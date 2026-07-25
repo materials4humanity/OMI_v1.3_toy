@@ -365,6 +365,212 @@ absent, directly against the real `docs/COVERAGE.md`.
 
 ---
 
+## ADR-011 — State is a flat array plus a schema, not a nested dict
+
+**Status.** Accepted **Gap.** none — implementation choice **Milestone.** M1
+
+**What the framework leaves open.**
+Core §3.1 fixes the four slots `(m, z, ν, Γ)` and Core §3.2 fixes the
+abstract spaces, but neither fixes a concrete data representation. Spec §12
+sketches `State` as "named slots... mode label; body index" without saying
+how a slot's named components are laid out in memory.
+
+**Decision.**
+A `State` wraps one flat `numpy.ndarray` of floats plus a `StateSchema` — an
+ordered mapping from `(slot, component name)` to a slice of that array.
+Domains declare their schema (interface item 1) by naming components per
+slot with a dimension each; `State.get(slot, name)` slices the flat array.
+Metric scaling, Jacobians, and SVDs therefore all operate on one plain array
+shape.
+
+**Alternatives rejected.**
+*A nested dict of arrays per slot* (`state.m["texture"]`). Rejected: natural
+to read, but every numeric routine (Jacobian, metric scaling, SVD) would need
+to flatten/unflatten repeatedly, and the flattening order would become an
+undeclared implicit contract. Making the flat array primary and dict-like
+access a view onto it removes the duplication.
+
+**What would change this.** Field-valued slots (spatially resolved `m`, per
+Core §2.5's body-indexed state) would need a richer per-slot tensor/mesh
+representation — out of scope while that PASS-C remains an anti-goal.
+
+**Pinned by.** `tests/test_state_schema.py`.
+
+---
+
+## ADR-012 — `EvolutionOperator` is an ABC: `step` is domain-supplied, `lift`/`lipschitz` are computed, `is_erasure` is declared
+
+**Status.** Accepted **Gap.** none — implementation choice, informed by C-3.9a/S-3.x **Milestone.** M1
+
+**What the framework leaves open.**
+Spec §12 names `.step`, `.lift`, `.lipschitz_estimate`, `.is_erasure` as the
+protocol surface but does not say which are domain-supplied versus generic
+machinery.
+
+**Decision.**
+`EvolutionOperator` is an ABC. A concrete domain operator supplies `step`
+(the elementary map) and declares `is_erasure` as a fixed boolean — matching
+how Core §7.1's table declares erasure per stage from domain knowledge, not
+from a computed numeric threshold. `jacobian` defaults to a central
+finite-difference estimate (plain numerics, not a framework claim); domains
+may override it with an exact analytic derivative, which ADR-001 flags as
+eventually necessary for trustworthy M3 observability oracles. `lift`
+(pushforward to `𝒫(𝒮)`, by looping `step` over particles) and `lipschitz`
+(SVD of the metric-scaled Jacobian — Spec §2.5's *local* spectrum, not a
+global bound) are both generic, provided by the base class from
+`step`/`jacobian`.
+
+**Alternatives rejected.**
+*A `Protocol` requiring all four methods on every operator.* Rejected —
+`lift` and `lipschitz` are entirely mechanical given `step`/`jacobian`;
+forcing every domain operator to reimplement them invites drift (one loops
+particles wrong, another computes the SVD differently) for no benefit.
+*Computing `is_erasure` from a numeric rank/singular-value cutoff.* Rejected
+— Core §3.9 says only "substantially lower effective dimension" and `L ≪ 1`;
+picking a cutoff now would invent a threshold the Specification doesn't give,
+exactly what ADR-005 forbids. Quantitative erasure completeness is M2's
+`erasure.py`.
+
+**What would change this.** M2's erasure-completeness measurement may find a
+domain-declared `is_erasure` disagrees with the measured rank — that is a
+finding to report, not a reason to compute the flag differently now.
+
+**Pinned by.** `tests/test_semigroup.py` (exercises `lift`/`lipschitz`
+indirectly) and each domain's own operator tests.
+
+---
+
+## ADR-013 — `Control` is a callable over a declared interval
+
+**Status.** Accepted **Gap.** none — implementation choice **Milestone.** M1
+
+**What the framework leaves open.**
+Core §3.2 requires controls to be "functions of time on an interval, not
+scalars," but fixes no representation (piecewise-constant table, spline,
+closed-form callable, ...).
+
+**Decision.**
+`Control` is a frozen dataclass wrapping a plain Python callable
+`t -> np.ndarray` together with the declared interval `[t0, t1]`; calling
+`control(t)` validates `t` is in range. This is the minimal thing satisfying
+"function of time, not a scalar" without committing to a sampling or spline
+representation no domain here needs yet.
+
+**Alternatives rejected.**
+*A fixed-grid array of samples.* Rejected — forces a sampling-rate decision
+with no Spec basis, and the analytic operators in this reference
+implementation want exact closed-form evaluation at arbitrary `t`, not
+interpolation error.
+
+**What would change this.** A domain needing a control with its own internal
+state (e.g. a stateful controller) — the callable signature would need
+widening.
+
+**Pinned by.** `tests/test_control.py`.
+
+---
+
+## ADR-014 — Readouts: three distinct call shapes, not one interface; Class B computed by the literal weakest-link formula, not tail machinery
+
+**Status.** Accepted **Gap.** S-4.2–S-4.6 deferred to M6; none for the taxonomy split itself **Milestone.** M1
+
+**What the framework leaves open.**
+Core §3.5 defines Type-0/1/2 with three genuinely different signatures
+(`S → R^n`; `S → Op(U → R × S)`; `Op × 𝔅 → R`), not one shape. Class B's tail
+machinery (Spec §4.2–4.6) is scheduled for M6, not M1.
+
+**Decision.**
+`readouts.py` declares `ReadoutType`/`ReadoutClass` enums plus separate base
+classes matching each type's own signature: `FunctionalReadout` (Type-0) and
+`ConstitutiveReadout` (Type-1). Type-2 is declared in the enum, for interface
+declarations that need to name it, but has no concrete base class here — it
+requires Tier II, an anti-goal (CLAUDE.md §9). A Class-B-flagged
+`FunctionalReadout` accepts an explicit sub-element count `n_sub` standing in
+for `V / V_0` and computes the weakest-link distribution directly from Core
+§3.6's own formula `P(ρ_V > x) = [P(ρ_0 > x)]^N` by resampling the ensemble's
+per-particle readout values — no driven-volume field, no tail extrapolation,
+no join threshold. This is the literal SPEC-quality definition (C-3.6/S-4.1),
+not the M6 refinement.
+
+**Alternatives rejected.**
+*One `Readout` ABC with a single abstract `__call__`.* Rejected — Type-2's
+signature genuinely does not take a `State`; forcing a common signature would
+misrepresent one branch's type.
+*Implementing driver/tail separation (Spec §4.2) now.* Rejected — assigned to
+M6; doing it now builds ahead of the roadmap's own ordering.
+
+**What would change this.** M6 replacing the resampling-based Class B
+computation with the driver/tail-separated, rare-event-sampled version — the
+resampling version should then become the "naive" comparison baseline, not be
+deleted.
+
+**Pinned by.** `tests/test_readouts.py`.
+
+---
+
+## ADR-015 — `Chain` is a linear ordered sequence of segments for M1
+
+**Status.** Accepted **Gap.** none — implementation choice **Milestone.** M1
+
+**What the framework leaves open.**
+Spec §12 names `Chain` (a mode-labelled DAG) as a core abstraction, but the
+hybrid mode-labelling itself is Spec §5.1, PASS-C and an anti-goal for now
+(CLAUDE.md §9).
+
+**Decision.**
+For M1, `Chain` is a linear ordered sequence of `(EvolutionOperator, Control)`
+segments — the degenerate, single-mode case of a "mode-labelled DAG."
+`Chain.rollout(initial_ensemble)` applies each segment's `.lift` in order and
+returns a `Trajectory` recording *every* intermediate `Ensemble`, not just the
+final one — needed later for rollout-length error curves (S-1.4/S-9.2) and
+retrospective smoothing (Core §3.8).
+
+**Alternatives rejected.**
+*Building the general mode-labelled DAG now.* Rejected — Spec §5.1 is an
+anti-goal; a linear chain is the honest subset that is actually specified
+(Core §3.3's composition), and generalising to modes/guards without a
+derivation would invent structure ahead of a PASS-C gap.
+
+**What would change this.** Spec §5.1 being resolved (an ADR filling that gap,
+or a framework revision).
+
+**Pinned by.** `tests/test_chain_rollout.py`; `tests/test_semigroup.py` for
+the composition identity itself.
+
+---
+
+## ADR-016 — Domain interfaces are a shared frozen dataclass, in Core §4's field order
+
+**Status.** Accepted **Gap.** serves C-4/C-7 (PASS-D) **Milestone.** M1
+
+**What the framework leaves open.**
+Core §4 requires seven declared items but fixes no data structure. ADR-003
+commits to two domains chosen to invert each other and to a diff test, but
+not the declaration's shape.
+
+**Decision.**
+`src/omi/interface.py` (domain-neutral — the *shape* of a declaration is
+framework machinery even though its *content* is domain-specific) defines an
+`InstantiationDeclaration` frozen dataclass with seven fields in Core §4's
+order: `state_schema`, `control_space`, `erasure_inventory`,
+`readout_catalogue`, `observation_suite`, `invariants`, `scale_structure`.
+Each of `omi_domains/*/interface.py` constructs one. A `diff(a, b)` function
+reports, per field, whether the two declarations differ, making the
+interface comparison in ADR-003's pinning test mechanical rather than
+hand-written prose.
+
+**Alternatives rejected.**
+*Each domain freely shaping its own declaration object.* Rejected —
+ADR-003's whole point is that a shared, fixed shape is what makes the diff a
+mechanical fact instead of an assertion in prose.
+
+**What would change this.** A third/fourth domain sketch (Core §7.3, Spec
+§11.4) revealing the seven-item shape doesn't generalise.
+
+**Pinned by.** `tests/test_interface_diff.py` (ADR-003's pinning test).
+
+---
+
 ## Open questions
 
 Not decisions — hypotheses the code should settle. Full statements in
