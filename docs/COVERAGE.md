@@ -141,6 +141,29 @@ contrasts between probe responses rather than single probes, and the
 **Test:** oracle with a known kinematic hidden variable; check whether the
 single-probe rule yields a false negative.
 
+> **Status: answered at M4** (`tests/oracles/test_known_insufficiency.py`).
+> Confirmed with a constructed kinematic-type hidden variable whose effect
+> on the response has *equal magnitude* under forward and reversed
+> subsequent driving, differing only in sign: running the sufficiency
+> deficit estimator under either single probe alone recovers the *same*
+> deficit (ratio within 30% at 8000 pairs, expected to converge to 1 with
+> more data) — so "reversed driving only" is false of this variable even
+> though it is exactly the directional/kinematic type Spec §1.6's table
+> means to name. A single-probe reading would therefore report "insufficient"
+> correctly but could not distinguish this candidate from a non-directional
+> one showing the same single-probe divergence — confirmed directly:
+> `discriminating()` on the naive single-probe signature returns `False` for
+> two candidates tuned to share one probe's divergence, while the
+> symmetric/antisymmetric decomposition (ADR-022, docs/DECISIONS.md)
+> correctly separates them.
+>
+> **Proposed wording for v1.4 (Spec §1.6):** rows in the divergence
+> fingerprint table should name *contrasts between paired-probe responses*
+> (e.g. "antisymmetric under forward/reversed reversal → kinematic
+> variable") rather than "which single probe diverges" — the latter is
+> unreliable exactly for the directional-variable case the table most wants
+> to catch.
+
 **OQ-2 — Is erasure completeness operator-level or component-level?**
 Core §3.9 consequence 3 offers "mutual information between pre- and
 post-erasure states, *or* residual variance explained by upstream variables".

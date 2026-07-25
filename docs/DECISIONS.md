@@ -216,6 +216,17 @@ and it is cheap to make structural.
 
 **Pinned by.** `tests/test_vocabulary.py`, which must fail on a planted term.
 
+**Amendment (M4).** "Campaign" was seeded from Appendix B's flagship column
+("provenance group" → "heat, campaign") but turned out to collide with the
+Specification's *own* generic vocabulary: Spec §1 and §8 use "campaign" for
+the framework-level concept (the sufficiency campaign), not the
+metallurgical provenance-group sense, and `src/omi/sufficiency.py`
+legitimately needs to cite it. Removed from the banned list; "heat" stays
+banned, since Core/Spec never use it as a generic term (they say "thermal").
+This is exactly ADR-006's "grows as domains are added" working in reverse —
+a real collision, found while implementing, corrected instead of worked
+around.
+
 ---
 
 ## ADR-007 — Type checker: mypy in strict mode
@@ -773,6 +784,146 @@ dangerous cells, never "observed") and the domain triage tests
 
 ---
 
+## ADR-021 — Matched-pair campaign data is plain arrays; the raw response gap is never independently exposed
+
+**Status.** Accepted **Gap.** none — implementation choice, informed by S-1.2 (SPEC) **Milestone.** M4
+
+**What the framework leaves open.**
+Spec §1.2 gives the deficit estimator as a formula over expectations
+(`E[(ρ_A-ρ_B)²]`, `σ²_rep`, `E[(s_{A,j}-s_{B,j})²]`) but not a data
+structure for the matched-history pairs a real or simulated campaign
+produces.
+
+**Decision.**
+`sufficiency_deficit` takes plain arrays: per-pair responses
+`response_a`/`response_b`, per-pair matched-component differences
+(`matched_component_diffs`, shape `(n_pairs, n_matched)`), a precomputed
+sensitivity vector (`response_jacobian`, one entry per matched component —
+callers obtain this from `observability.sensitivity_operator`, tying M4 to
+M3 the way Spec §1 itself is scoped: "depends on §3"), and a separately
+estimated `repeat_variance`. This keeps the estimator a pure function of
+already-collected campaign data, decoupled from *how* a campaign generates
+that data (real instrumentation, or an oracle's synthetic simulation).
+
+The empirical mean of squared response differences
+(`E[(ρ_A-ρ_B)²]`) is computed *inside* `sufficiency_deficit` and returned
+only as one field of a `DeficitResult` dataclass that always also carries
+the correction terms and the clamped, corrected deficit. **No public
+function returns this raw quantity by itself** — docs/ROADMAP.md M4:
+"a raw response gap must not be obtainable from the public API." A caller
+who wants the raw number must construct it themselves from the same input
+arrays, at which point it is visibly their own computation, not this
+module's.
+
+**Alternatives rejected.**
+*A `MatchedPair` object per pair, with a campaign-runner class.* Rejected —
+adds a class hierarchy around what the formula treats as four vectors, and
+tempts a `campaign.raw_gap()` convenience method that would violate the
+no-standalone-raw-gap requirement above.
+
+**What would change this.** A real campaign's data-loading layer, once one
+exists (Spec §5.3's provenance-grouped storage) — it would produce these
+same arrays, not replace them.
+
+**Pinned by.** `tests/oracles/known_insufficiency.py` /
+`tests/oracles/test_known_insufficiency.py`.
+
+---
+
+## ADR-022 — The probe set decomposes into symmetric/antisymmetric parts, resolving OQ-1
+
+**Status.** Accepted **Gap.** OQ-1 **Milestone.** M4
+
+**What the framework leaves open.**
+Spec §1.6's fingerprint table identifies a missing component by *which*
+probe among a set shows divergence (e.g. "reversed driving only →
+kinematic/directional variable"). OQ-1 (docs/COVERAGE.md Part IV)
+hypothesised that this single-probe reading is unreliable for genuinely
+directional (kinematic) hidden variables, which can affect *both* forward
+and reversed probes equally in magnitude — with the informative signal
+being in how the two probes' responses combine, not in whether either one
+alone "diverges."
+
+**Decision.**
+`ProbeSet` carries the four raw values (`forward_a`, `forward_b`,
+`reversed_a`, `reversed_b`) and exposes `symmetric_gap` (the difference
+between the pairs' *averaged* forward/reversed responses) and
+`antisymmetric_gap` (the difference between their forward/reversed
+*half-differences*). A kinematic/directional hidden variable that flips
+sign under reversal shows up entirely in `antisymmetric_gap`, with
+`symmetric_gap ≈ 0`; a non-directional hidden variable shows the reverse.
+`discriminating(signatures, tolerance)` takes the `(symmetric_gap,
+antisymmetric_gap)` signature for each of several *candidate* missing
+components and fails (returns `False`) if any two candidates' signatures
+are not distinguishable at the declared tolerance — operationalising Spec
+§1.6's own design requirement ("MUST discriminate between candidate
+components, not merely detect divergence").
+
+**Alternatives rejected.**
+*Keep the single-probe table as the whole story, add symmetric/antisymmetric
+as an extra diagnostic.* Rejected once `tests/oracles/test_known_insufficiency.py`
+showed why: a single "does the reversed probe diverge" check gives the
+*same* answer (yes) for both a kinematic and a non-kinematic hidden
+variable in the oracle's construction, so it cannot discriminate between
+candidates — exactly OQ-1's hypothesised failure mode, confirmed with
+evidence, not left as speculation.
+
+**What would change this.** A third candidate type (e.g. thermally
+activated, Spec §1.6's other row) needing a third probe axis — the
+decomposition would need generalising beyond a single forward/reversed
+pair, which is out of scope for this M4 investigation.
+
+**Pinned by.** `tests/oracles/test_known_insufficiency.py`.
+
+---
+
+## ADR-023 — Augmentation-loop candidates are schema components; learning error is exactly zero for analytic operators
+
+**Status.** Accepted **Gap.** none — implementation choice; Err_learn informed by ADR-001 **Milestone.** M4
+
+**What the framework leaves open.**
+Spec §1.5's augmentation loop pseudocode operates on an abstract "candidate
+pool `Z`" and a "state description `S`," without fixing what either is in
+code. Spec §1.4's `Err_learn` requires training a candidate model at
+matched data budget and reading its rollout-length error — meaningless
+without a learned model to train.
+
+**Decision.**
+A candidate is a `(Slot, str)` naming one component to add to a
+`StateSchema` — the same schema object already used everywhere else
+(ADR-011). `augmentation_loop` takes a callable `sufficiency_test:
+StateSchema -> DeficitResult`, a callable `variance_delta: StateSchema ->
+float` (in practice backed by `observability.variance_term`, per
+docs/ROADMAP.md M4: "consuming the variance term from M3"), and a candidate
+pool of such pairs; it implements Spec §1.5's seven steps literally,
+returning which candidates were accepted and — critically — *which term
+blocked* (Spec §1.7's trichotomy) when the loop stops with residual bias.
+
+`learning_error` always returns exactly `0.0`. This is not a placeholder
+standing in for a future estimate — ADR-001 commits every module through M7
+to exact analytic operators, which are not fit to any data budget and so
+have no learning error by construction; `0.0` is the *correct* value for
+this instantiation, not an approximation of one that will change. Spec
+§1.4's actual rollout-curve procedure applies once M8 introduces learned
+operators behind the same protocol, at which point `learning_error` gets a
+real implementation, not a corrected one.
+
+**Alternatives rejected.**
+*Raise `NotSpecified` for `Err_learn`.* Rejected — S-1.4 is fully derived
+(SPEC), not a gap; nothing about the procedure is missing, it simply has no
+nonzero value to report before a learned operator exists. Refusing would
+misrepresent a milestone dependency as a specification gap.
+
+**What would change this.** M8's learned operators, at which point
+`learning_error` is replaced with a genuine rollout-length-curve measurement
+at matched data budget.
+
+**Pinned by.** `tests/oracles/test_known_insufficiency.py` (the augmentation
+loop accepting/rejecting the hidden variable correctly) and ADR-001's own
+pin.
+
+---
+
 ## Open questions
 
 Not decisions — hypotheses the code should settle. Full statements in
@@ -780,7 +931,7 @@ Not decisions — hypotheses the code should settle. Full statements in
 
 | id | Question | Milestone | Status |
 |---|---|---|---|
-| OQ-1 | Fingerprint: single probe or contrast between probes? | M4 | open |
+| OQ-1 | Fingerprint: single probe or contrast between probes? | M4 | answered — see COVERAGE.md Part IV |
 | OQ-2 | Erasure completeness: operator-level or component-level? | M2 | partially answered — see COVERAGE.md Part IV |
 | OQ-3 | Class B under competing defect populations | M6 | open |
 | OQ-4 | Does inverse design report which variance is binding? | M9 | open |

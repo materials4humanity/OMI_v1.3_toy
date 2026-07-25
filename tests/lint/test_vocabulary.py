@@ -14,6 +14,15 @@ individual words, to avoid flagging generic words ("current", "voltage",
 outright — ADR-006 says the list "grows as domains are added," and finer
 splitting can happen then, driven by an actual collision rather than
 speculatively.
+
+"campaign" (Appendix B's flagship instance of "provenance group") is
+deliberately *not* banned, despite appearing in that column: Spec §1 and
+§8 use "campaign" as the framework's own generic term (e.g. "the
+sufficiency campaign," "campaign design") throughout the very sections
+src/omi/sufficiency.py implements. Banning it would block legitimate
+citation of the Specification's own vocabulary — a real collision found
+while implementing M4, not a hypothetical one, so it is recorded here
+rather than silently worked around.
 """
 
 from __future__ import annotations
@@ -30,7 +39,7 @@ SRC_OMI = REPO_ROOT / "src" / "omi"
 BANNED_TERMS: tuple[str, ...] = (
     # --- flagship instance column ---
     "coil", "coils",
-    "heat", "campaign", "campaigns",
+    "heat",
     "processing line",
     "alloy family", "alloy", "alloys",
     "austenitisation", "austenitization", "austenitise", "austenitize",
