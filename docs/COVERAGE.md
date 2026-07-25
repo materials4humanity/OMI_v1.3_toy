@@ -95,7 +95,7 @@ Status codes:
 | S-9.3 | §9.3 | Baselines; grouped splits; prospective validation | SPEC / **PASS-C** (go-no-go table) | `conformance.py` |
 | S-9.4 | §9.4 | **Falsification thresholds** | **PASS-D** | ADR per application |
 | S-9.5 | §9.5 | Uncertainty taxonomy; calibration reporting | SPEC | `conformance.py` |
-| S-10 | §10 | Operations; innovation drift; lifecycle | **PASS-C** (procedure) / SPEC (proposition) | drift monitor only |
+| S-10 | §10 | Operations; innovation drift; lifecycle | **PASS-C** (procedure) / SPEC (proposition) | `assimilate.py` — innovation sequence (SPEC) + NIS chi-squared drift monitor (ADR-026 declares the procedure); recalibration/champion-challenger/rollback remain unimplemented anti-goals |
 | S-11 | §11 | Full instantiation declarations | **PASS-D** | `omi_domains/` |
 | S-12 | §12 | **Reference implementation architecture** | **PASS-C** | **this repo is the synthesis — ADR every choice** |
 

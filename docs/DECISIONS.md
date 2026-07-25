@@ -924,6 +924,210 @@ pin.
 
 ---
 
+## ADR-024 — The EnKF reuses `state.Ensemble`/`EvolutionOperator.lift`; analysis is the standard stochastic (perturbed-observation) update
+
+**Status.** Accepted **Gap.** none — implementation choice, informed by C-3.8/S-3.1 (SPEC) **Milestone.** M5
+
+**What the framework leaves open.**
+Core §3.8 states that "the assimilation of measurements into a state
+estimate is a filtering algorithm assembled from evolution and readout
+operators," and docs/ROADMAP.md M5 names "EnKF along the chain" as the
+deliverable, but neither Core nor Spec gives ensemble Kalman filter update
+equations — Spec §3.1 gives only the *linearised*, deterministic Gramian
+form (`P_k = ((P_k^0)^{-1} + G_k)^{-1}`), which is the population/Fisher-
+information object M3 already computes, not a recursive filter over a
+single realised trajectory of noisy observations.
+
+**Decision.**
+`assimilate.py` uses the standard textbook ensemble Kalman filter (Evensen):
+
+1. **Representation.** The forecast and analysis ensembles are plain
+   `state.Ensemble` instances — no new ensemble type. Forecast is exactly
+   `EvolutionOperator.lift` (already generic pushforward over particles,
+   ADR-012); nothing new is needed to advance an ensemble through a chain
+   segment.
+2. **Analysis update.** At an instrumented index, given a forecast ensemble
+   `{s_i^f}`, sample mean `s̄^f` and covariance `P^f` (empirical, over
+   particles), and a readout `H` (a `FunctionalReadout`, reusing M3's typing
+   rather than a new observation-operator class):
+   `K = P^f H'^T (H' P^f H'^T + R)^{-1}` where `H' = H.jacobian(s̄^f)` is the
+   readout's own linearisation (already required by `FunctionalReadout`,
+   M3), and each particle is updated as
+   `s_i^a = s_i^f + K(y_i - H(s_i^f))` with **perturbed observations**
+   `y_i = y + ε_i`, `ε_i ~ N(0, R)` (the classical stochastic EnKF, chosen
+   over a square-root/deterministic variant because it needs no matrix
+   square root and its sampling noise is exactly the standard textbook
+   price paid for an unbiased ensemble covariance update — not a numerical
+   shortcut peculiar to this repository).
+3. **Linearised `H'` reuses `FunctionalReadout.jacobian`**, so an EnKF run
+   through a chain of analytic operators is a linearised-innovation variant
+   of the algorithm — appropriate given ADR-001 (analytic operators only
+   through M7): the forecast step is the true nonlinear pushforward, only
+   the *analysis* gain linearises the readout, which is exact when the
+   readout is itself linear (true for every M1–M4 domain readout) and a
+   standard, named approximation (extended-EnKF) otherwise.
+4. **Process noise `Q`** is a parameter the caller supplies per segment
+   (default zero, i.e. deterministic dynamics plus observation noise only)
+   — Spec never specifies a `Q`, and forcing one would invent a number; a
+   caller building an oracle with genuine process noise passes it explicitly
+   and it is added to the forecast ensemble as i.i.d. per-particle noise
+   before the next analysis.
+
+**Alternatives rejected.**
+*A deterministic/square-root EnKF (ETKF, EAKF).* Rejected for this
+milestone — avoids the perturbed-observation sampling noise, but adds a
+matrix square root and a rotation ambiguity neither Spec nor Core motivates;
+revisit if the stochastic EnKF's extra sampling noise is ever shown to
+corrupt a downstream oracle's tolerance.
+*A particle filter.* Rejected — Spec §3.1's own posterior-covariance object
+is explicitly linear-Gaussian (`P_k = ((P_k^0)^{-1}+G_k)^{-1}`); a particle
+filter estimates a different (fully nonlinear, non-Gaussian) posterior that
+nothing in Spec §3 asks for, and would need its own resampling-degeneracy
+diagnostics that M5's exit gate does not exercise.
+
+**What would change this.** A domain with strongly non-Gaussian, non-linear
+readouts where the stochastic EnKF's Gaussian analysis visibly biases the
+posterior mean relative to a ground truth the oracle can check.
+
+**Pinned by.** `tests/oracles/known_latent_trajectory.py` /
+`tests/oracles/test_known_latent_trajectory.py`.
+
+---
+
+## ADR-025 — The ensemble smoother is a single backward cross-covariance pass over the recorded trajectory, not a re-run filter
+
+**Status.** Accepted **Gap.** none — implementation choice, informed by C-3.8 (SPEC, "retrospective inference... is the correct setting") **Milestone.** M5
+
+**What the framework leaves open.**
+Core §3.8 and Spec §3.1 motivate *why* smoothing matters (the Gramian's sum
+over `j ≥ k` is "the smoothing object"; "retrospective inference... is
+therefore the correct setting for latent-variable identifiability") but
+give no smoother algorithm — Spec §3 is entirely about the deterministic
+Fisher-information Gramian, not a recursive estimator over noisy data.
+
+**Decision.**
+An ensemble smoother in the sense of Evensen & van Leeuwen: because every
+ensemble member of the EnKF's forecast/analysis trajectory is a *full path*
+(the same particle index `i` is tracked through every chain segment,
+`chain.rollout` already preserving per-particle identity end to end via
+`Ensemble.particles` rows), the cross-covariance between an **earlier**
+time's forecast state and a **later** time's observation is directly an
+empirical sample covariance across those same particles — no re-linearisation
+and no backward recursion through Jacobians is needed. Concretely,
+`smooth(trajectory, observations)`:
+
+1. Runs the forward EnKF filter once (ADR-024), recording the forecast
+   ensemble at every chain index.
+2. For each earlier index `k` and each observation at a later index
+   `j > k` taken from the *same* particle trajectories, computes the
+   cross-covariance `P_{k,j} = Cov(s_k^f, H(s_j^f))` empirically over
+   particles, forms the smoothing gain
+   `K_{k,j} = P_{k,j} H'^T (H' P_j^f H'^T + R)^{-1}`, and updates each
+   particle's *earlier* state `s_{k,i}^s = s_{k,i}^f + K_{k,j}(y_i - H(s_{j,i}^f))`
+   using the same perturbed-observation convention as the filter.
+3. When several later observations bear on the same `k`, they are applied
+   sequentially in time order, each smoothing the result of the previous —
+   an ensemble-smoother analogue of sequential filtering, rather than a
+   single joint update, since Spec gives no joint-information form to
+   target.
+
+This is the direct payoff of ADR-024's choice to carry ensembles as full
+per-particle trajectories rather than independent per-time samples: without
+that, cross-time covariance would not be computable at all.
+
+**Alternatives rejected.**
+*A Rauch–Tung–Striebel (RTS) backward recursion through the Jacobian
+`Φ_{k+1,k}`.* Rejected — reintroduces exactly the chained-Jacobian-product
+machinery ADR-018 built JVP/VJP to avoid, for no accuracy benefit here since
+the ensemble already carries the needed cross-covariance directly.
+*Re-running the filter with the full future observation set folded into an
+augmented state.* Rejected — equivalent in the linear-Gaussian case but far
+more code for a toy-scale chain, and it obscures which observation is doing
+the smoothing work for the "latent variable becomes inferred" demonstration
+this milestone requires.
+
+**What would change this.** A chain long enough that per-particle-path
+memory becomes the storage bottleneck, at which point a genuine backward
+recursion (RTS/EnKS with Jacobians) would trade storage for the reintroduced
+Φ machinery.
+
+**Pinned by.** `tests/oracles/test_known_latent_trajectory.py` (smoother
+recovers a known latent trajectory within a stated interval; the previously
+unobserved/dangerous latent direction becomes `Triage.INFERRED` once the
+smoother's reduced posterior variance is fed back through M3's
+`danger_triage`).
+
+---
+
+## ADR-026 — Innovation drift monitoring instantiates S-10's proposition with the standard NIS chi-squared consistency test
+
+**Status.** Accepted **Gap.** S-10 (Spec §10 procedure is **PASS-C**; the proposition itself is SPEC) **Milestone.** M5
+
+**What the framework leaves open.**
+Spec §10 states, as a proposition already covered by Core §3.8, that "the
+innovation sequence is a sufficient statistic for model drift," but the
+section is otherwise `[Pass C]`: "To be written: innovation-based drift
+detection with control limits; scheduled recalibration; continual learning
+with forgetting protection; champion/challenger deployment..." — i.e. the
+*proposition* is SPEC and directly implementable (compute the innovation
+sequence), but the *detection procedure* (what statistic, what control
+limit) has no formula anywhere in either document.
+
+**Decision.**
+Per CLAUDE.md §4 move 2 (Decide, with an ADR, when a gap must be filled to
+make progress): docs/ROADMAP.md's M5 exit gate explicitly requires
+"innovation monitor detects a planted drift," so refusing outright would
+block a named exit-gate deliverable. The chosen procedure is the
+**normalised innovation squared (NIS) chi-squared consistency test**
+(Bar-Shalom, Li & Kirubarajan — the standard, textbook Kalman-filter
+innovation monitor, not an invented one):
+
+1. At each instrumented index `j`, compute the innovation
+   `d_j = y_j - H_j(s̄_j^f)` and the innovation covariance
+   `S_j = H_j' P_j^f H_j'^T + R_j` (both already available from the EnKF
+   forecast of ADR-024), and the scalar
+   `NIS_j = d_j^T S_j^{-1} d_j`.
+2. Under a correctly-specified model, `NIS_j` is chi-squared distributed
+   with `dim(y_j)` degrees of freedom (a standard, textbook fact — not a
+   framework claim, and not something this repository invents).
+3. **Drift monitor.** Over a sliding window of the last `w` innovations
+   (`w` a declared parameter, default 10), the monitor reports the mean
+   NIS against the chi-squared distribution's expected value and a
+   two-sided control limit at a declared confidence level (default 95%,
+   `scipy.stats.chi2`), flagging drift when the windowed mean exits the
+   control limits. Both the raw `NIS_j` sequence and the windowed
+   statistic are always returned together (never only the boolean flag),
+   matching the reporting discipline ADR-017/ADR-020 already established
+   for other declared conventions.
+
+This is recorded as a Decide-ADR, not folded silently into "the" innovation
+sequence, because a different confidence level or window would change which
+drifts are caught — exactly the kind of invented number CLAUDE.md §4
+requires to be visible and challengeable rather than buried in code.
+
+**Alternatives rejected.**
+*CUSUM on the innovation mean.* Rejected for the default — better at
+detecting small sustained biases, but needs a reference/slack parameter
+Spec gives no basis for either; the chi-squared test needs only the
+already-available `S_j`, so it is the smaller addition. A CUSUM variant is
+not precluded and could be added as a second declared monitor later.
+*Refuse entirely (`NotSpecified("S-10", ...)`).* Rejected as the sole
+response — legitimate for the *scheduled recalibration / champion-
+challenger / rollback* portions of Spec §10, which this milestone does not
+touch and which remain unimplemented anti-goals for now, but not for the
+drift-detection procedure itself, since the exit gate requires a working
+demonstration and a standard, citable statistical test exists to instantiate
+the SPEC proposition without inventing framework.
+
+**What would change this.** A concrete published control-limit convention
+appearing in a future Spec revision, at which point this ADR is superseded
+rather than silently edited.
+
+**Pinned by.** `tests/test_innovation_drift_monitor.py` (a planted drift
+must trip the monitor; a nominal, undrifted run must not).
+
+---
+
 ## Open questions
 
 Not decisions — hypotheses the code should settle. Full statements in
