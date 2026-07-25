@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "omi"
+version = "0.1.0.dev0"
+description = "Reference implementation of OMI v1.3 (Operator Materials Intelligence) — M0 scaffolding."
+requires-python = ">=3.11"
+readme = "CLAUDE.md"
+license = { text = "UNLICENSED" }
+
+# Pinned per docs/ROADMAP.md M0: "pyproject.toml ... pinned deps". torch is
+# deliberately absent here — it is an optional extra (see below) and MUST
+# NOT be imported at module scope anywhere under src/omi/ (CLAUDE.md §8).
+dependencies = [
+    "numpy==2.1.3",
+    "scipy==1.14.1",
+]
+
+[project.optional-dependencies]
+torch = ["torch==2.5.1"]
+dev = [
+    "pytest==8.3.3",
+    "mypy==1.13.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+# ADR-007: mypy in strict mode is the M0 type-checking choice.
+[tool.mypy]
+python_version = "3.11"
+strict = true
+packages = ["omi"]
+files = ["src", "tests"]
+
+[[tool.mypy.overrides]]
+module = "scipy.*"
+ignore_missing_imports = true

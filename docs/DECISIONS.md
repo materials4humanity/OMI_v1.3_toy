@@ -218,6 +218,153 @@ and it is cheap to make structural.
 
 ---
 
+## ADR-007 — Type checker: mypy in strict mode
+
+**Status.** Accepted **Gap.** none — implementation choice **Milestone.** M0
+
+**What the framework leaves open.**
+ROADMAP M0 requires "type-check" in CI and CLAUDE.md §8 requires "type hints
+throughout," but neither the Core nor the Spec names a tool, and Spec §12
+(reference architecture) does not reach this level of build tooling at all.
+
+**Decision.**
+`mypy --strict` over `src/` and `tests/`, run as its own CI job. Config lives
+in `pyproject.toml` under `[tool.mypy]`. Slot and type/class taxonomies are
+enums (CLAUDE.md §8), which strict mypy checks exhaustively when `match`
+statements are used — a direct enforcement of "typed, not stringly-typed"
+without extra tooling.
+
+**Alternatives rejected.**
+*pyright.* Faster and arguably better inference in editors, but its strict
+CLI mode is oriented around `pyrightconfig.json` rather than `pyproject.toml`
+and its plugin story for the dataclass/enum-heavy style this codebase uses is
+thinner than mypy's. Nothing here is framework-mandated either way; mypy is
+chosen for `pyproject.toml`-native configuration and long-standing default
+status for library packages, not because pyright is deficient.
+
+**What would change this.** A concrete mypy limitation hit during M1+ (e.g.
+variance issues with the `EvolutionOperator` protocol) that pyright resolves
+and mypy cannot, even with `--strict` relaxed locally.
+
+**Pinned by.** the `typecheck` CI job (`mypy src tests`); it must exit 0 on
+the empty M0 framework.
+
+---
+
+## ADR-008 — Test layout: lint tests plant and remove their own violations
+
+**Status.** Accepted **Gap.** none — implementation choice **Milestone.** M0
+
+**What the framework leaves open.**
+ROADMAP M0 requires the three lints to be "demonstrably" shown failing on a
+planted violation and passing once removed, but does not say how that
+demonstration is captured so it stays true (rather than being a one-time
+manual transcript that silently rots).
+
+**Decision.**
+Lint tests live in `tests/lint/` (`test_vocabulary.py`, `test_citations.py`,
+`test_gap_citations.py`). Each lint test is structured as a pair: an
+implementation function (`find_banned_terms`, `find_uncited_docstrings`,
+`find_uncited_gap_ids`) that scans a given source tree and returns violations,
+plus a pytest test that (a) asserts zero violations against the real
+`src/omi/`, and (b) writes a temporary module containing one planted
+violation, asserts the scanner catches it, then removes the temp module. Both
+directions of the fail→pass demonstration are therefore executable on every
+CI run, not just performed once by hand.
+
+**Alternatives rejected.**
+*A one-off shell transcript checked into the repo.* Rejected — it is exactly
+the kind of assertion that silently stops being true after a refactor, which
+is the failure mode CLAUDE.md's gap discipline exists to prevent applied to
+tooling itself.
+*Git history as the evidence* (commit a violation, then commit its removal).
+Rejected — not re-verifiable in CI on every run, and it pollutes history with
+a deliberately broken intermediate commit.
+
+**What would change this.** Nothing structural; new lints follow the same
+pattern.
+
+**Pinned by.** the lint tests themselves — `tests/lint/test_vocabulary.py`,
+`tests/lint/test_citations.py`, `tests/lint/test_gap_citations.py`.
+
+---
+
+## ADR-009 — Oracle protocol expressed as a minimal `Protocol`, not a base class
+
+**Status.** Accepted **Gap.** none — implementation choice **Milestone.** M0
+
+**What the framework leaves open.**
+CLAUDE.md §7 and ROADMAP M0 require an oracle to expose "the system's normal
+interface plus a `truth()`," but oracles across milestones wrap unrelated
+"normal interfaces" — a tail oracle samples and maps; a sufficiency oracle
+evolves matched-history pairs; a blind-spot oracle exposes a Gramian. Nothing
+in the Spec fixes how that common shape is expressed in code.
+
+**Decision.**
+`tests/oracles/__init__.py` defines a `runtime_checkable typing.Protocol`
+named `Oracle` with exactly one member: `truth() -> Any`, documented to return
+"the constructed ground-truth answer, whatever type is natural for this
+oracle." Each concrete oracle (e.g. the known-tail oracle) is an ordinary
+class that happens to satisfy the protocol; its actual "normal interface"
+(sampling, evolving, whatever the oracle needs) is specific to it and
+documented in its own module, not forced into a shared shape.
+
+**Alternatives rejected.**
+*An ABC with abstract methods for both the normal interface and `truth()`.*
+Rejected because the "normal interface" is not one thing across oracle types
+— a shared ABC would either be empty (offering nothing beyond `Protocol`) or
+would force unrelated oracles (tail, blind-spot, insufficiency) into a common
+method surface they don't naturally share, which is inventing structure the
+framework does not require.
+
+**What would change this.** If a second protocol member turns out to be
+common to every oracle built through M6 (e.g. a shared `seed`/`rng` accessor),
+it gets added to `Oracle` then, pinned by a new test.
+
+**Pinned by.** `tests/oracles/__init__.py`'s own conformance assertion, and
+`tests/oracles/test_known_tail.py::test_isinstance_oracle_protocol`.
+
+---
+
+## ADR-010 — The gap registry parses `COVERAGE.md`'s tables by line-oriented regex
+
+**Status.** Accepted **Gap.** none — implementation choice **Milestone.** M0
+
+**What the framework leaves open.**
+ROADMAP M0 and CLAUDE.md §4 require "a registry of every gap referenced in
+code," parsed from `docs/COVERAGE.md` rather than duplicated in Python, but
+neither document specifies a parsing method — `COVERAGE.md` is prose-and-tables
+Markdown, not a machine format.
+
+**Decision.**
+`src/omi/gaps.py` reads `docs/COVERAGE.md` (located by searching upward from
+the module's own file for a directory containing `docs/COVERAGE.md`, so it
+works regardless of the caller's working directory) and extracts every id in
+the first column of a Markdown table row via a line-anchored regex
+(`^\|\s*([A-Za-z][\w.\-]*)\s*\|`), restricted to the table bodies of Part I
+and Part II (bounded by the `## Part` headings), skipping header/separator
+rows. The result is a `frozenset[str]` cached for the process lifetime.
+
+**Alternatives rejected.**
+*A full Markdown parser (e.g. `markdown-it-py`, `mistune`) to walk a real
+table AST.* Rejected as a dependency (and a `pyproject.toml` pin) bought for a
+document whose table format is simple, stable, and entirely under this
+project's own control.
+*A YAML/JSON file mirroring the ids, regenerated from `COVERAGE.md` by a
+script.* Rejected — this is exactly the duplication the roadmap forbids;
+a generated mirror is still a second copy that can drift if the generation
+step is skipped.
+
+**What would change this.** `COVERAGE.md`'s table format changing shape
+(e.g. splitting into per-part files) — the regex and file-location search
+would need updating together, in one place.
+
+**Pinned by.** `tests/test_gap_registry.py` — asserts known ids (e.g.
+`"S-1.2"`, `"C-3.1"`) are present and an invented id (e.g. `"S-99.9"`) is
+absent, directly against the real `docs/COVERAGE.md`.
+
+---
+
 ## Open questions
 
 Not decisions — hypotheses the code should settle. Full statements in
