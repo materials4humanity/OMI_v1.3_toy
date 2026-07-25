@@ -16,6 +16,7 @@ from typing import Callable
 
 import numpy as np
 
+from omi.gaps import NotSpecified
 from omi.state import Ensemble, FloatArray, Metric, State
 
 
@@ -121,7 +122,49 @@ class EvolutionOperator(ABC):
         """
         jac = self.jacobian(state, control)
         scaled = jac * metric.scale[np.newaxis, :] / metric.scale[:, np.newaxis]
-        return np.linalg.svd(scaled, compute_uv=False)
+        result: FloatArray = np.linalg.svd(scaled, compute_uv=False)
+        return result
+
+
+@dataclass(frozen=True)
+class LipschitzReport:
+    """A local spectrum together with the metric that produced it (CLAUDE.md
+    §5 invariant 1; Core §3.9 / Spec §2.5: every reported Lipschitz constant
+    is metric-dependent and must carry its metric). Never pass the bare
+    spectrum array around where a report is expected to be quoted."""
+
+    spectrum: FloatArray
+    metric: Metric
+
+
+def lipschitz_report(
+    operator: EvolutionOperator, state: State, control: Control, metric: Metric
+) -> LipschitzReport:
+    """Compute :meth:`EvolutionOperator.lipschitz` and package it with its
+    metric (Core §3.9 / Spec §2.5), per docs/ROADMAP.md M2: "Lipschitz
+    spectra reported with their metric attached."
+    """
+    return LipschitzReport(operator.lipschitz(state, control, metric), metric)
+
+
+def amplification_decomposition(
+    operator: EvolutionOperator, state: State, control: Control, metric: Metric
+) -> tuple[FloatArray, FloatArray]:
+    """Refuses: ``L_total = L_phys x L_num`` (Spec §2.5) has no estimation
+    procedure in the Specification — "[Pass B] ... To be written: estimation
+    procedure for the local spectrum by finite differences..." This function
+    exists so the refusal is executable (CLAUDE.md §4) rather than the
+    decomposition being silently omitted; callers needing the *total*
+    spectrum should use :func:`lipschitz_report` instead, which is fully
+    specified (Core §3.3).
+    """
+    raise NotSpecified(
+        "S-2.5",
+        "Spec §2.5",
+        "the physical/numerical amplification decomposition L_phys x L_num "
+        "has no estimation procedure in the Specification; only the total "
+        "local spectrum (lipschitz_report) is specified",
+    )
 
 
 def semigroup_residual(

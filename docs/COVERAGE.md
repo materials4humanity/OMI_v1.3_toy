@@ -152,6 +152,39 @@ erasure is not a reason to enlarge the state") fails for surviving components.
 **Test:** oracle with designed per-component contraction; check whether a
 single operator-level rank predicts downstream influence.
 
+> **Status: partially answered at M2** (`tests/oracles/test_known_erasure.py`).
+> The first hypothesis is confirmed with evidence: on a diagonal (non-mixing)
+> designed-rank Jacobian with one full-gain, one small-gain (0.15), and one
+> exactly-zero-gain component, a naive "fraction of variance retained"
+> reading calls the small-gain component >95% erased, while the
+> operator-level rank (`omi.erasure.measure_erasure`, via SVD) and a
+> per-component recoverability estimate (`omi.erasure.component_recoverability`,
+> R² of post-step regressed on pre-step — operationalising the "residual
+> variance explained by upstream variables" candidate; mutual information is
+> not implemented) **agree with each other** and correctly call it fully
+> surviving/assimilable (R² > 0.999). The naive heuristic is the one that is
+> wrong, not the operator-level/component-level split as such.
+>
+> **Refined open question, not yet tested:** the oracle above is diagonal —
+> each named component aligns with exactly one singular direction, so
+> operator-level rank and per-component recoverability could not help but
+> agree. The genuinely open case is a *mixing* erasure (non-diagonal
+> Jacobian, surviving subspace spanning a linear combination of several named
+> components) — there, does operator-level rank still predict per-component
+> influence, or does the framework need a per-component projection onto the
+> surviving subspace as a distinct diagnostic? Left open for M3+
+> (`observability.py`'s Gramian gives the natural machinery for this).
+>
+> **Second hypothesis (Core §2.2's suppression rule for surviving
+> components) is deferred to M4**, when `sufficiency.py` exists to test it
+> against.
+>
+> **Proposed wording for v1.4 (Core §3.9 consequence 3):** append a caveat —
+> "Erasure completeness must not be read off a component's raw magnitude or
+> variance reduction: a component can lose most of its magnitude and remain
+> exactly recoverable. Use mutual information or residual variance explained
+> (R²) against the pre-erasure state, not the component's own scale."
+
 **OQ-3 — Competing risks in Class B.**
 Spec §4.3 transfers a tail index from one defect population. With several
 populations of differing `α` and `β`, survival is `∏ₚ[1−Fₚ]^{Nₚ}` and no single
@@ -172,6 +205,31 @@ and the state has heterogeneous units. Spec §2.5 requires a local spectrum
 rather than a global bound but does not fix the metric.
 **Test:** rescale a slot; confirm every reported `L` changes; confirm the
 aleatoric-sigma normalisation makes them comparable across slots.
+
+> **Status: answered at M2** (`tests/oracles/test_metric_dependence.py`, the
+> test ADR-002 names). A fixed linear coupling (raw off-diagonal coefficient
+> 0.01, one component's natural scale 100x the other's) demonstrates both
+> halves directly:
+>
+> 1. **Every reported `L` changes with the declared metric.** The same
+>    operator's local spectrum differs substantially between a bare/unit
+>    metric (`scale = [1, 1]`) and the default aleatoric-sigma metric — not
+>    an approximation, a different matrix gets SVD'd.
+> 2. **The bare metric hides real coupling; the declared one reveals it.**
+>    Scaled by the bare metric, the off-diagonal term reads as negligible
+>    (< 0.02) next to the diagonal (1.0) — a naive, metric-blind conclusion.
+>    Scaled by the aleatoric-sigma metric, the same raw coefficient reads as
+>    fully as strong as the diagonal (> 0.5), which matches direct empirical
+>    perturbation: moving each component by its own one-sigma moves the
+>    readout by a comparable amount for both (ratio within a factor of 2),
+>    not the ~100x discrepancy a raw comparison would show.
+>
+> This confirms ADR-002's default (aleatoric-sigma non-dimensionalisation)
+> does what it is meant to: make cross-component comparison physically
+> meaningful rather than an artifact of unit choice. No framework edit is
+> proposed — Core §3.9 / Spec §2.5 already require a declared metric; this
+> investigation demonstrates why, with a constructed counterexample to the
+> "just read the raw Jacobian" alternative.
 
 ---
 

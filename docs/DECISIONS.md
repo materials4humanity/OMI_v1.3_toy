@@ -571,6 +571,53 @@ mechanical fact instead of an assertion in prose.
 
 ---
 
+## ADR-017 — Numerical rank tolerance for erasure measurement, always reported alongside the full spectrum
+
+**Status.** Accepted **Gap.** none — implementation choice, informed by C-3.9a/S-3.2 **Milestone.** M2
+
+**What the framework leaves open.**
+Core §3.9 defines an erasure by "image of substantially lower effective
+dimension" and `L ≪ 1`; Spec §3.2's Proposition 3.2 talks about "Jacobian
+rank `r`" as though rank were unambiguous. For an exact (symbolic) matrix
+rank is well-defined; for a numerically computed Jacobian (finite difference
+or floating point), distinguishing a "zero" singular value from a small
+positive one requires a tolerance the Specification does not give a number
+for.
+
+**Decision.**
+`measure_erasure` computes the metric-scaled Jacobian's singular values and
+determines numerical rank with the same convention `numpy.linalg.matrix_rank`
+uses by default: singular values below `max(M, N) * eps * σ_max` are treated
+as zero, with the tolerance itself exposed as an optional parameter. This is
+a standard numerical-linear-algebra convention, not a framework-specific
+invented threshold — the same reasoning ADR-012 already applied to
+finite-difference Jacobians. Critically, the **full singular-value spectrum
+is always reported alongside the rank**, so a qualitative judgement of
+"is this `L ≪ 1`, or just below whatever tolerance was chosen" stays
+inspectable rather than being silently collapsed into one integer.
+
+**Alternatives rejected.**
+*Picking a fixed absolute cutoff (e.g. `1e-3`) as "the" erasure threshold.*
+Rejected — that would be inventing the numeric content of "substantially
+lower" and "`≪ 1`" that Core deliberately leaves qualitative, exactly what
+ADR-005 forbids doing to a framework claim.
+*Refusing to compute a rank at all until Core supplies a threshold.*
+Rejected — unlike `L_phys × L_num` (S-2.5, genuinely `[Pass B]`, no
+estimation procedure of any kind given), *numerical* rank is a solved,
+standard problem once a matrix is in hand; the open part is only the
+*qualitative* judgement of whether that rank constitutes "substantially
+lower," which this ADR leaves to the reader of the reported spectrum, not to
+a hidden constant.
+
+**What would change this.** A domain whose Jacobian is so ill-conditioned
+that the standard tolerance convention misclassifies genuine near-kernel
+directions — would need a domain-declared tolerance override, still reported.
+
+**Pinned by.** `tests/oracles/test_known_erasure.py` — a Jacobian with a
+designed exact rank recovers that rank and the correct surviving subspace.
+
+---
+
 ## Open questions
 
 Not decisions — hypotheses the code should settle. Full statements in
@@ -579,10 +626,10 @@ Not decisions — hypotheses the code should settle. Full statements in
 | id | Question | Milestone | Status |
 |---|---|---|---|
 | OQ-1 | Fingerprint: single probe or contrast between probes? | M4 | open |
-| OQ-2 | Erasure completeness: operator-level or component-level? | M2 | open |
+| OQ-2 | Erasure completeness: operator-level or component-level? | M2 | partially answered — see COVERAGE.md Part IV |
 | OQ-3 | Class B under competing defect populations | M6 | open |
 | OQ-4 | Does inverse design report which variance is binding? | M9 | open |
-| OQ-5 | Metric dependence of reported `L` | M2 | open |
+| OQ-5 | Metric dependence of reported `L` | M2 | answered — see COVERAGE.md Part IV |
 
 When one resolves: record the evidence, update `COVERAGE.md`, and if it implies
 a framework edit, state the proposed wording so it can be carried to v1.4.
