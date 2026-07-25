@@ -16,7 +16,7 @@ from enum import Enum
 
 import numpy as np
 
-from omi.operators import Control
+from omi.operators import Control, finite_difference_jacobian
 from omi.state import Ensemble, FloatArray, State
 
 
@@ -59,6 +59,16 @@ class FunctionalReadout(ABC):
     def evaluate(self, state: State) -> FloatArray:
         """The functional's value at a single state (Core §3.5, Type-0:
         ``ρ_0: 𝒮 → ℝ^n``)."""
+
+    def jacobian(self, state: State) -> FloatArray:
+        """``D_s evaluate(state)`` (Core §3.8's Proposition: "the observation
+        operator H is a Type-0 readout" — this is Spec §3.1's ``H'_j`` when a
+        :class:`FunctionalReadout` is used as an observation operator).
+        Defaults to a central finite-difference estimate, same convention as
+        :meth:`~omi.operators.EvolutionOperator.jacobian` (ADR-012);
+        override with an exact analytic derivative where available.
+        """
+        return finite_difference_jacobian(lambda v: self.evaluate(State(state.schema, v)), state.values)
 
     def __call__(self, ensemble: Ensemble) -> FloatArray:
         """Evaluate at every particle, returning the empirical distribution

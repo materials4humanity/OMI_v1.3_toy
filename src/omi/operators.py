@@ -49,10 +49,11 @@ class Control:
         return self.t1 - self.t0
 
 
-def _finite_difference_jacobian(
+def finite_difference_jacobian(
     f: Callable[[FloatArray], FloatArray], x: FloatArray, eps: float = 1e-6
 ) -> FloatArray:
-    """Central finite-difference Jacobian of ``f`` at ``x``.
+    """Central finite-difference Jacobian of ``f`` at ``x`` (Core §3.3's
+    ``F_k`` / Spec §3.1's ``H'_j``: both are tangent maps ``D_s``).
 
     Plain numerics, not a framework claim (ADR-012): the default estimator
     when a domain operator does not override :meth:`EvolutionOperator.jacobian`
@@ -102,7 +103,7 @@ class EvolutionOperator(ABC):
         available — ADR-001 notes this is what eventually makes M3's
         observability oracles trustworthy.
         """
-        return _finite_difference_jacobian(lambda v: self.step(State(state.schema, v), control).values, state.values)
+        return finite_difference_jacobian(lambda v: self.step(State(state.schema, v), control).values, state.values)
 
     def lift(self, ensemble: Ensemble, control: Control) -> Ensemble:
         """Pushforward lift to ``𝒫(𝒮)`` (Core §3.3): apply :meth:`step` to

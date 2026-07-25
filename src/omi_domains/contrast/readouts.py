@@ -27,6 +27,13 @@ class TerminalVoltage(FunctionalReadout):
     def evaluate(self, state: State) -> FloatArray:
         return state.get(Slot.NU, "potential")
 
+    def jacobian(self, state: State) -> FloatArray:
+        """Exact analytic Jacobian (ADR-001): a direct component read has a
+        trivial, exact derivative — no finite-difference estimate needed."""
+        jac = np.zeros((1, state.schema.size))
+        jac[0, state.schema.slice_for(Slot.NU, "potential")] = 1.0
+        return jac
+
 
 @dataclass(frozen=True)
 class DendriteRisk(FunctionalReadout):

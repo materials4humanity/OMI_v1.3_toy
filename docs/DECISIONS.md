@@ -618,6 +618,161 @@ designed exact rank recovers that rank and the correct surviving subspace.
 
 ---
 
+## ADR-018 — Φ is never formed as a chained matrix product; the Gramian itself is materialised densely at these toy state dimensions
+
+**Status.** Accepted **Gap.** none — implementation choice, informed by S-3.5 (SPEC) **Milestone.** M3
+
+**What the framework leaves open.**
+Spec §3.5 requires: "Never form `Φ_{j,k}`. All quantities reduce to
+matrix–vector products... `Φ_{j,k}v` is a forward JVP, `Φ_{j,k}^*w` a
+reverse VJP... Randomised or Lanczos eigensolvers recover the leading `r`
+directions in `O(r)` Gramian actions." This is a fully specified procedure
+(SPEC, not a gap) — but it targets high-dimensional learned operators, where
+forming `Φ_{j,k}` (a product of many segment Jacobians) or the full Gramian
+matrix would be computationally infeasible. This reference implementation's
+analytic operators have state dimensions in the single digits.
+
+**Decision.**
+Two things, kept distinct. **(1) `Φ_{j,k}` itself is never formed as a
+chained matrix product**, at any state dimension — `propagate_jvp` /
+`propagate_vjp` always apply each segment's own Jacobian to a *vector*, one
+segment at a time, in forward (JVP) or reverse (VJP) order; the segments'
+Jacobians are never multiplied together. This is the literal, scale-independent
+content of "never form `Φ_{j,k}`," and it is honoured regardless of how small
+the toy state is. **(2) The Gramian `G_k` and its per-sensor terms are
+materialised as dense matrices**, built by applying the JVP/VJP action to
+every standard basis vector. This is a reference-implementation concession
+justified by the toy state dimension (≤ 10): materialising an `n×n` matrix
+from `n` JVP/VJP evaluations costs `O(n)` actions, which is cheap here, and a
+dense matrix is what the four-way triage (which needs the *complete*
+eigenspectrum, not just the leading `r` directions) and the observed/inferred
+per-term breakdown both consume directly. The Lanczos path Spec §3.5
+recommends for recovering only the *leading* `r` directions at scale is
+additionally implemented (`leading_eigenpairs_via_lanczos`, using
+`scipy.sparse.linalg.eigsh` against a `LinearOperator` built from the same
+JVP/VJP primitives) and tested for agreement with the dense computation —
+so both computational strategies Spec §3.5 discusses exist, and an
+implementation moving to high-dimensional learned operators at M8 would drop
+concession (2), not concession (1).
+
+**Alternatives rejected.**
+*Only ever using the Lanczos/`LinearOperator` path, never materialising a
+dense Gramian.* Rejected for M3 — the observed/inferred classification and
+the complete four-way triage need every eigendirection's per-term
+provenance, which the leading-`r` Lanczos path does not by itself supply
+without additional deflation machinery Spec §3.5 does not derive.
+
+**What would change this.** State dimensions large enough that dense
+materialisation stops being cheap — i.e., exactly the regime Spec §3.5 is
+written for, arriving with learned operators at M8.
+
+**Pinned by.** `tests/test_observability_jvp_vjp.py` (Φ is never chained —
+segment Jacobians are applied one at a time) and
+`tests/test_observability_lanczos.py` (Lanczos and dense agree on the
+leading eigenvalues of a known Gramian).
+
+---
+
+## ADR-019 — The observability prior covariance defaults to the declared metric's aleatoric variance
+
+**Status.** Accepted **Gap.** none — implementation choice **Milestone.** M3
+
+**What the framework leaves open.**
+Spec §3.1 requires a prior covariance `P_k^0` to form the posterior
+`P_k = ((P_k^0)^{-1} + G_k)^{-1}`, but does not say what `P_k^0` should be by
+default.
+
+**Decision.**
+`P_k^0 = diag(metric.scale ** 2)` — the same aleatoric standard deviation
+ADR-002 already uses to build the default `Metric`, squared into a variance.
+This reuses an existing, already-declared quantity rather than introducing a
+new one: "how much does this component vary across the incoming population
+absent any information" is exactly what an aleatoric-sigma prior means, and
+it keeps the prior expressed in the same declared metric that every
+downstream Lipschitz constant and erasure measurement already carries
+(CLAUDE.md §5 invariant 1).
+
+**Alternatives rejected.**
+*An uninformative (infinite / very large) prior.* Rejected — it would make
+`P_k` insensitive to genuine prior domain knowledge (e.g. a component known
+to vary only a little) and makes the posterior numerically degenerate in
+directions with literally zero information, which is precisely the erased
+subspace erasure.py already characterises.
+
+**What would change this.** A domain wanting a genuinely different prior
+(e.g. from a previous assimilation cycle, Core §3.8's recursive filtering) —
+supported by passing an explicit `P_k^0` instead of the default.
+
+**Pinned by.** `tests/test_observability_gramian.py`.
+
+---
+
+## ADR-020 — Danger-score triage and observed/inferred thresholds are conventions, always reported alongside their continuous scores
+
+**Status.** Accepted **Gap.** none — implementation choice, informed by S-3.3 (SPEC) **Milestone.** M3
+
+**What the framework leaves open.**
+Spec §3.3 gives the danger score formula and the 2×2 triage exactly
+(influential/non-influential × identifiable/unidentifiable), and
+distinguishes *observed* from *inferred* by whether "a single near-diagonal
+term `j ≈ k` dominates" the Gramian sum. None of "influential," "small
+`v^*Pv`," or "dominates" is given a number.
+
+**Decision.**
+Two threshold conventions, both parameters (overridable), both always
+reported alongside the raw continuous quantity they categorise so the label
+is never the only thing kept:
+
+1. **Influential / non-influential and identifiable / unidentifiable:**
+   split at the *median* of, respectively, the influence scores
+   (`v_i^* S_k^* W S_k v_i`) and the residual-uncertainty scores
+   (`v_i^* P_k v_i`) across all eigendirections of `P_k` at this index —
+   inclusively on both sides (`influence >= median`, `uncertainty <= median`),
+   so that a direction tied exactly at the median (unavoidable with few
+   directions, e.g. two components equally influential) is not silently
+   excluded from "influential" by a strict inequality. A median split is
+   scale-free (unlike an absolute cutoff, which would silently encode units)
+   and answers a well-posed question — "is this direction more or less
+   influential/uncertain than a typical direction here" — without inventing a
+   physical threshold Core does not supply.
+2. **Observed vs. inferred:** "near-diagonal" (`j ≈ k`) is operationalised as
+   `time_index` within a declared window of `k` — default window 0, the most
+   literal reading (only an observation *at* `k` itself counts as
+   near-diagonal). A direction is *observed* if the near-diagonal
+   observations together supply more than 50% of that direction's total
+   Gramian quadratic form; otherwise, if identifiable at all, it is
+   *inferred*. This was tightened during implementation: an earlier version
+   compared against whichever instrumented index happened to be *nearest in
+   time*, however far that was — which made "observed" the default outcome
+   whenever only one, arbitrarily distant, sensor existed, defeating the
+   distinction. The window-based reading is what makes "inferred" achievable
+   at all, which is the point (CLAUDE.md §3: inferred directions are "the
+   framework's distinctive contribution").
+3. **Worst case over an operating window (Spec §3.6):** given triage results
+   from an ensemble of nominal trajectories, "worst" means the single
+   trajectory with the largest total danger score (`Σ_i 𝒟_i`); that
+   trajectory's *entire* triage is returned, rather than taking an
+   elementwise max of per-direction diagnostics across trajectories. Per-
+   direction eigenbases come from different linearisation points and are not
+   directly comparable component-by-component, so mixing them would not be
+   a meaningful "direction" at all.
+
+**Alternatives rejected.**
+*Absolute, hand-picked cutoffs (e.g. "influence > 1.0").* Rejected — would
+depend on the declared metric's units in a way a median split does not, and
+would be exactly the invented-number problem ADR-005 and ADR-017 both avoid.
+
+**What would change this.** A domain where the median split produces an
+unhelpful triage (e.g. a strongly bimodal influence distribution where the
+median falls inside a cluster) — the convention is a parameter, not hard-coded.
+
+**Pinned by.** `tests/oracles/test_known_blind_spot.py` (a designed
+unobservable direction must land in the unidentifiable/marginalisable or
+dangerous cells, never "observed") and the domain triage tests
+(`tests/test_domain_triage.py`).
+
+---
+
 ## Open questions
 
 Not decisions — hypotheses the code should settle. Full statements in
