@@ -204,7 +204,12 @@ class BendCampaignResult:
     p0: float
     """Model-based (fitted GPD tail), not calibrated against the empirical
     bulk sampling below — see :attr:`bulk_p0_implied` for the comparison,
-    reported rather than reconciled."""
+    reported rather than reconciled. The gap between the two is dominated by
+    `xi_a_hat`'s own sampling variance (Hill estimator, `N_SITES` spatially-
+    correlated sites), not by join-threshold instability — Spec §4.2's
+    threshold-sensitivity diagnostic (:attr:`join_diagnostics`) cannot
+    surface this, since it holds `xi_a_hat` fixed. See docs/V1.4-EDITS.md
+    E-15."""
     bulk_volumes: FloatArray
     bulk_failure_probabilities: FloatArray
     """Empirical (Monte Carlo), not closed-form — see module docstring,

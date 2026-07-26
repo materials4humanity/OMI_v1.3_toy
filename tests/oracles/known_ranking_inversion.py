@@ -14,6 +14,20 @@ the process-zone thickness) changes each material's effective count at a
 different thickness, so a material with many, individually-mild weak links
 can be overtaken by a material with few, individually-severe ones once
 reduction engages differently for each.
+
+**What this oracle validates, precisely.** ``ℓ_D``/``p0`` here are hand-
+supplied constants, not measured from a driver field — there is no spatial
+sampling anywhere in this file, and :func:`~omi.classb.estimate_correlation_length`
+is never called. This is a legitimate "known by construction" check
+(CLAUDE.md §7) that :func:`~omi.classb.n_eff`'s two-regime branch logic is
+*wired correctly* — given chosen `(ℓ_D, p0)` pairs, does the formula's own
+arithmetic produce the sign-flip the two-tier structure predicts. It is
+**not** evidence that Proposition 4.2's reduction is an *emergent*
+consequence of sampling an actually spatially-correlated, through-thickness
+driver field — that requires Core §2.5's body-indexed state (`[Pass C]`,
+CLAUDE.md §9 anti-goal) and is not checkable here or anywhere else in this
+repository. Same blocker as the flagship bend campaign's thin regime; see
+`docs/V1.4-EDITS.md` E-14.
 """
 
 from __future__ import annotations

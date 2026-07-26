@@ -357,6 +357,21 @@ constructions whose test lives outside `tests/oracles/` —
 oracle pairs `known_X.py` with `tests/oracles/test_known_X.py`. This is
 recorded, not fixed (§6).
 
+**Addendum (post-Phase-2 circularity review, not part of the original
+extract above).** The `known_ranking_inversion.py` row's "COVERAGE id / Spec"
+column cites "S-4.4, Prop. 4.2" without qualification; read alongside the
+"Estimator recovered" column ("driven by dimensional reduction specifically
+(`n_eff` check)"), this can be misread as the oracle validating Proposition
+4.2's dimensional reduction as an empirical, emergent effect. It does not:
+the oracle calls `n_eff` directly with hand-supplied `ℓ_D`/`p0` constants for
+two materials, samples no driver field, and never calls
+`estimate_correlation_length` — it checks that `n_eff`'s own two-regime
+branch arithmetic produces the predicted sign-flip, which is a legitimate
+formula-correctness check, not evidence of emergence from a real
+spatially-correlated field. See `docs/V1.4-EDITS.md` E-14 and
+`tests/oracles/test_known_ranking_inversion.py::test_ranking_inversion_is_not_empirically_validated_as_an_emergent_effect`
+(added and permanently skipped, same review).
+
 ### The inverse table — measurements with no oracle behind them
 
 **[RE-RUN]** Derived by AST-parsing every public (non-underscore) top-level
