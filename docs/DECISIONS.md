@@ -1255,6 +1255,110 @@ known exact exceedance probability at a fraction of direct-sampling cost).
 
 ---
 
+## ADR-028 — Conformance is a reporting-completeness gate, not a numeric pass/fail; a dedicated `ConformanceNotMet` distinct from `NotSpecified`
+
+**Status.** Accepted **Gap.** none — S-9.1/S-9.2/S-9.5 are SPEC; S-9.4 (falsification thresholds) is PASS-D and is refused, not answered, by this ADR **Milestone.** M7
+
+**What the framework leaves open.**
+Spec §9.1's level table (OMI-0/1/2) states *what must be reported* at each
+level ("rollout-length error curve reported," "sufficiency test run and
+reported," "‖𝒟_λ‖ wherever scale bridging occurs") but never a numeric
+threshold any of these must clear — thresholds are a separate, explicitly
+unspecified concern (S-9.4: "Each criterion... requires a stated tolerance
+or a procedure for setting one per application. To be written."). Spec also
+never says how a conformance module should be structured: whether it
+recomputes every diagnostic itself, what exception a failed claim raises, or
+how "wherever scale bridging occurs" is decided for a chain that, in this
+repository, never actually executes a cross-scale operator.
+
+**Decision.**
+
+1. **Conformance is a completeness gate.** `generate_report` checks whether
+   each level's required diagnostics are *present*, not whether any
+   diagnostic's value clears a threshold. This reads Spec §9.1's table
+   literally: every OMI-0/1/2 line item is phrased as "reported," "run and
+   reported," or "declared" — never "below X." Numeric falsification
+   thresholds are S-9.4's separate, PASS-D concern and remain out of scope
+   here; a caller wanting threshold-gated pass/fail composes it on top of a
+   `ConformanceReport`'s own residuals, exactly as CLAUDE.md §4 prefers
+   (declare the number *and* the diagnostics that let a reader judge it,
+   rather than this module inventing a threshold Spec does not supply).
+2. **`ConformanceInputs` is a plain, caller-supplied bundle — never
+   recomputed.** `conformance.py` does not re-run `sufficiency_deficit`,
+   `danger_triage`, `semigroup_residual`, or anything else; it only checks
+   that the caller has *already* produced each diagnostic (each field is
+   `Optional`, `None` meaning "not produced"). This mirrors ADR-021's
+   treatment of campaign data: the module consumes already-collected
+   evidence, it does not generate it. The alternative — conformance.py
+   owning the recomputation of every diagnostic across arbitrary chains —
+   would duplicate every other module's API surface for no benefit, since
+   the caller (a domain's own test/demonstration code) is exactly where
+   that diagnostic was already computed for its own oracle tests.
+3. **A dedicated `ConformanceNotMet` exception**, distinct from
+   `omi.gaps.NotSpecified`. A failed level claim is not a Specification
+   gap — it is "this chain has not yet produced the required evidence,"
+   which is a different failure mode from "the Specification does not say
+   how to do this." Raising `NotSpecified` for a missing diagnostic would
+   misfile an evidentiary gap as a derivation gap and would corrupt the gap
+   registry's `known_gap_ids()` bookkeeping (`gaps.py`'s tests assert every
+   `NotSpecified` cites a live `COVERAGE.md` row; a conformance failure has
+   no such row to cite).
+4. **Closure defect is vacuously satisfied when no scale bridging is
+   actually executed.** Both domains' `scale_structure` declarations
+   describe a *fuller* eventual scope (flagship's Tier II, contrast's
+   pack-level tier) than either chain actually runs at M1–M7 (Tier
+   II/pack-level are anti-goals, never executed). `ConformanceInputs`
+   therefore carries a `scale_bridging_occurs: bool` the caller sets
+   describing the chain *as actually built*, not the domain's textual
+   aspiration; the closure-defect requirement is satisfied whenever this is
+   `False`, and requires a supplied `closure_defect` value (refused per S-6,
+   an anti-goal — `docs/DECISIONS.md`'s anti-goal list) only when `True`.
+   This is why neither domain is blocked on closure defect at M7: neither
+   chain crosses a scale in the code that actually runs.
+5. **Structural OMI-0 items** ("typed chain," "grouped splits enforced")
+   are satisfied by construction rather than computed: `State`/`Ensemble`
+   are typed dataclasses throughout (checked by `mypy --strict` in CI, not
+   re-checked at report time), and no random-split code path exists
+   anywhere in this repository (CLAUDE.md §5 invariant 6) — there being
+   nothing to disprove, `ConformanceInputs.grouped_splits_enforced`
+   defaults to `True` and is not computed from data, since there is no data
+   loader yet to compute it from.
+6. **New computational content lives in `conformance.py` itself**: the
+   rollout-length error curve (a direct generalisation of M2's error-
+   compounding demonstration to arbitrary chains, satisfying OMI-0's own
+   line item) and the S-9.5 calibration diagnostics (PIT values, ensemble
+   CRPS via the standard energy-score estimator, empirical interval
+   coverage) — these have no existing home in an earlier module and their
+   formulas are standard, named, textbook constructions Spec explicitly
+   requires by name, not an invented convention.
+
+**Alternatives rejected.**
+*Conformance re-runs every diagnostic from a bare chain.* Rejected — see
+point 2; also would force `conformance.py` to import every domain-neutral
+module's full API just to orchestrate it, inverting the dependency
+direction CLAUDE.md §6's architecture map implies (`conformance.py` sits
+above the other modules, consuming their outputs).
+*Numeric thresholds baked into level requirements (e.g. "deficit < 0.1").*
+Rejected — exactly the invented-narrative-number problem CLAUDE.md §4 and
+§8 warn against; S-9.4 is explicit that thresholds need a stated procedure
+this repository does not have.
+*Reusing `NotSpecified` for an unmet conformance requirement.* Rejected —
+see point 3.
+
+**What would change this.** A future milestone building genuine Tier
+II/pack-level execution for either domain would flip
+`scale_bridging_occurs` to `True` for that chain, at which point OMI-1
+requires either a real closure-defect measurement (blocked — S-6 remains an
+anti-goal) or a further ADR revisiting whether closure defect can be
+partially bounded some other way.
+
+**Pinned by.** `tests/test_conformance.py` (level-table mechanics,
+`ConformanceNotMet` with a specific unmet list), `tests/test_conformance_flagship.py`
+(OMI-1 achieved), `tests/test_conformance_contrast.py` (OMI-0 achieved, OMI-1
+honestly blocked on the sufficiency test not yet run for this domain).
+
+---
+
 ## Open questions
 
 Not decisions — hypotheses the code should settle. Full statements in
