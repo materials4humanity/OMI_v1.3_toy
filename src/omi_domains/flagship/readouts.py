@@ -9,14 +9,34 @@ alone" made literal in code.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Callable
 
 import numpy as np
 
 from omi.operators import Control
-from omi.readouts import ConstitutiveOperator, ConstitutiveReadout, FunctionalReadout, ReadoutClass
+from omi.readouts import (
+    ComponentReadout,
+    ConstitutiveOperator,
+    ConstitutiveReadout,
+    FunctionalReadout,
+    ReadoutClass,
+    Type2Geometry,
+)
 from omi.state import FloatArray, Slot, State
 
 _NULL_CONTROL = Control(0.0, 1.0, lambda t: np.array([0.0]))
+
+N_THROUGH_THICKNESS_QUADRATURE_POINTS = 9
+"""Odd, so the neutral axis (z=0, zero strain) is itself a quadrature point
+— Tier I½'s through-thickness quadrature (ADR-035, docs/DECISIONS.md), not a
+mesh: a fixed, small number of direct evaluations along one axis."""
+
+
+def _constant_strain_fn(value: float) -> Callable[[float], FloatArray]:
+    def fn(t: float) -> FloatArray:
+        return np.array([value])
+
+    return fn
 
 
 @dataclass(frozen=True)
@@ -126,3 +146,52 @@ class CoatingGauge(FunctionalReadout):
         jac = np.zeros((1, state.schema.size))
         jac[0, state.schema.slice_for(Slot.GAMMA, "coating_thickness")] = 1.0
         return jac
+
+
+@dataclass(frozen=True)
+class BendAngle(ComponentReadout):
+    """Tier I½'s concrete instance (ADR-035, docs/DECISIONS.md): bending, the
+    Type-2/Class-B response Core §7.1's own table declares for the flagship
+    and which no Type-2 readout has ever existed to supply.
+
+    Linear through-thickness strain, ``ε(z) = curvature · z`` for
+    ``z ∈ [-thickness/2, thickness/2]`` — the one loading mode ADR-035
+    permits — drives the *existing* Type-1 constitutive operator
+    (:class:`HardnessConstitutiveOperator`) at
+    :data:`N_THROUGH_THICKNESS_QUADRATURE_POINTS` points spanning the
+    thickness: :meth:`~omi.readouts.ConstitutiveOperator.respond` is called
+    once per point from the *same* bound operator (a frozen dataclass;
+    ``respond`` does not mutate it), so each point is an independent
+    evaluation from the same initial state, not a sequential time history.
+    The outer-fibre value (``|z|`` maximal, where bending strain peaks) is
+    the returned response; the thickness fraction where the local response
+    exceeds :attr:`driver_threshold` — Spec §4.1's declared critical value
+    ``D_c``, a property of when local hardening indicates incipient
+    cracking, not a statistic of any particular campaign's data — is the
+    process-zone volume Core §3.6's Class B claim couples the tiers
+    through.
+    """
+
+    readout_class: ReadoutClass = field(default=ReadoutClass.B)
+    driver_threshold: float = 106.3
+    """``D_c`` (Spec §4.1): calibrated once against a nominal
+    (mean-inclusion-content, unit-geometry) specimen so a typical specimen
+    shows a modest, non-degenerate process zone near the outer fibre —
+    declared here, not fit inside `omi.classb` (Core §4 item 4b)."""
+    n_quadrature_points: int = N_THROUGH_THICKNESS_QUADRATURE_POINTS
+
+    def evaluate(
+        self, operator: ConstitutiveOperator, geometry: Type2Geometry
+    ) -> tuple[FloatArray, float]:
+        z = np.linspace(-geometry.thickness / 2.0, geometry.thickness / 2.0, self.n_quadrature_points)
+        strain = geometry.curvature * z
+        driver_field = np.empty(self.n_quadrature_points)
+        for i, eps in enumerate(strain):
+            control = Control(0.0, 1.0, _constant_strain_fn(float(eps)))
+            response, _updated_state = operator.respond(control)
+            driver_field[i] = response[0]
+
+        outer_fibre_response = float(np.max(driver_field))
+        process_zone_fraction = float(np.mean(driver_field > self.driver_threshold))
+        process_zone_volume = process_zone_fraction * geometry.thickness
+        return np.array([outer_fibre_response]), process_zone_volume

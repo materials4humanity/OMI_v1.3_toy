@@ -1806,6 +1806,105 @@ keyword heuristic is revisited.
 
 ---
 
+## ADR-035 — Tier I½: a bounded, structurally-fenced lift of the Tier II anti-goal, for one scalar-geometry, one-loading-mode Class B readout
+
+**Status.** Accepted **Gap.** C-2.4 / C-3.6 (SPEC) — implementation choice,
+partially lifting CLAUDE.md §9's Tier II anti-goal under a bounded,
+structurally-enforced fence, not filling a Specification derivation gap
+**Milestone.** Phase 2 (post-M9 remediation)
+
+**What the framework leaves open.**
+Core §3.6's Class B claim is that failure is governed by a driver field
+coupling two tiers — material (Tier I) and component (Tier II) — through a
+process-zone *volume* argument (`N_eff`'s dimensional reduction, Proposition
+4.2). Through M9, every Class B readout in this repository has been Type-0
+(no geometry at all): the contrast domain's `DendriteRisk` and the oracle
+constructions in `tests/oracles/`. Core §7.1's own table declares the
+flagship's bend angle as `Type-2, Class B` — the concrete case Class B's
+volume argument is meant to be exercised on — but no Type-2 readout has ever
+existed, because CLAUDE.md §9 bans "Tier II boundary value problems and FE²
+coupling" outright, and a full component-scale solver is exactly that. The
+result, confirmed in Phase 1's coverage-verification pass
+(`docs/COVERAGE.md`, C-3.6 and S-4.1/S-4.2/S-4.4/S-4.6): ten of `classb.py`'s
+sixteen public symbols have no domain test and no oracle test at all — the
+machinery Core §3.6 is most distinctive about has only ever been exercised
+against hand-supplied numbers, never a real driver field.
+
+**Decision.**
+**Tier I½** is a scoped exception to CLAUDE.md §9's Tier II anti-goal,
+covering exactly: a Type-1 constitutive operator composed with **one scalar
+geometry parameter and one loading mode**, evaluated by **through-thickness
+quadrature**, returning a response *and* a process-zone volume. Nothing
+else. Specifically, and enforced structurally rather than by convention:
+
+- **No meshes, element assembly, equilibrium iteration, or solver of any
+  kind.** Through-thickness quadrature is direct evaluation of the already-
+  exact Type-1 operator at a handful of points along one axis, not
+  discretisation of a boundary-value problem.
+- **No contact or friction.**
+- **Exactly one loading mode** (bending, via a linear through-thickness
+  strain profile) — not a general loading-mode catalogue.
+- **Geometry no richer than a thickness and a curvature.** Enforced by
+  making the Type-2 geometry argument (`omi.readouts.Type2Geometry`) a
+  frozen dataclass of exactly two scalar fields. If a domain ever needs to
+  pass this class a mesh, an element connectivity table, or anything that
+  is not a bare float, the fence has been breached — that is the signal to
+  revisit this ADR, not to extend `Type2Geometry`.
+- **Never called "Tier II" in code, docstrings, or reports.** "Tier I½"
+  names exactly this bounded case; "Tier II" continues to name the banned,
+  unbounded one, and the two must not be conflated by naming.
+
+`src/omi/readouts.py` gains the domain-neutral half: `Type2Geometry` (the
+two-scalar dataclass above) and `ComponentReadout` (ABC declaring
+`evaluate(operator: ConstitutiveOperator, geometry: Type2Geometry) ->
+tuple[FloatArray, float]` — response *and* process-zone volume, both
+returned, never one hidden, since Core §3.6's claim is specifically that the
+volume couples the tiers). `ReadoutType.TYPE_2` — declared at M1 but never
+referenced outside its own definition until now — becomes each readout
+base's own declared `readout_type` class attribute
+(`FunctionalReadout.readout_type = ReadoutType.TYPE_0`,
+`ConstitutiveReadout.readout_type = ReadoutType.TYPE_1`,
+`ComponentReadout.readout_type = ReadoutType.TYPE_2`), so the enum is
+actually load-bearing rather than declarative-only.
+`src/omi_domains/flagship/readouts.py` gains the concrete instance,
+`BendAngle(ComponentReadout)`: through-thickness quadrature of the existing
+`HardnessConstitutiveOperator` under a linear strain profile
+`ε(z) = curvature · z`, the outer-fibre (`z = ±thickness/2`) response as the
+returned value, and the thickness-fraction where the local response exceeds
+a declared threshold as the process-zone volume.
+
+**Alternatives rejected.**
+*Leave Tier II a complete anti-goal; accept that Class B's volume argument
+stays untested on any geometry-bearing readout.* Rejected — Core §3.6's most
+distinctive machinery (S-4.1 through S-4.6) would remain permanently
+exercised only by hand-supplied numbers and a Type-0 contrast readout with
+no geometry parameter at all, on a domain (flagship) that explicitly
+declares a Type-2/Class-B response in Core §7.1's own table. That is a much
+larger and more consequential gap than the bounded risk Tier I½ takes on.
+*Implement a genuine (even simplified) finite-element solver for the
+flagship.* Rejected outright — this is exactly Tier II/FE² coupling, and
+CLAUDE.md §9's ban on it stands unchanged for anything beyond the bounded
+case named above.
+*Allow richer geometry (e.g. a width, a hole, a fillet radius) as a
+convenience for a "more realistic" example.* Rejected — every additional
+scalar is a step back toward a shape catalogue, which is a step back toward
+a mesh. Two scalars is the fence; it is deliberately drawn tighter than the
+minimum that would technically still avoid a solver.
+
+**What would change this.** A domain or a finding that Tier I½'s bending
+case cannot exercise Class B's dimensional-reduction claim meaningfully
+(e.g. the outer-fibre driver field turns out degenerate under every
+declared curvature); a future need for genuine contact, multiple loading
+modes, or richer geometry, at which point this ADR is revisited and
+possibly superseded, not silently extended by adding a field to
+`Type2Geometry`.
+
+**Pinned by.** `tests/test_flagship_classb_bend.py` (`Type2Geometry`
+structurally rejects anything but two scalars; `BendAngle` returns both a
+response and a process-zone volume; the wired Class B machinery below).
+
+---
+
 ## Open questions
 
 Not decisions — hypotheses the code should settle. Full statements in

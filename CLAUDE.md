@@ -259,7 +259,14 @@ Two further rules:
 Do not build these. They are `[Pass B]`/`[Pass C]` in the framework and
 building them from a one-line description produces confident nonsense.
 
-- Tier II boundary value problems and FE² coupling
+- Tier II boundary value problems and FE² coupling — **except Tier I½**
+  (ADR-035, docs/DECISIONS.md): a Type-1 constitutive operator composed with
+  one scalar geometry parameter and one loading mode, evaluated by
+  through-thickness quadrature, returning a response and a process-zone
+  volume. No meshes, element assembly, equilibrium iteration, solver,
+  contact/friction, more than one loading mode, or geometry richer than a
+  thickness and a curvature — and never call it "Tier II." If a task needs
+  any of those, it is Tier II, not Tier I½, and the anti-goal still applies.
 - Hybrid mode/guard structure and jump maps (Spec §5.1)
 - Body-indexed state and the registration operator (Spec §5.2)
 - Closure-defect measurement procedure (Spec §6) — the *definition* is in

@@ -17,6 +17,19 @@ FLAGSHIP_DECLARATION = InstantiationDeclaration(
     readout_catalogue=(
         "aggregate_hardness: Type-0/Class-A",
         "hardness_constitutive: Type-1",
+        "bend_angle: Type-2/Class-B (Tier I½, ADR-035, docs/DECISIONS.md); "
+        "process-zone volume = thickness fraction where the local response "
+        "exceeds a declared threshold. "
+        "Item 4b (Core §4): driver field = outer-fibre-peaked local hardening "
+        "response under linear through-thickness bending strain "
+        "(curvature × z), evaluated at through-thickness quadrature points; "
+        "defect population = inclusion_content, independently measured and "
+        "Pareto-tailed at the campaign level (src/omi_domains/flagship/"
+        "classb_bend.py); physics map Ψ = linear (driver = "
+        "inclusion_weight × inclusion_content + geometry/hardening terms), "
+        "so its Spec §4.3 exponent β = 1, read directly off the "
+        "constitutive operator's own linear response formula rather than "
+        "invented inside omi.classb.",
     ),
     observation_suite=(
         "in-die force/torque sensing (Type-0 readout of z)",
@@ -27,7 +40,11 @@ FLAGSHIP_DECLARATION = InstantiationDeclaration(
         "coating_thickness_monotone_nondecreasing",
     ),
     scale_structure=(
-        "Tier I only at M1 (SVE-level analytic operators); Tier II (component "
-        "BVP) is an anti-goal per CLAUDE.md §9 and is not implemented."
+        "Tier I (SVE-level analytic operators) from M1, plus Tier I½ from "
+        "Phase 2 (ADR-035, docs/DECISIONS.md): a bounded, structurally-"
+        "fenced component readout (bend_angle) restricted to one scalar "
+        "geometry parameter and one loading mode, no mesh or solver. Tier "
+        "II proper (a genuine boundary-value problem, FE2 coupling) remains "
+        "an anti-goal per CLAUDE.md §9 and is not implemented."
     ),
 )
