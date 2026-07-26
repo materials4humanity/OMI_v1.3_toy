@@ -228,14 +228,89 @@ identified. OQ-4 answered.
 
 ---
 
+## M10 — Paper evidence
+
+**Deliverable.** The evidence a framework paper needs and this repository
+does not yet have. Every milestone through M9 is inward-facing (does the
+implementation work); M10 is outward-facing (does the implementation supply
+what a v1.4 paper needs to argue generality, competitiveness, and
+falsifiability). Runs after Phase 3 of the post-M9 remediation work; do not
+begin it before then.
+
+### M10.1 — Four interface-only sketches (Spec §11.4)
+
+Core §1.1 claims eight domain families; two are implemented and both are
+physically adjacent. The generality claim rests on the interface being
+fillable, and a filled declaration is evidence even with no code behind it
+(CLAUDE.md §5 invariant 11).
+
+One page each, seven items in Core §4 order, no implementation:
+
+- **Layer-wise additive processing** — hybrid structure and body-indexed
+  state at their most extreme.
+- **Device yield** — Class B volume scaling should recover the classical
+  defect-density model, making this independent confirmation of §3.6's
+  mathematics from a field that has used it for decades.
+- **Crystallisation and formulation** — polymorph selection as a bifurcating
+  evolution operator, dissolution as a Class B readout.
+- **One deliberately awkward case, chosen at M10.1 time** — a domain the
+  interface is expected to *strain*, since a sketch that fills too easily
+  proves less than one that exposes a missing slot.
+
+Machine-diffable against the two implemented domains (reuse
+`omi.interface.diff`). Any item a sketch cannot fill is a finding for
+`docs/V1.4-EDITS.md`, and a more valuable one than a clean fill.
+
+### M10.2 — Baseline characterisation (Spec §9.3, `[Pass C]`)
+
+Spec §9.3 requires comparison against gradient-boosted trees and tabular
+regression, and asks for a scored go/no-go table it does not supply. Both
+domains are ground-truth simulators, so this is answerable without field
+data — and answerable better than one dataset would allow.
+
+Sweep the regime rather than running a single comparison: process-window
+width relative to measurement noise, labelled-record count, and presence of
+geometry-dependent (Type-2) responses. Report where tabular wins, where the
+operator graph wins, and where the crossover sits. Include
+**inverse-design hit rate**, not only forward accuracy — that is the axis
+on which tabular models are structurally incapable rather than merely
+worse, and it is the framework's real claim.
+
+The honest outcome is the valuable one. Spec §9.3 already states that
+narrow-window, densely-instrumented, forward-prediction-only production is a
+case for *not* using OMI. Quantifying where that boundary falls converts a
+qualitative caveat into a result.
+
+### M10.3 — Falsification thresholds (Core §6.1, Spec §9.4, `[Pass D]`)
+
+Core §6.1 lists six falsification criteria and the framework says of itself
+that a criterion without a tolerance is not falsifiable (`docs/V1.4-EDITS.md`
+E-11 records that only one of six is currently operationalised). Supply, at
+minimum, the *procedure* for setting each threshold per application, derived
+from decision sensitivity, plus worked values for both implemented domains.
+
+### M10.4 — Finalise `docs/V1.4-EDITS.md`
+
+As a standalone document that reads correctly without the repository —
+quoting rather than cross-referencing, since its audience is the framework's
+authors, not this code.
+
+**Exit gate.** Four sketches declared and diffed. The go/no-go table
+populated with the regime boundary identified. Thresholds procedure with
+worked values. `docs/V1.4-EDITS.md` complete and self-contained.
+
+---
+
 ## Milestone dependency graph
 
 ```
 M0 ──► M1 ──┬──► M2 ──► M3 ──► M4 ──► M5 ──┐
-            │                              ├──► M7 ──► M8 ──► M9
+            │                              ├──► M7 ──► M8 ──► M9 ──► M10
             └──► M6 ─────────────────────  ┘
 ```
 
 M6 is independent of M2–M5 and may run in parallel. M7 requires M2–M6. M9
 requires M7 and benefits from M8 but does not require it — analytic operators
-are differentiable and sufficient for the control problem.
+are differentiable and sufficient for the control problem. M10 requires M9
+and the post-M9 remediation phases (docs/DECISIONS.md, docs/V1.4-EDITS.md)
+to have run first.

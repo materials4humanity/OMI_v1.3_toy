@@ -48,6 +48,18 @@ therefore scheduled late (see `docs/ROADMAP.md`), and analytic operators serve
 as stand-ins throughout — they are faster, exactly differentiable, and they
 supply ground truth.
 
+This repository is **evidence for a v1.4 framework paper** — a general
+framework from which tools can be architected — not a deployable prediction
+tool in itself. That reframes what its outputs are for.
+
+> **The codebase's primary outputs are evidence and *corrections*.** Where an
+> implementation attempt shows a Specification section to be wrong,
+> ill-posed, unbuildable as written, or more (or less) complete than its
+> `[Pass X]` marker claims, **that discovery is a deliverable, not an
+> obstacle.** Capture it. A framework revision derived from an honest
+> implementation attempt is worth more than a module that quietly works
+> around the problem.
+
 ## 3. Vocabulary
 
 Use these terms exactly. They are defined in Core; do not coin synonyms.
@@ -146,6 +158,14 @@ Non-negotiable. Violating any of these produces non-conforming output.
 10. **Targets are declared before analysis.** Danger scores, state selection
     and observability triage are all defined relative to a *declared* readout
     set. If the target set changes, the analysis is invalid and must be re-run.
+11. **The generality claim is the paper's central bet, and its evidence is
+    that the seven-item interface is fillable by domains outside the two
+    implemented.** Interface declarations without implementations behind them
+    — a sketch that fills, or fails to fill, Core §4's seven items for a
+    domain neither `flagship` nor `contrast` covers — count as evidence for
+    this claim and are explicitly in scope (see M10, `docs/ROADMAP.md`). A
+    sketch that cannot fill an item is not a failed exercise; it is a finding
+    for `docs/V1.4-EDITS.md`.
 
 ## 6. Architecture
 
@@ -259,3 +279,13 @@ that looks finished.
 - When you make a choice the Spec does not dictate, write the ADR first.
 - Prefer refusing to guessing. Prefer measuring to assuming. Prefer a small
   correct module with its diagnostics to a large one without.
+- **When an implementation attempt finds a framework defect — a Core or Spec
+  section that is wrong, ill-posed, unbuildable as written, or more or less
+  complete than its `[Pass X]` marker claims — record it in
+  `docs/V1.4-EDITS.md` *before* deciding how the code will cope with it.**
+  The ADR that follows records this repository's implementation choice; the
+  `V1.4-EDITS.md` entry records the separate, prior fact that the framework
+  itself needs to change. Writing the code workaround first and the framework
+  finding later (or never) is how a genuine defect gets silently absorbed
+  into a repository-specific convention instead of reaching the paper it is
+  evidence for.
