@@ -78,7 +78,7 @@ Status codes:
 | S-4.1 | §4.1 | Class B object: failure driver field, `max D > D_c` | SPEC | `classb.py` |
 | S-4.2 | §4.2 | Driver/tail separation; join threshold; diagnostics | SPEC | `classb.py` |
 | S-4.3 | §4.3 | Tail transfer `ξ_D = β ξ_a`; Prop 4.1; sanity check | SPEC | `classb.py` — see OQ-3 |
-| S-4.4 | §4.4 | `N_eff`; dimensional reduction; Prop 4.2 | SPEC | `classb.py` |
+| S-4.4 | §4.4 | `N_eff`; dimensional reduction; Prop 4.2 | SPEC | `classb.py` — isotropic scalar `ℓ_D` only; anisotropic/directional `ℓ_D` (Spec's explicit banded-structure requirement) not yet implemented, per ADR-027 |
 | S-4.5 | §4.5 | Rare-event sampling: subset simulation, conditional generative | SPEC | `classb.py` |
 | S-4.6 | §4.6 | Four-rung validation ladder | SPEC | `classb.py` |
 | S-5.1 | §5.1 | Hybrid systems | **PASS-C** | anti-goal |
@@ -208,12 +208,42 @@ single operator-level rank predicts downstream influence.
 > exactly recoverable. Use mutual information or residual variance explained
 > (R²) against the pre-erasure state, not the component's own scale."
 
-**OQ-3 — Competing risks in Class B.**
+**OQ-3 — Competing risks in Class B. Answered M6.**
 Spec §4.3 transfers a tail index from one defect population. With several
 populations of differing `α` and `β`, survival is `∏ₚ[1−Fₚ]^{Nₚ}` and no single
 `ξ` describes the range of interest.
 **Test:** two-population oracle; check whether a single-`ξ` fit misestimates
 the design-point exceedance probability.
+
+**Evidence.** `tests/test_classb_competing_risks.py`: a common, light-tailed
+population (`α=5`, 10,000 members) and a rare, heavy-tailed population
+(`α=1.5`, 10 members) drive the same component. At a design point deep enough
+that the rare population's heavier tail dominates (its total exceedance
+contribution `N·F(d)` exceeds the common population's, despite 1000x fewer
+members), pooling every descriptor and fitting one Hill tail index —
+exactly what a practitioner unaware of the two populations would do —
+underestimates the true, competing-risk-aware failure probability
+(`omi.classb.competing_risk_survival`, `∏ₚ[1−Fₚ]^{Nₚ}`) by several orders of
+magnitude (observed ratio > 1000x in the constructed case). The pooled fit's
+tail index lands close to the *common* population's own `α` because the top
+order-statistic window used for fitting is filled overwhelmingly by its far
+greater count, even though every individual common-population value is
+smaller than the rare population's.
+
+**Answer.** Yes — a single-`ξ` fit misestimates the design-point exceedance
+probability, severely and in the unsafe direction (underestimation), whenever
+a rare population's tail is heavier than a common population's. This is not a
+corner case to caveat; it is the generic behaviour of pooling under
+competing risks.
+
+**Proposed wording for v1.4 (Spec §4.3, after Proposition 4.1):** append a
+requirement — "Where more than one defect population plausibly contributes
+to the same driver, each population's tail index MUST be measured and
+transferred separately (`ξ_{D,p} = β_p·ξ_{a,p}`) and combined via the
+competing-risks survival product; fitting a single pooled tail index across
+populations of differing severity is non-conforming, since the fit is
+dominated by whichever population is most numerous in the fitting window,
+not by whichever population actually governs the design point."
 
 **OQ-4 — Does inverse design report *which* variance is binding?**
 Spec §7.3 selects within a feasible set. When the set is empty — e.g. aleatoric

@@ -1128,6 +1128,133 @@ must trip the monitor; a nominal, undrifted run must not).
 
 ---
 
+## ADR-027 — Class B numerics: join threshold, Hill tail estimator, correlation-length estimator, subset-simulation conventions, and validation-ladder scope
+
+**Status.** Accepted **Gap.** none — S-4.1 through S-4.6 are all SPEC; every item below is a declared numerical convention within a fully derived formula, not a derivation gap **Milestone.** M6
+
+**What the framework leaves open.**
+Spec §4 is unusual among the sections this repository has implemented so
+far: every subsection is marked SPEC in `docs/COVERAGE.md` (S-4.1–S-4.6), so
+nothing here is refused or filled by a Decide-ADR resolving an actual
+derivation gap. What Spec §4 leaves open is purely numerical, the same kind
+of thing ADR-017/019/020 already record for other SPEC sections: §4.2 says
+the join threshold sits at "typically the 90th to 95th percentile," not a
+single number; §4.3 requires a "measured" tail index but names no estimator;
+§4.4 requires \(\ell_D\) "from the two-point autocorrelation of the driver
+field" without naming a crossing convention or an error-bar procedure, and
+separately flags that it is "biased low on short domains" without a
+correction; §4.5's subset simulation requires "modified Metropolis sampling"
+without fixing a proposal or an input-space convention; §4.6's rung 2
+("independently measured... and not by this framework") is explicitly
+someone else's estimator, not this module's, so there is nothing to
+implement there beyond accepting it as data.
+
+**Decision.**
+
+1. **Join threshold (§4.2):** default `threshold_quantile = 0.95` (the upper
+   end of Spec's own stated 90th–95th range, preferring more bulk data under
+   the manifold prior and less extrapolation asked of the tail transfer),
+   always a caller-overridable parameter, always reported alongside the
+   count of samples above it and a *sensitivity curve* — the exceedance
+   probability at the design point recomputed at several thresholds spanning
+   at least the required factor-of-two range — never a single cached number
+   (matching CLAUDE.md §8's "never hardcode a narrative number").
+2. **Tail-index estimator (§4.3):** the **Hill estimator**
+   (Hill, 1975) — `alpha_hat = k / sum(log(X_(i)/X_(k+1)))` over the top `k`
+   order statistics — chosen over a full GPD MLE because Spec's own
+   Proposition 4.1 is stated for a regularly-varying (Pareto-type) tail, and
+   Hill is the standard, simplest consistent estimator for exactly that tail
+   class, with a textbook, citable finite-sample error rate
+   (`sqrt(k)`-consistent). Default `k = ceil(0.1 * n)` (top 10% of samples),
+   reusing the same "sits in the 90th–95th percentile" convention as the
+   join threshold rather than inventing an unrelated number — both are the
+   same underlying question ("how much of the sample counts as tail").
+   `tail_index_transfer(xi_a, beta) = beta * xi_a` is Spec §4.3's boxed
+   formula applied directly, with no numerics of its own to declare.
+3. **Correlation length (§4.4):** \(\ell_D\) is read off the empirical,
+   FFT-based autocorrelation of a supplied 1-D driver field as the lag at
+   which the ACF first drops below \(1/e\) (the standard correlation-length
+   convention for a field with no cleaner closed form to target), scaled by
+   the field's declared sample spacing. The error bar is a block-bootstrap
+   over non-overlapping sub-segments of the field (resampling segments
+   with replacement, recomputing the crossing lag each time) — chosen over
+   an analytic formula because none is given and a resampling estimate
+   needs no distributional assumption. The **domain-length-to-\(\ell_D\)
+   ratio** is always reported alongside the estimate: Spec's own text says
+   the estimate is "biased low on short domains," so a short-domain warning
+   is only honest if it is computed, not asserted; a ratio below a declared
+   ratio of 10 is flagged as unreliable in the result rather than silently
+   trusted. **Scope:** only the isotropic case (a single scalar \(\ell_D\))
+   is implemented; Spec §4.4's anisotropic, directional \(\ell_D\)
+   requirement for banded structures is not — this repository's toy driver
+   fields are 1-D, and a directional extension has no oracle here to check
+   it against yet. This is a scope limitation stated openly, not a
+   Specification gap, and it is recorded here rather than silently doing
+   less than S-4.4 while still marking the row fully implemented.
+4. **Dimensional reduction (Prop 4.2):** `n_eff(volume, correlation_length,
+   process_zone_thickness)` implements the boxed formula exactly:
+   `volume / correlation_length**3` when `correlation_length <=
+   process_zone_thickness` (uncorrelated/bulk regime — the case Spec calls
+   "no change in the size-effect exponent"), else `(volume /
+   process_zone_thickness) / correlation_length**2` (the reduced, in-plane
+   regime). No convention is invented here; the formula's own two branches
+   are exactly Spec's two cases.
+5. **Subset simulation (§4.5):** the standard Au & Beck (2001) formulation
+   in *standard-normal input space*: the caller supplies a performance
+   function `evaluate: R^n -> R` (typically a Rosenblatt/probability-
+   integral-transform composition of the physical generative model), inputs
+   are drawn i.i.d. standard normal at level 0, and each subsequent level
+   runs one Metropolis chain per surviving seed with a symmetric Gaussian
+   proposal (default `proposal_std = 1.0`, since the input space is already
+   standardised) accepting a proposal exactly when it both satisfies the
+   current level's conditional-exceedance region and is accepted under the
+   standard-normal density ratio (trivial here since a symmetric proposal
+   about a standard-normal target reduces the ratio to 1 whenever the
+   region condition holds — the acceptance rule Spec's "modified Metropolis"
+   name refers to). Default `conditional_probability = 0.1`, `n_per_level =
+   500` — Spec's own worked cost example ("`4 x 500` evaluations for `P_f ~
+   10^-4`").
+6. **Validation ladder (§4.6):** rungs 1, 3, and 4 are computed by this
+   module (bulk-distribution residual; fractography residual, which sets a
+   `voids_construction` flag when it fails at a stated tolerance per Spec's
+   explicit "the entire construction is void" requirement; volume-scaling-
+   exponent residual). **Rung 2 is not computed here at all** — Spec's own
+   text says the defect-population tail is "independently measured by
+   established characterisation methodology... and not by this framework,"
+   so `classb.py` only accepts it as a caller-supplied value with its own
+   error bar, exactly like `ADR-021`'s treatment of matched-pair campaign
+   data as something the module consumes rather than generates.
+
+**Alternatives rejected.**
+*A GPD maximum-likelihood tail fit instead of Hill.* Rejected as the
+default — more general (covers bounded and light tails too) but Spec §4.3's
+own construction is explicitly regularly-varying/Pareto-type, and Hill is
+the simpler, standard estimator for exactly that case; a GPD fit remains
+available as `scipy.stats.genpareto` for a caller who needs the general
+case, but is not what `tail_index_transfer`'s companion estimator uses by
+default.
+*An analytic correlation-length error bar (e.g. from a fitted correlation
+model's own confidence interval).* Rejected — would require assuming a
+parametric form (exponential, Gaussian) for the autocorrelation that Spec
+does not require and a domain need not satisfy; block bootstrap is
+assumption-free at the cost of needing several sub-segments.
+*Full anisotropic \(\ell_D\) now.* Deferred, not rejected — see point 3;
+revisit when a domain or oracle needs a directional driver field.
+
+**What would change this.** A domain whose driver field is genuinely
+multi-dimensional and anisotropic (Spec §4.4's banded-structure case) would
+force the anisotropic extension; a domain whose defect tail is not
+regularly varying would force a GPD (or other) fit in place of Hill.
+
+**Pinned by.** `tests/oracles/test_known_tail.py` (Hill + transfer recovers
+`beta * xi_a` across four `(alpha, beta)` pairs, docs/ROADMAP.md M6 exit
+gate), `tests/oracles/test_known_ranking_inversion.py` (Prop 4.2's
+dimensional reduction reproducing a specimen-thickness ranking inversion),
+and `tests/test_classb_subset_simulation.py` (subset simulation recovers a
+known exact exceedance probability at a fraction of direct-sampling cost).
+
+---
+
 ## Open questions
 
 Not decisions — hypotheses the code should settle. Full statements in
@@ -1137,7 +1264,7 @@ Not decisions — hypotheses the code should settle. Full statements in
 |---|---|---|---|
 | OQ-1 | Fingerprint: single probe or contrast between probes? | M4 | answered — see COVERAGE.md Part IV |
 | OQ-2 | Erasure completeness: operator-level or component-level? | M2 | partially answered — see COVERAGE.md Part IV |
-| OQ-3 | Class B under competing defect populations | M6 | open |
+| OQ-3 | Class B under competing defect populations | M6 | answered — see COVERAGE.md Part IV |
 | OQ-4 | Does inverse design report which variance is binding? | M9 | open |
 | OQ-5 | Metric dependence of reported `L` | M2 | answered — see COVERAGE.md Part IV |
 
