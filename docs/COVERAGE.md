@@ -61,10 +61,10 @@ Status codes:
 | S-1.6 | §1.6 | Divergence fingerprint table | SPEC | `sufficiency.py` — see OQ-1 |
 | S-1.7 | §1.7 | Blocking-term trichotomy | SPEC | `sufficiency.py` |
 | S-1.8 | §1.8 | Worked demonstration | **PASS-D** | oracle test |
-| S-2.1 | §2.1 | Approximation class and caveats; no composition theorem | SPEC | `operators.py` docs |
-| S-2.2 | §2.2 | Hard structural constraints | SPEC | `constraints.py` |
-| S-2.3 | §2.3 | Training objectives | SPEC | learning milestone |
-| S-2.4 | §2.4 | Stability-aware training; rollout reporting | SPEC | learning milestone |
+| S-2.1 | §2.1 | Approximation class and caveats; no composition theorem | SPEC | `operators.py` docs; `learning.py` (DeepONet-style branch/trunk, ADR-029) |
+| S-2.2 | §2.2 | Hard structural constraints | SPEC | `constraints.py` — positivity, simplex, monotonicity, conservation implemented; symmetry left to domains (ADR-030); thermodynamic admissibility (GENERIC/port-Hamiltonian) not implemented, scope limitation per ADR-030 |
+| S-2.3 | §2.3 | Training objectives | SPEC | `learning.py` — data fidelity + semigroup-consistency penalty; closure-defect/manifold/reachability regularisation terms not applicable (S-6/manifold learning out of scope) |
+| S-2.4 | §2.4 | Stability-aware training; rollout reporting | SPEC | `learning.py` — multi-step pushforward training, noise injection, spectral-norm capping, rollout-length curve (reuses `conformance.rollout_length_error_curve`); manifold projection not implemented, scope limitation per ADR-029 |
 | S-2.5 | §2.5 | **Amplification decomposition `L_phys × L_num`; local spectrum** | **PASS-B** | *"To be written: estimation procedure…"* → ADR or refuse |
 | S-2.6 | §2.6 | **Backward error budgeting** | **PASS-B** | *"To be written: the backward recursion"* → refuse |
 | S-2.7 | §2.7 | **Refusal criterion; trigger condition** | **PASS-B** | *"To be written: the trigger condition"* → refuse |

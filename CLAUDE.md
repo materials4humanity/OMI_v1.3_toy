@@ -164,6 +164,7 @@ src/omi/                  domain-neutral framework — NO domain vocabulary
   inverse.py              constrained control; certificates; decision layer
   conformance.py          OMI-0/1/2 report generation
   gaps.py                 NotSpecified; the gap registry
+  learning.py             neural operators (DeepONet-style); training; added M8 (ADR-029)
 src/omi_domains/
   flagship/               metallurgical process chain (Core §7.1)
   contrast/               electrochemical cell under service (Core §7.2)

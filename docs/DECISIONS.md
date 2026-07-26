@@ -1359,6 +1359,190 @@ honestly blocked on the sufficiency test not yet run for this domain).
 
 ---
 
+## ADR-029 — Neural operators live in a new `src/omi/learning.py`; a DeepONet-style branch/trunk network, implemented entirely in numpy with no torch dependency
+
+**Status.** Accepted **Gap.** none — S-2.1, S-2.3, S-2.4 are SPEC; S-2.5–2.7 remain PASS-B and are refused, not touched here **Milestone.** M8
+
+**What the framework leaves open.**
+Spec §2.1 names DeepONet, FNO, and graph-based operators as the approximation
+class but gives no architecture for this repository's finite-dimensional,
+non-grid, non-graph toy states; CLAUDE.md's architecture map (§6) predates
+M8 and reserves no filename for it; and CLAUDE.md §8's standing convention —
+"torch optional with a numpy fallback that gives identical results. Never
+import torch at module scope in `src/omi/`" — describes a policy for *if*
+torch is used, not a requirement that a learned operator must use it at all.
+
+**Decision.**
+
+1. **New module, `src/omi/learning.py`.** `operators.py` holds the
+   `EvolutionOperator` abstraction and its generic, domain-neutral lift/
+   Lipschitz machinery; a full neural-operator implementation (network
+   architecture, training loop, noise injection, spectral control) is
+   substantial enough, and specific enough to *this* interchangeable
+   approximation class (CLAUDE.md §2: "the neural operators are not the
+   point... one interchangeable approximation class"), to warrant its own
+   file rather than growing `operators.py` past its own abstraction.
+2. **Architecture: DeepONet's branch/trunk decomposition, adapted to a
+   finite output dimension.** A branch network encodes the input
+   ``(state, control, dt)`` into a latent code `b in R^p`; a trunk network
+   encodes each of the `n` *output component indices* (one-hot, since
+   there is no continuous query domain here) into a latent code, forming a
+   fixed `T in R^{n x p}` (recomputed from current trunk weights each
+   call, since weights change during training); the output is
+   `T @ b + bias`. This is the standard branch/trunk bilinear structure
+   applied to a discrete, finite set of "sensor" outputs rather than a
+   continuous function space — a legitimate, commonly-used DeepONet
+   variant, not FNO (grid-structured field-to-field maps do not fit this
+   repository's toy vector states, which is why FNO is not attempted here).
+3. **No torch anywhere in this milestone's code.** The network, its
+   forward pass, its exact Jacobian (via chained per-layer Jacobians —
+   `diag(tanh'(z)) @ W` composed layer by layer, exact because the network
+   is a fixed, small, differentiable function, not an approximation of one),
+   and its training (hand-derived reverse-mode backprop, plain numpy) are
+   implemented once, in numpy, with no second implementation to keep
+   consistent. This satisfies CLAUDE.md §8's convention trivially rather
+   than by comparison: there is nothing to fall back *from*, "torch
+   optional" is honoured because torch is never required, and "identical
+   results" needs no cross-backend equivalence test because only one
+   backend exists. A torch-accelerated training backend remains a
+   legitimate future addition (e.g. for a domain whose networks outgrow
+   hand-rolled backprop), but this repository's toy-scale networks
+   (branch/trunk each a two-hidden-layer MLP, tens to low hundreds of
+   parameters) do not need it, and this environment cannot install torch to
+   test it (no network at runtime) — writing an untested torch path would
+   violate CLAUDE.md §10's "prefer a small correct module... to a large one
+   without."
+4. **Training procedure (Spec §2.3/§2.4).** Multi-step ("pushforward")
+   training with truncated backpropagation through the unrolled network's
+   own composition, so error is trained
+   against rollout length, not one-step accuracy alone (Spec §2.4's own
+   requirement, echoing CLAUDE.md §5 invariant 7); Gaussian noise injection
+   on the training inputs at each step (Spec §2.4); a semigroup-consistency
+   penalty reusing `operators.semigroup_residual` directly against the
+   *learned* operator during training, not just at evaluation time (Spec
+   §2.3 names this as a training-objective term, not only a diagnostic);
+   and post-step spectral-norm capping on every weight matrix (Spec §2.4's
+   "spectral normalisation or explicit Lipschitz control, tuned per
+   segment" — implemented as a hard cap applied after each gradient step,
+   the simplest faithful reading, with the cap itself a declared,
+   overridable parameter per CLAUDE.md §4/§8's discipline against invented
+   uncited numbers).
+5. **Manifold projection (Spec §2.4) is not implemented.** Spec marks this
+   "the strongest practical justification for manifold learning," but no
+   manifold-learning machinery exists anywhere in this repository (it is
+   not scheduled by docs/ROADMAP.md at any milestone) — implementing it
+   now would be inventing a manifold-learning submodule with no oracle to
+   check it against. Recorded as a stated scope limitation, not a silent
+   omission.
+
+**Alternatives rejected.**
+*FNO instead of / alongside DeepONet.* Rejected — FNO targets grid-
+structured field-to-field maps (Fourier modes over a spatial grid); neither
+domain's toy state has that structure, and forcing a grid decomposition
+onto a 5-7 dimensional flat vector would be a costume, not an
+implementation.
+*A torch-first implementation with a numpy fallback reimplementing the same
+math.* Rejected — see point 3; two independent implementations of the same
+forward/backward math is exactly the fragility CLAUDE.md §8's "identical
+results" requirement exists to guard against, and this repository has no
+way to test the torch half.
+*Growing `operators.py` in place.* Rejected — see point 1.
+
+**What would change this.** A domain whose state is genuinely grid- or
+graph-structured (a real Tier II field, an actual mesh) would justify FNO or
+a graph network; a network large enough that hand-rolled numpy backprop
+becomes the bottleneck would justify an optional torch training backend,
+added alongside (not replacing) the numpy forward pass every
+`EvolutionOperator.step` call still uses.
+
+**Pinned by.** `tests/test_learning_gradient_check.py` (analytic gradients
+match finite-difference gradients, validating the hand-rolled backprop
+itself), `tests/test_learning_oracle.py` (a trained `DeepONetOperator`
+passes the same oracle checks as its analytic counterpart, per
+docs/ROADMAP.md M8's exit gate).
+
+---
+
+## ADR-030 — `constraints.py` implements four of Spec §2.2's five hard-constraint categories; thermodynamic admissibility (GENERIC/port-Hamiltonian) is out of scope
+
+**Status.** Accepted **Gap.** none — S-2.2 is SPEC; the *categories* are named, the specific parameterisation of each is an implementation choice **Milestone.** M8
+
+**What the framework leaves open.**
+Spec §2.2 names five categories of hard structural constraint (symmetry,
+thermodynamic admissibility, range constraints, monotonicity, conservation)
+and requires each be architecture, never a loss penalty, but gives no
+specific parameterisation for any of them — "simplex parameterisation,"
+"positivity," "monotone parameterisation or non-negative increments," and
+"mass balance" are all named by their mathematical *shape*, not by a
+formula.
+
+**Decision.**
+`constraints.py` implements four of the five categories as literal,
+differentiable-where-needed reparameterisations, each a function
+`unconstrained parameters -> constrained output`, so that violating the
+constraint is not representable at all, not merely discouraged:
+
+1. **Range/positivity** — `softplus` (`log(1+e^x)`), smooth, exactly
+   positive, with an exact analytic derivative for the Jacobian chain.
+2. **Range/simplex (fractions)** — `softmax`, exactly summing to one and
+   componentwise non-negative by construction.
+3. **Monotonicity** — cumulative sum of `softplus` increments: the
+   ``i``-th output is ``initial + sum_{k<=i} softplus(delta_k)``, which is
+   non-decreasing by construction regardless of the unconstrained
+   ``delta``.
+4. **Conservation** — an affine projection onto the hyperplane
+   ``{x : sum(x) = total}``: ``x - (sum(x) - total) / n``, the closest point
+   on that hyperplane in Euclidean distance, so any unconstrained vector is
+   projected to one that exactly conserves the declared total.
+
+**Symmetry** (equivariant architectures, permutation invariance) is declared
+in the module but not given a concrete general-purpose layer here: an
+equivariant layer's correct form depends on *which* group acts on *which*
+state components, which is domain content (CLAUDE.md §5 invariant 3
+forbids exactly this kind of domain-specific decision inside `src/omi/`).
+A domain that needs symmetry declares its own equivariant layer in
+`omi_domains/*/`, built from primitives here if useful (e.g. the
+conservation projection is itself permutation-equivariant already, so it
+transfers unmodified).
+
+**Thermodynamic admissibility (GENERIC/port-Hamiltonian structure) is not
+implemented.** Separating reversible and irreversible dynamics with a
+guaranteed non-negative dissipation term is a substantially larger
+undertaking than the other four categories — it requires committing to a
+specific decomposition of the *learned operator's own dynamics* (not just a
+reparameterisation of its output), which in turn requires deciding how a
+GENERIC/port-Hamiltonian structure composes with the branch/trunk
+architecture of ADR-029, a design question neither Spec nor Core resolves
+and no oracle in this repository yet tests. Recorded here as a stated scope
+limitation (docs/COVERAGE.md updated accordingly) rather than a rushed,
+unverified implementation.
+
+**Alternatives rejected.**
+*Soft penalty terms added to the training loss instead of architecture.*
+Rejected — this is precisely what Spec §2.2 says not to do ("a penalty
+enforces physics where the training data live; an optimiser searching for
+an optimal route finds precisely where enforcement is weak"), and
+CLAUDE.md §5 invariant 5 states it as a non-negotiable.
+*Clipping instead of a smooth reparameterisation for positivity/
+monotonicity.* Rejected — clipping has a zero (or undefined) gradient at
+the boundary, which would silently kill gradient-based training near the
+constraint; `softplus` is smooth and strictly positive everywhere with a
+well-defined derivative, needed for ADR-029's backprop to flow through it.
+
+**What would change this.** A domain declaring a genuine symmetry group
+acting on its state, at which point that domain's own equivariant layer
+would be built (and, if it turns out generic, promoted here); a milestone
+that specifically targets thermodynamic structure, with its own ADR
+resolving how GENERIC/port-Hamiltonian composes with whatever operator
+architecture is current at that time.
+
+**Pinned by.** `tests/test_constraints.py` (each layer's constraint holds
+by construction, checked off-manifold with adversarial out-of-range inputs
+— docs/ROADMAP.md M8's exit gate: "constraint satisfaction holds
+off-manifold").
+
+---
+
 ## Open questions
 
 Not decisions — hypotheses the code should settle. Full statements in
