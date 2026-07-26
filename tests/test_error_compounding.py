@@ -15,8 +15,10 @@ from omi.state import Metric, Slot
 from omi_domains.flagship.build import build_chain, build_incoming_ensemble
 from omi_domains.flagship.operators import TRANSFER
 
+from tests.conftest import ObservationRecorder
 
-def test_perturbation_before_the_erasure_is_damped_at_the_terminal_state() -> None:
+
+def test_perturbation_before_the_erasure_is_damped_at_the_terminal_state(observe: ObservationRecorder) -> None:
     rng = np.random.default_rng(0)
     incoming = build_incoming_ensemble(200, rng)
     metric = Metric.from_ensemble(incoming)
@@ -39,12 +41,13 @@ def test_perturbation_before_the_erasure_is_damped_at_the_terminal_state() -> No
         final_perturbed = segment.operator.step(final_perturbed, segment.control)
 
     terminal_distance = metric.distance(final_baseline, final_perturbed)
+    observe("terminal_distance", terminal_distance, "< 0.5", units="metric distance, injected perturbation = 5 sigma")
     # The perturbation itself was 5 sigma; if it survived undamped the
     # terminal distance would be of that order. Erasure should crush it.
     assert terminal_distance < 0.5
 
 
-def test_perturbation_after_the_erasure_survives_to_the_terminal_state() -> None:
+def test_perturbation_after_the_erasure_survives_to_the_terminal_state(observe: ObservationRecorder) -> None:
     """The same magnitude of perturbation, injected on a component the
     erasure does not touch and which survives it (inclusion_content, Core
     §7.1), applied *after* heating_and_soak — transfer does not damp it at
@@ -70,13 +73,14 @@ def test_perturbation_after_the_erasure_survives_to_the_terminal_state() -> None
     final_perturbed = transfer_segment.operator.step(post_heating_perturbed, transfer_segment.control)
 
     terminal_distance = metric.distance(final_baseline, final_perturbed)
+    observe("terminal_distance", terminal_distance, "> 4.5", units="metric distance, injected perturbation = 5 sigma")
     # Undamped: the post-erasure perturbation should reach the terminal
     # state at essentially its full injected size (5 sigma in one
     # component), unlike the pre-erasure case above.
     assert terminal_distance > 4.5
 
 
-def test_pre_erasure_damping_is_much_stronger_than_post_erasure_propagation() -> None:
+def test_pre_erasure_damping_is_much_stronger_than_post_erasure_propagation(observe: ObservationRecorder) -> None:
     """The qualitative claim itself (CLAUDE.md §7 prefers orderings to
     decimals): pre-erasure perturbations are damped by orders of magnitude
     more than post-erasure ones, for the same injected size."""
@@ -107,4 +111,11 @@ def test_pre_erasure_damping_is_much_stronger_than_post_erasure_propagation() ->
     final_post_perturbed = transfer_segment.operator.step(post_heating_perturbed, transfer_segment.control)
     post_erasure_distance = metric.distance(final_post_baseline, final_post_perturbed)
 
+    observe("pre_erasure_distance", pre_erasure_distance, "narrative only, not asserted")
+    observe("post_erasure_distance", post_erasure_distance, "> 100 * pre_erasure_distance")
+    observe(
+        "ratio_post_over_pre",
+        post_erasure_distance / pre_erasure_distance,
+        "> 100",
+    )
     assert post_erasure_distance > 100 * pre_erasure_distance

@@ -16,6 +16,8 @@ import numpy as np
 from omi.operators import Control, EvolutionOperator
 from omi.state import Ensemble, FloatArray, Metric, Slot, State, StateSchema
 
+from tests.conftest import ObservationRecorder
+
 SCHEMA = StateSchema(((Slot.M, "a", 1), (Slot.M, "b", 1)))
 
 # A fixed coupling: b weakly appears to influence a (raw coefficient 0.01);
@@ -50,7 +52,7 @@ def _build_ensemble(n: int, rng: np.random.Generator) -> Ensemble:
     return Ensemble(SCHEMA, np.stack([a, b], axis=1))
 
 
-def test_bare_undeclared_metric_hides_the_true_coupling_strength() -> None:
+def test_bare_undeclared_metric_hides_the_true_coupling_strength(observe: ObservationRecorder) -> None:
     """Without a metric reflecting each component's real scale (here, both
     treated as unit-scale), the coupling term (raw coefficient 0.01) reads as
     negligible next to the diagonal (1.0) — a naive, metric-blind reading."""
@@ -61,10 +63,13 @@ def test_bare_undeclared_metric_hides_the_true_coupling_strength() -> None:
 
     jac = op.jacobian(ensemble[0], NULL_CONTROL)
     scaled = jac * bare_metric.scale[np.newaxis, :] / bare_metric.scale[:, np.newaxis]
+    observe("bare_scaled_offdiagonal", scaled[0, 1], "< 0.02")
     assert abs(scaled[0, 1]) < 0.02
 
 
-def test_aleatoric_sigma_metric_reveals_the_coupling_is_as_strong_as_the_diagonal() -> None:
+def test_aleatoric_sigma_metric_reveals_the_coupling_is_as_strong_as_the_diagonal(
+    observe: ObservationRecorder,
+) -> None:
     """Declaring the metric from the ensemble's own aleatoric spread
     (ADR-002's default) rescales the coupling entry by b's much larger
     natural scale, revealing that a one-sigma change in b moves a by about as
@@ -76,10 +81,12 @@ def test_aleatoric_sigma_metric_reveals_the_coupling_is_as_strong_as_the_diagona
 
     jac = op.jacobian(ensemble[0], NULL_CONTROL)
     scaled = jac * metric.scale[np.newaxis, :] / metric.scale[:, np.newaxis]
+    observe("metric_scale", metric.scale, "narrative only, not asserted")
+    observe("true_scaled_offdiagonal", scaled[0, 1], "> 0.5")
     assert abs(scaled[0, 1]) > 0.5
 
 
-def test_lipschitz_spectrum_changes_with_the_declared_metric() -> None:
+def test_lipschitz_spectrum_changes_with_the_declared_metric(observe: ObservationRecorder) -> None:
     """Same operator, same state: two different declared metrics give two
     different local spectra — "confirm every reported L changes" (OQ-5)."""
     rng = np.random.default_rng(2)
@@ -91,10 +98,15 @@ def test_lipschitz_spectrum_changes_with_the_declared_metric() -> None:
     spectrum_bare = op.lipschitz(ensemble[0], NULL_CONTROL, bare_metric)
     spectrum_true = op.lipschitz(ensemble[0], NULL_CONTROL, true_metric)
 
+    observe("spectrum_bare", spectrum_bare, "not allclose(spectrum_true, rtol=0.1)")
+    observe("spectrum_true", spectrum_true, "not allclose(spectrum_bare, rtol=0.1)")
+
     assert not np.allclose(spectrum_bare, spectrum_true, rtol=0.1)
 
 
-def test_aleatoric_normalisation_makes_a_one_sigma_perturbation_comparable_across_slots() -> None:
+def test_aleatoric_normalisation_makes_a_one_sigma_perturbation_comparable_across_slots(
+    observe: ObservationRecorder,
+) -> None:
     """Perturbing each component by its own empirical one-sigma and pushing
     it through the operator should move the readout ('a') by a comparable
     amount for both components — "confirm the aleatoric-sigma normalisation
@@ -116,4 +128,7 @@ def test_aleatoric_normalisation_makes_a_one_sigma_perturbation_comparable_acros
     effect_from_b = op.step(perturbed_b, NULL_CONTROL).get(Slot.M, "a")[0] - baseline_a
 
     ratio = effect_from_b / effect_from_a
+    observe("effect_from_a", effect_from_a, "narrative only, not asserted")
+    observe("effect_from_b", effect_from_b, "narrative only, not asserted")
+    observe("ratio", ratio, "0.5 < ratio < 2.0")
     assert 0.5 < ratio < 2.0

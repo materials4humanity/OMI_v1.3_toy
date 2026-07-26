@@ -22,6 +22,8 @@ from omi.learning import (
 from omi.operators import Control
 from omi.state import FloatArray
 
+from tests.conftest import ObservationRecorder
+
 EPS = 1e-5
 
 
@@ -66,7 +68,7 @@ def _make_params_and_record() -> tuple[DeepONetParams, TrainingRecord]:
     return params, record
 
 
-def test_multistep_pushforward_branch_gradient_matches_finite_difference() -> None:
+def test_multistep_pushforward_branch_gradient_matches_finite_difference(observe: ObservationRecorder) -> None:
     params, record = _make_params_and_record()
     _loss, grads = _record_loss_and_grads(params, record, noise_std=0.0, rng=np.random.default_rng(0))
 
@@ -75,10 +77,12 @@ def test_multistep_pushforward_branch_gradient_matches_finite_difference() -> No
         return loss
 
     numeric = _numeric_weight_gradient(loss_fn, params, layer_index=0, is_branch=True)
-    assert np.max(np.abs(grads.branch[0][0] - numeric)) < 1e-8
+    max_abs_error = float(np.max(np.abs(grads.branch[0][0] - numeric)))
+    observe("max_abs_error", max_abs_error, "< 1e-8")
+    assert max_abs_error < 1e-8
 
 
-def test_multistep_pushforward_trunk_gradient_matches_finite_difference() -> None:
+def test_multistep_pushforward_trunk_gradient_matches_finite_difference(observe: ObservationRecorder) -> None:
     params, record = _make_params_and_record()
     _loss, grads = _record_loss_and_grads(params, record, noise_std=0.0, rng=np.random.default_rng(0))
 
@@ -87,10 +91,12 @@ def test_multistep_pushforward_trunk_gradient_matches_finite_difference() -> Non
         return loss
 
     numeric = _numeric_weight_gradient(loss_fn, params, layer_index=0, is_branch=False)
-    assert np.max(np.abs(grads.trunk[0][0] - numeric)) < 1e-8
+    max_abs_error = float(np.max(np.abs(grads.trunk[0][0] - numeric)))
+    observe("max_abs_error", max_abs_error, "< 1e-8")
+    assert max_abs_error < 1e-8
 
 
-def test_multistep_pushforward_bias_gradient_matches_finite_difference() -> None:
+def test_multistep_pushforward_bias_gradient_matches_finite_difference(observe: ObservationRecorder) -> None:
     params, record = _make_params_and_record()
     _loss, grads = _record_loss_and_grads(params, record, noise_std=0.0, rng=np.random.default_rng(0))
 
@@ -112,10 +118,12 @@ def test_multistep_pushforward_bias_gradient_matches_finite_difference() -> None
 
         numeric[i] = (loss_plus - loss_minus) / (2 * EPS)
 
-    assert np.max(np.abs(grads.bias - numeric)) < 1e-8
+    max_abs_error = float(np.max(np.abs(grads.bias - numeric)))
+    observe("max_abs_error", max_abs_error, "< 1e-8")
+    assert max_abs_error < 1e-8
 
 
-def test_semigroup_consistency_branch_gradient_matches_finite_difference() -> None:
+def test_semigroup_consistency_branch_gradient_matches_finite_difference(observe: ObservationRecorder) -> None:
     rng = np.random.default_rng(0)
     state_dim, control_dim = 3, 1
     params = init_deeponet_params(state_dim, control_dim, rng, latent_dim=4, hidden_dim=5)
@@ -131,4 +139,6 @@ def test_semigroup_consistency_branch_gradient_matches_finite_difference() -> No
         return loss
 
     numeric = _numeric_weight_gradient(loss_fn, params, layer_index=0, is_branch=True)
-    assert np.max(np.abs(grads.branch[0][0] - numeric)) < 1e-7
+    max_abs_error = float(np.max(np.abs(grads.branch[0][0] - numeric)))
+    observe("max_abs_error", max_abs_error, "< 1e-7")
+    assert max_abs_error < 1e-7

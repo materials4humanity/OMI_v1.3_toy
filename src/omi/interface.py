@@ -11,6 +11,7 @@ code; the *content* of a declaration is supplied by each domain in
 from __future__ import annotations
 
 from dataclasses import dataclass, fields
+from enum import Enum, auto
 
 from omi.state import StateSchema
 
@@ -53,6 +54,43 @@ class InstantiationDeclaration:
     (once measured, at M2+) the closure defect ``‖𝒟_λ‖``."""
 
 
+class InvariantKind(Enum):
+    """Item 6's invariants are declared as free-text names (ADR-016); this is
+    the minimum structural type ADR-034 (docs/DECISIONS.md, superseding
+    ADR-003) requires before two domains' invariant *lists* can be compared
+    for more than incidental string difference: whether each declared
+    invariant is a conservation law or a monotonicity constraint (Spec §5's
+    two hard-constraint categories that apply here — see
+    :mod:`omi.constraints`)."""
+
+    CONSERVATION = auto()
+    MONOTONICITY = auto()
+
+
+def classify_invariant(name: str) -> InvariantKind:
+    """Classify a declared invariant's name by kind (ADR-034).
+
+    A keyword heuristic on the declared name for Core §4 item 6's
+    invariants, not a claim about the invariant's semantics beyond what
+    Spec §2.2's two relevant hard-constraint categories already require
+    domains to state: every declared invariant here is either a
+    conservation law or a monotonicity constraint. A name matching neither
+    keyword is refused rather than guessed at — this is a naming-convention
+    check, not a Specification gap, so it raises :class:`ValueError`, not
+    :class:`~omi.gaps.NotSpecified`.
+    """
+    lowered = name.lower()
+    if "conserv" in lowered:
+        return InvariantKind.CONSERVATION
+    if "monoton" in lowered:
+        return InvariantKind.MONOTONICITY
+    raise ValueError(
+        f"invariant {name!r} names neither a conservation law nor a monotonicity "
+        "constraint by its own declared name (expected 'conserv...' or 'monoton...' "
+        "to appear in it) — classify_invariant refuses to guess"
+    )
+
+
 def diff(a: InstantiationDeclaration, b: InstantiationDeclaration) -> dict[str, bool]:
     """Per-item: whether *a* and *b* declare something different (Core §4:
     interface declarations are "comparative"; ADR-016).
@@ -60,5 +98,17 @@ def diff(a: InstantiationDeclaration, b: InstantiationDeclaration) -> dict[str, 
     Mechanical equality per field — every field is either directly
     comparable data (:class:`~omi.state.StateSchema`, a string, a tuple of
     strings), so "different" needs no domain-specific judgement call.
+
+    One additional key, ``"invariants_structural"`` (ADR-034), compares the
+    *multiset of invariant kinds* (:func:`classify_invariant`) rather than
+    the literal declared names: two domains that each declare one
+    conservation law and one monotonicity constraint, under different
+    names, are not structurally inverted on item 6 even though the literal
+    ``"invariants"`` key above reports them as different. Naming alone must
+    not be mistaken for a structural inversion.
     """
-    return {f.name: getattr(a, f.name) != getattr(b, f.name) for f in fields(InstantiationDeclaration)}
+    result = {f.name: getattr(a, f.name) != getattr(b, f.name) for f in fields(InstantiationDeclaration)}
+    a_kinds = sorted(classify_invariant(name).name for name in a.invariants)
+    b_kinds = sorted(classify_invariant(name).name for name in b.invariants)
+    result["invariants_structural"] = a_kinds != b_kinds
+    return result

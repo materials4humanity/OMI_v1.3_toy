@@ -115,7 +115,12 @@ comparison stable.
 
 ## ADR-003 — Two domains from M1, chosen to invert each other
 
-**Status.** Accepted **Gap.** C-7 (PASS-D) **Milestone.** M1
+**Status.** Superseded by ADR-034 (docs/DECISIONS.md) for the pinning-test
+half only — the decision to build two domains chosen to invert each other
+stands unchanged; what ADR-034 corrects is the mechanical claim "differ on
+at least six of seven items," which conflated Core §7.2's seven *table
+rows* with Core §4's seven *interface items* (they are not the same seven).
+**Gap.** C-7 (PASS-D) **Milestone.** M1
 
 **What the framework leaves open.**
 Core §7 declares two instantiations but marks the full declarations `[Pass D]`.
@@ -136,8 +141,9 @@ structural bet and it is only checkable by the diff.
 
 **What would change this.** Nothing short of abandoning the generality claim.
 
-**Pinned by.** `tests/test_interface_diff.py` — the declared interfaces differ
-on at least six of seven items, reproducing Core §7.2.
+**Pinned by.** `tests/test_interface_diff.py` — see ADR-034 for the corrected
+form of this pin (the declared interfaces invert on exactly the six Core §4
+items Core §7.2's own table names, checked by name rather than by count).
 
 ---
 
@@ -1721,6 +1727,82 @@ should become the primary return value instead of a summary label.
 **Pinned by.** `tests/oracles/test_known_infeasible_specification.py`
 (docs/ROADMAP.md M9 exit gate: "the binding term is correctly identified");
 OQ-4 marked answered in docs/COVERAGE.md Part IV.
+
+---
+
+## ADR-034 — Core §7.2's table maps to six of Core §4's seven items, not seven of seven; `interface.diff()` gains a structural check for invariants
+
+**Status.** Accepted, supersedes ADR-003's pinning test **Gap.** C-4 (SPEC)
+**Milestone.** Phase 1 (`build/REVIEW-EXTRACT.md` §3 finding)
+
+**What the framework leaves open.**
+Core §4 declares seven interface items. Core §7.2's own comparison table
+(flagship vs. contrast) has seven *rows*, and ADR-003's pinning test read
+"seven rows" as "seven items" and asserted `differing >= 6` against
+`interface.diff()`'s seven dict keys directly. The review extraction
+(`build/REVIEW-EXTRACT.md` §3) found this conflates two different lists:
+Core §7.2's seven rows are "Erasure operators," "Observation suite,"
+"Dominant slot," "Control axis," "Tier structure," "Class B," and "Nonlocal
+slot ν" — and the last two both name the *state schema* (Core §4 item 1),
+while item 6 (invariants) has no row in Core §7.2's table at all. So Core
+§7.2's seven rows test exactly **six** of Core §4's seven items, not seven,
+and the old pinning test's "6 of 7" threshold passed for the wrong reason:
+it happened to also count `invariants` (item 6, untested by Core §7.2) as
+differing, because the two domains name their invariants after different
+physics. Two domains that named their invariants identically in *kind* but
+differently in *string* would still have passed the old test — on an item
+Core §7.2 never claims is inverted — which is exactly the kind of
+naming-vs-structure conflation this repo's own gap discipline exists to
+catch.
+
+**Decision.**
+Two changes, both in `src/omi/interface.py`:
+
+1. `classify_invariant(name: str) -> InvariantKind` classifies a declared
+   invariant's name as `CONSERVATION` or `MONOTONICITY` by keyword
+   (`"conserv"` / `"monoton"` substrings), refusing (`ValueError`, not
+   `NotSpecified` — this is a naming-convention check, not a Specification
+   gap) on a name matching neither. `diff()` gains an additional key,
+   `"invariants_structural"`, comparing the *sorted multiset of kinds*
+   rather than the literal declared strings.
+2. `tests/test_interface_diff.py` now asserts against Core §7.2's six named
+   items **by name** (`erasure_inventory`, `observation_suite`,
+   `state_schema`, `control_space`, `scale_structure`, `readout_catalogue`),
+   via an explicit `CORE_7_2_ROW_TO_INTERFACE_ITEM` mapping table pinned by
+   its own test, rather than a bare `differing >= 6` count over whatever
+   keys `diff()` happens to return. A separate test demonstrates the case
+   this ADR exists to catch directly: flagship and contrast's `invariants`
+   literal-string diff is `True` (different names), but
+   `invariants_structural` is `False` — both domains declare exactly one
+   conservation law and one monotonicity constraint.
+
+**Alternatives rejected.**
+*Changing `InstantiationDeclaration.invariants`'s type from `tuple[str, ...]`
+to a structured `tuple[(str, InvariantKind), ...]`.* Rejected for this ADR's
+scope — that is a breaking change to ADR-016's declaration shape used by
+both domains and by every existing consumer of `InstantiationDeclaration`,
+and the task at hand only requires the *comparison* to be structural, not
+the storage. `classify_invariant` derives the kind from the existing string
+at diff time; if a future domain's invariant naming can't be classified by
+keyword, that failure is the signal to revisit storage, not a reason to
+change it pre-emptively.
+*Leaving the pinning test as a bare count and just fixing the `invariants`
+conflation by excluding it from the count.* Rejected — a bare count over an
+unnamed subset of keys is exactly the failure mode here; naming the six
+items explicitly is what makes the test re-derivable from Core §7.2's table
+by inspection, and what stops a future field addition to
+`InstantiationDeclaration` from silently changing what "6 of 7" means.
+
+**What would change this.** A `[Pass A]` resolution of Core Appendix B (the
+general↔domain glossary, per `docs/COVERAGE.md`'s note) that gives
+invariants a richer typed vocabulary than "conservation or monotonicity" —
+at which point `InvariantKind` gains members and `classify_invariant`'s
+keyword heuristic is revisited.
+
+**Pinned by.** `tests/test_interface_diff.py` —
+`test_core_7_2s_seven_rows_cover_exactly_six_distinct_interface_items`,
+`test_flagship_and_contrast_differ_on_exactly_the_six_items_core_7_2_names`,
+`test_invariants_literal_diff_and_structural_diff_disagree`.
 
 ---
 

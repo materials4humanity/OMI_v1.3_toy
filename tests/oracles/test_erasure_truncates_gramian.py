@@ -15,6 +15,7 @@ from omi.operators import Control
 from omi.readouts import FunctionalReadout, ReadoutClass
 from omi.state import FloatArray, State
 
+from tests.conftest import ObservationRecorder
 from tests.oracles.known_erasure import GAINS, SCHEMA, DiagonalErasureOperator
 
 
@@ -32,7 +33,7 @@ class FullStateReadout(FunctionalReadout):
         return np.eye(state.values.shape[0])
 
 
-def test_gramian_rank_before_the_erasure_is_bounded_by_its_designed_rank() -> None:
+def test_gramian_rank_before_the_erasure_is_bounded_by_its_designed_rank(observe: ObservationRecorder) -> None:
     """A rich (full-state, low-noise) sensor placed strictly *after* the
     erasure still cannot make the pre-erasure Gramian's rank exceed the
     erasure's own designed rank (2 of 3) — Spec §3.2 Prop 3.2."""
@@ -49,11 +50,15 @@ def test_gramian_rank_before_the_erasure_is_bounded_by_its_designed_rank() -> No
     assert designed_rank == 2
 
     measured_rank = np.linalg.matrix_rank(gramian.total)
+    observe("designed_rank", designed_rank, "constructed, not measured")
+    observe("measured_rank", measured_rank, "<= designed_rank, == designed_rank")
     assert measured_rank <= designed_rank
     assert measured_rank == designed_rank  # this rich a sensor should achieve the bound exactly
 
 
-def test_erased_direction_is_unidentifiable_even_with_a_perfect_downstream_sensor() -> None:
+def test_erased_direction_is_unidentifiable_even_with_a_perfect_downstream_sensor(
+    observe: ObservationRecorder,
+) -> None:
     """Corollary 3.3 (Spec §3.2): directions in ker(F_erasure) are
     unidentifiable from post-erasure data, however good the sensor is."""
     control = Control(0.0, 1.0, lambda t: np.array([0.0]))
@@ -66,4 +71,6 @@ def test_erased_direction_is_unidentifiable_even_with_a_perfect_downstream_senso
 
     erased_direction = np.array([0.0, 0.0, 1.0])  # the exactly-zero-gain component
     action = gramian.total @ erased_direction
-    assert np.linalg.norm(action) < 1e-6
+    norm = float(np.linalg.norm(action))
+    observe("erased_direction_action_norm", norm, "< 1e-6")
+    assert norm < 1e-6

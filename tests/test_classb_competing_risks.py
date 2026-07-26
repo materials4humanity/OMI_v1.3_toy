@@ -19,6 +19,7 @@ import numpy as np
 
 from omi.classb import competing_risk_survival, estimate_tail_index_hill
 
+from tests.conftest import ObservationRecorder
 from tests.oracles.known_tail import KnownTailOracle
 
 COMMON_POPULATION = KnownTailOracle(alpha_a=5.0, beta=1.0, k=1.0, x_m=1.0)
@@ -71,7 +72,9 @@ def _naive_single_xi_failure_probability(rng: np.random.Generator) -> float:
     return 1.0 - survival
 
 
-def test_oq3_a_single_pooled_tail_fit_badly_underestimates_the_design_point_risk() -> None:
+def test_oq3_a_single_pooled_tail_fit_badly_underestimates_the_design_point_risk(
+    observe: ObservationRecorder,
+) -> None:
     """OQ-3, answered: pooling both populations and fitting a single tail
     index underestimates the true, competing-risk-aware design-point failure
     probability by orders of magnitude — the pooled fit is dominated by the
@@ -81,6 +84,11 @@ def test_oq3_a_single_pooled_tail_fit_badly_underestimates_the_design_point_risk
     rng = np.random.default_rng(7)
     true_probability = _true_design_point_failure_probability()
     naive_probability = _naive_single_xi_failure_probability(rng)
+    ratio = true_probability / naive_probability if naive_probability > 0.0 else float("inf")
+
+    observe("true_probability", true_probability, "narrative only, not asserted")
+    observe("naive_probability", naive_probability, "> 0.0")
+    observe("ratio_true_over_naive", ratio, "> 100")
 
     assert naive_probability > 0.0
     assert true_probability / naive_probability > 100, (
@@ -89,7 +97,9 @@ def test_oq3_a_single_pooled_tail_fit_badly_underestimates_the_design_point_risk
     )
 
 
-def test_the_rare_heavy_tailed_population_dominates_the_true_design_point_risk() -> None:
+def test_the_rare_heavy_tailed_population_dominates_the_true_design_point_risk(
+    observe: ObservationRecorder,
+) -> None:
     """Sanity check on the construction itself: despite having 1000x fewer
     members, the rare population contributes more design-point exceedance
     than the common one — that asymmetry is exactly what a pooled fit
@@ -99,4 +109,6 @@ def test_the_rare_heavy_tailed_population_dominates_the_true_design_point_risk()
 
     common_contribution = N_COMMON * f_common
     rare_contribution = N_RARE * f_rare
+    observe("common_contribution", common_contribution, "< rare_contribution")
+    observe("rare_contribution", rare_contribution, "> common_contribution")
     assert rare_contribution > common_contribution

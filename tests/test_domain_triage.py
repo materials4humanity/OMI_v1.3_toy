@@ -25,6 +25,8 @@ from omi_domains.flagship.build import build_chain as flagship_chain
 from omi_domains.flagship.build import build_incoming_ensemble as flagship_incoming
 from omi_domains.flagship.readouts import AggregateHardness, CoatingGauge, ForceTorqueSensor
 
+from tests.conftest import ObservationRecorder
+
 
 def test_flagship_triage_runs_end_to_end() -> None:
     rng = np.random.default_rng(0)
@@ -85,7 +87,9 @@ def _unresolved_danger_fraction(chain, nominal, prior, sensors, target_readouts)
     return dangerous_variance / total_unobserved_variance
 
 
-def test_contrasts_poor_observation_suite_leaves_more_target_variance_dangerous() -> None:
+def test_contrasts_poor_observation_suite_leaves_more_target_variance_dangerous(
+    observe: ObservationRecorder,
+) -> None:
     """The actual M3 exit-gate comparison: the contrast domain's poor,
     single-sensor observation suite must leave a materially larger fraction
     of its own no-sensor target variance dangerous (influential and
@@ -112,6 +116,9 @@ def test_contrasts_poor_observation_suite_leaves_more_target_variance_dangerous(
     ]
     c_prior = default_prior_covariance(contrast_metric)
     c_fraction = _unresolved_danger_fraction(c_chain, c_nominal, c_prior, c_sensors, [DendriteRisk()])
+
+    observe("flagship_unresolved_danger_fraction", f_fraction, "< contrast_unresolved_danger_fraction")
+    observe("contrast_unresolved_danger_fraction", c_fraction, "> flagship_unresolved_danger_fraction")
 
     print(f"\nflagship unresolved-danger fraction: {f_fraction:.3f}")
     print(f"contrast unresolved-danger fraction: {c_fraction:.3f}")

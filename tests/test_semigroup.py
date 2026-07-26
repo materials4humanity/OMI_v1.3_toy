@@ -21,29 +21,33 @@ from omi_domains.contrast.state import CONTRAST_SCHEMA
 from omi_domains.flagship.operators import HEATING_AND_SOAK, TRANSFER
 from omi_domains.flagship.state import FLAGSHIP_SCHEMA
 
+from tests.conftest import ObservationRecorder
+
 FLOATING_POINT_TOLERANCE = 1e-9
 
 
 @pytest.mark.parametrize("t_mid", [0.1, 0.37, 0.5, 0.9])
-def test_flagship_heating_and_soak_is_semigroup_exact(t_mid: float) -> None:
+def test_flagship_heating_and_soak_is_semigroup_exact(t_mid: float, observe: ObservationRecorder) -> None:
     rng = np.random.default_rng(0)
     state = State(FLAGSHIP_SCHEMA, rng.normal(loc=5.0, scale=2.0, size=FLAGSHIP_SCHEMA.size))
     control = Control(0.0, 1.0, lambda t: np.array([8.0]))
     residual = semigroup_residual(HEATING_AND_SOAK, state, control, t_mid)
+    observe("residual", residual, f"< {FLOATING_POINT_TOLERANCE}", units=f"t_mid={t_mid}")
     assert residual < FLOATING_POINT_TOLERANCE
 
 
 @pytest.mark.parametrize("t_mid", [0.05, 0.15, 0.25])
-def test_flagship_transfer_is_semigroup_exact(t_mid: float) -> None:
+def test_flagship_transfer_is_semigroup_exact(t_mid: float, observe: ObservationRecorder) -> None:
     rng = np.random.default_rng(1)
     state = State(FLAGSHIP_SCHEMA, rng.normal(loc=5.0, scale=2.0, size=FLAGSHIP_SCHEMA.size))
     control = Control(0.0, 0.3, lambda t: np.array([1.0]))
     residual = semigroup_residual(TRANSFER, state, control, t_mid)
+    observe("residual", residual, f"< {FLOATING_POINT_TOLERANCE}", units=f"t_mid={t_mid}")
     assert residual < FLOATING_POINT_TOLERANCE
 
 
 @pytest.mark.parametrize("t_mid", [0.2, 0.5, 0.8])
-def test_contrast_cycling_step_is_semigroup_exact(t_mid: float) -> None:
+def test_contrast_cycling_step_is_semigroup_exact(t_mid: float, observe: ObservationRecorder) -> None:
     """The contrast operator's growth laws are nonlinear (sqrt accumulation)
     and its ν components are recomputed algebraically each step — this
     checks semigroup exactness survives both, not just the flagship's linear
@@ -63,6 +67,7 @@ def test_contrast_cycling_step_is_semigroup_exact(t_mid: float) -> None:
     state = State(CONTRAST_SCHEMA, values)
     control = Control(0.0, 1.0, lambda t: np.array([2.0]))
     residual = semigroup_residual(CYCLING, state, control, t_mid)
+    observe("residual", residual, f"< {FLOATING_POINT_TOLERANCE}", units=f"t_mid={t_mid}")
     assert residual < FLOATING_POINT_TOLERANCE
 
 

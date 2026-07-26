@@ -211,6 +211,15 @@ Two further rules:
 - **Seed everything.** Every stochastic function takes an explicit generator.
   A flaky test in a framework about uncertainty quantification is worse than no
   test. CI runs the suite twice and compares.
+- **A test that checks a measured quantity records the quantity, not only the
+  verdict.** An assertion like `assert deficit < 0.05 * truth` pins a bound but
+  discards the number that was actually observed when the suite ran — anyone
+  auditing the claim later has to re-run the code to learn what "measured"
+  meant. Use the `observe` fixture (`tests/conftest.py`) to record the name,
+  the value, and the bound it was checked against, before the assertion.
+  `build/observations.json` is the resulting record: a git-ignored build
+  artefact, regenerated from scratch by every test-suite run, never hand-
+  edited or committed.
 
 ## 8. Conventions
 

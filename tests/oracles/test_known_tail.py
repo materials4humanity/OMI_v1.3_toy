@@ -17,6 +17,7 @@ import pytest
 
 from omi.classb import estimate_tail_index_hill, tail_index_transfer
 
+from tests.conftest import ObservationRecorder
 from tests.oracles import Oracle
 from tests.oracles.known_tail import KnownTailOracle
 
@@ -35,7 +36,9 @@ def test_known_tail_oracle_satisfies_the_oracle_protocol() -> None:
         (4.0, 1.0),  # weakly-amplifying case, beta == 1 (no rescaling of the tail index)
     ],
 )
-def test_hill_estimator_and_transfer_recover_xi_d(alpha_a: float, beta: float) -> None:
+def test_hill_estimator_and_transfer_recover_xi_d(
+    alpha_a: float, beta: float, observe: ObservationRecorder
+) -> None:
     """`estimate_tail_index_hill` applied to the *defect descriptor* samples
     (Spec §4.3: the tail index is "measured" from the defect population, not
     from the driver), then rescaled by `tail_index_transfer`, must land near
@@ -54,13 +57,17 @@ def test_hill_estimator_and_transfer_recover_xi_d(alpha_a: float, beta: float) -
     xi_d_hat = tail_index_transfer(xi_a_hat, beta)
     xi_d_true = oracle.truth()
 
+    observe("xi_a_hat", xi_a_hat, "narrative only, not asserted", units=f"alpha_a={alpha_a}")
+    observe("xi_d_hat", xi_d_hat, "abs(xi_d_hat - xi_d_true) < 0.15*xi_d_true + 0.02", units=f"beta={beta}")
+    observe("xi_d_true", xi_d_true, "constructed, not measured")
+
     assert abs(xi_d_hat - xi_d_true) < 0.15 * max(xi_d_true, 1e-6) + 0.02, (
         f"transferred xi_D_hat={xi_d_hat:.4f} vs constructed truth xi_D={xi_d_true:.4f} "
         f"(alpha_a={alpha_a}, beta={beta})"
     )
 
 
-def test_transfer_scales_linearly_with_beta() -> None:
+def test_transfer_scales_linearly_with_beta(observe: ObservationRecorder) -> None:
     """Qualitative ordering, per CLAUDE.md §7's preference for orderings over
     decimals: holding the measured `xi_a` fixed, a larger beta must recover a
     larger `xi_D`, since Spec §4.3 makes `xi_D` directly proportional to
@@ -73,6 +80,8 @@ def test_transfer_scales_linearly_with_beta() -> None:
     xi_d_small_beta = tail_index_transfer(xi_a_hat, beta=0.5)
     xi_d_large_beta = tail_index_transfer(xi_a_hat, beta=1.0)
 
+    observe("xi_d_small_beta", xi_d_small_beta, "< xi_d_large_beta", units="beta=0.5")
+    observe("xi_d_large_beta", xi_d_large_beta, "> xi_d_small_beta", units="beta=1.0")
     assert xi_d_small_beta < xi_d_large_beta
 
 

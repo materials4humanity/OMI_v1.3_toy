@@ -10,6 +10,8 @@ import pytest
 
 from omi.state import Ensemble, Metric, Slot, State, StateSchema
 
+from tests.conftest import ObservationRecorder
+
 SCHEMA = StateSchema(
     (
         (Slot.M, "field_a", 2),
@@ -68,11 +70,12 @@ def test_ensemble_from_states_and_component_view() -> None:
         np.testing.assert_array_equal(s.values, states[i].values)
 
 
-def test_metric_default_uses_aleatoric_sigma() -> None:
+def test_metric_default_uses_aleatoric_sigma(observe: ObservationRecorder) -> None:
     rng = np.random.default_rng(1)
     particles = rng.normal(loc=0.0, scale=3.0, size=(5000, SCHEMA.size))
     ensemble = Ensemble(SCHEMA, particles)
     metric = Metric.from_ensemble(ensemble)
+    observe("metric_scale", metric.scale, "all within 0.3 of 3.0 (true generating sigma)")
     # Qualitative, not decimal (CLAUDE.md §7): the fitted scale should be
     # within a few percent of the true generating sigma at this sample size.
     assert np.all(np.abs(metric.scale - 3.0) < 0.3)
@@ -86,7 +89,7 @@ def test_metric_falls_back_to_one_for_zero_variance_component() -> None:
     assert metric.scale[0] == 1.0
 
 
-def test_metric_distance_changes_when_a_component_is_rescaled() -> None:
+def test_metric_distance_changes_when_a_component_is_rescaled(observe: ObservationRecorder) -> None:
     """A light-touch check of metric dependence (OQ-5's full investigation,
     with recorded evidence, is scheduled for M2 per docs/ROADMAP.md — this
     only confirms the mechanism the investigation will use is present)."""
@@ -105,6 +108,9 @@ def test_metric_distance_changes_when_a_component_is_rescaled() -> None:
     a2 = Ensemble(SCHEMA, rescaled_particles)[0]
     b2 = Ensemble(SCHEMA, rescaled_particles)[1]
     d2 = rescaled_metric.distance(a2, b2)
+
+    observe("d1", d1, "narrative only, not asserted")
+    observe("d2", d2, "< 5 * d1")
 
     # The *rescaled* metric absorbs the unit change (aleatoric-sigma
     # normalisation), so the normalised distance stays comparable rather than

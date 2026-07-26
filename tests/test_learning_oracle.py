@@ -31,6 +31,8 @@ from omi_domains.contrast.build import build_incoming_ensemble
 from omi_domains.contrast.operators import CYCLING
 from omi_domains.contrast.state import CONTRAST_SCHEMA
 
+from tests.conftest import ObservationRecorder
+
 N_STEPS = 4
 CONTROL = Control(0.0, 1.0, lambda t: np.array([2.0]))
 FIRST_HALF = Control(0.0, 0.5, lambda t: np.array([2.0]))
@@ -105,7 +107,9 @@ def trained() -> Iterator[_Fixture]:
     )
 
 
-def test_learned_operator_matches_the_analytic_oracle_on_held_out_groups(trained: _Fixture) -> None:
+def test_learned_operator_matches_the_analytic_oracle_on_held_out_groups(
+    trained: _Fixture, observe: ObservationRecorder
+) -> None:
     """The primary oracle test (ADR-001: analytic operators remain the test
     oracle): one-step predictions on groups never used in training must be
     close to `CyclingStep`'s exact output, at the stated tolerance."""
@@ -118,12 +122,15 @@ def test_learned_operator_matches_the_analytic_oracle_on_held_out_groups(trained
             error = float(np.max(np.abs(state.values - record.true_trajectory[k + 1])))
             max_error = max(max_error, error)
 
+    observe("max_held_out_prediction_error", max_error, f"< {PREDICTION_TOLERANCE}")
     assert max_error < PREDICTION_TOLERANCE, (
         f"held-out prediction error {max_error:.4f} exceeds the stated tolerance {PREDICTION_TOLERANCE}"
     )
 
 
-def test_learned_operator_beats_a_naive_identity_baseline_on_held_out_groups(trained: _Fixture) -> None:
+def test_learned_operator_beats_a_naive_identity_baseline_on_held_out_groups(
+    trained: _Fixture, observe: ObservationRecorder
+) -> None:
     """Sanity check on the demonstration itself: the trained network must
     have learned *something* about `CyclingStep`'s dynamics, not merely
     memorised near-identity behaviour."""
@@ -137,10 +144,14 @@ def test_learned_operator_beats_a_naive_identity_baseline_on_held_out_groups(tra
             learned_error += float(np.sum((state.values - record.true_trajectory[k + 1]) ** 2))
             identity_error += float(np.sum((record.true_trajectory[0] - record.true_trajectory[k + 1]) ** 2))
             n += 1
+    observe("learned_error", learned_error, "< identity_error / 10")
+    observe("identity_error", identity_error, "> learned_error * 10")
     assert learned_error < identity_error / 10
 
 
-def test_semigroup_consistency_training_reduces_the_learned_operators_own_residual(trained: _Fixture) -> None:
+def test_semigroup_consistency_training_reduces_the_learned_operators_own_residual(
+    trained: _Fixture, observe: ObservationRecorder
+) -> None:
     """The semigroup-consistency training term (Spec §2.3) must measurably
     reduce the learned operator's own semigroup residual relative to an
     untrained network of the same architecture — the oracle test M1 already
@@ -150,6 +161,8 @@ def test_semigroup_consistency_training_reduces_the_learned_operators_own_residu
     untrained_residual = semigroup_residual(trained.untrained_operator, trained.probe_state, CONTROL, t_mid=0.5)
     trained_residual = semigroup_residual(trained.learned_operator, trained.probe_state, CONTROL, t_mid=0.5)
 
+    observe("untrained_residual", untrained_residual, "> trained_residual * 3")
+    observe("trained_residual", trained_residual, "< untrained_residual / 3")
     assert trained_residual < untrained_residual / 3
 
 
@@ -173,7 +186,9 @@ def _learned_vs_analytic_rollout_curve(
     return distances
 
 
-def test_rollout_length_error_curve_reported_for_the_learned_operator(trained: _Fixture) -> None:
+def test_rollout_length_error_curve_reported_for_the_learned_operator(
+    trained: _Fixture, observe: ObservationRecorder
+) -> None:
     """docs/ROADMAP.md M8 exit gate: "Rollout curve reported" — the learned
     operator's discrepancy from the analytic oracle at every rollout length,
     never a single terminal number (CLAUDE.md §5 invariant 7), and bounded
@@ -195,6 +210,7 @@ def test_rollout_length_error_curve_reported_for_the_learned_operator(trained: _
 
     curve = _learned_vs_analytic_rollout_curve(trained.learned_operator, baseline_state, identity_metric)
 
+    observe("rollout_length_error_curve", curve, "all finite, max < 1.0", units="identity-metric distance")
     assert len(curve) == N_STEPS
     assert all(np.isfinite(d) for d in curve)
     assert max(curve) < 1.0  # loose, stated bound: no blow-up over N_STEPS

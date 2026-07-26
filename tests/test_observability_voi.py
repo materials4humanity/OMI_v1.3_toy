@@ -25,6 +25,8 @@ from omi.operators import Control, EvolutionOperator
 from omi.readouts import FunctionalReadout, ReadoutClass
 from omi.state import FloatArray, Metric, Slot, State, StateSchema
 
+from tests.conftest import ObservationRecorder
+
 SCHEMA = StateSchema(((Slot.M, "a", 1), (Slot.M, "b", 1)))
 NULL_CONTROL = Control(0.0, 1.0, lambda t: np.array([0.0]))
 
@@ -67,7 +69,7 @@ def _chain() -> Chain:
     return Chain((Segment(Identity(), NULL_CONTROL), Segment(Identity(), NULL_CONTROL)))
 
 
-def test_woodbury_voi_matches_brute_force_reinversion() -> None:
+def test_woodbury_voi_matches_brute_force_reinversion(observe: ObservationRecorder) -> None:
     chain = _chain()
     nominal = nominal_trajectory(chain, State(SCHEMA, np.array([1.0, 1.0])))
     metric = Metric(SCHEMA, np.array([1.0, 1.0]))
@@ -85,10 +87,12 @@ def test_woodbury_voi_matches_brute_force_reinversion() -> None:
     sensitivity = sensitivity_operator(chain, nominal, 0, targets)
     brute_force = float(np.trace(sensitivity @ (posterior_before - posterior_after) @ sensitivity.T))
 
+    observe("woodbury", woodbury, "abs(woodbury - brute_force) < 1e-9")
+    observe("brute_force", brute_force, "abs(woodbury - brute_force) < 1e-9")
     assert abs(woodbury - brute_force) < 1e-9
 
 
-def test_placement_favours_the_unobserved_component_over_a_redundant_sensor() -> None:
+def test_placement_favours_the_unobserved_component_over_a_redundant_sensor(observe: ObservationRecorder) -> None:
     chain = _chain()
     nominal = nominal_trajectory(chain, State(SCHEMA, np.array([1.0, 1.0])))
     metric = Metric(SCHEMA, np.array([1.0, 1.0]))
@@ -104,6 +108,7 @@ def test_placement_favours_the_unobserved_component_over_a_redundant_sensor() ->
         chain, nominal, 0, prior, gramian, [new_component, redundant], {"sensor_b": 1.0, "sensor_a_again": 1.0}, targets
     )
 
+    observe("ratios", ratios, "ratios['sensor_b'] > 10 * ratios['sensor_a_again']")
     assert best.name == "sensor_b"
     assert ratios["sensor_b"] > 10 * ratios["sensor_a_again"]
 

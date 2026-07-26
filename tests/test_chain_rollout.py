@@ -13,8 +13,10 @@ from omi_domains.contrast.build import build_chain as contrast_chain
 from omi_domains.flagship.build import build_incoming_ensemble as flagship_incoming
 from omi_domains.flagship.build import build_chain as flagship_chain
 
+from tests.conftest import ObservationRecorder
 
-def test_flagship_chain_runs_end_to_end_and_erasure_takes_effect() -> None:
+
+def test_flagship_chain_runs_end_to_end_and_erasure_takes_effect(observe: ObservationRecorder) -> None:
     rng = np.random.default_rng(42)
     initial = flagship_incoming(200, rng)
     chain = flagship_chain()
@@ -32,11 +34,16 @@ def test_flagship_chain_runs_end_to_end_and_erasure_takes_effect() -> None:
     surviving_std_before = initial.component(Slot.M, "prior_grain_size").std()
     surviving_std_after = trajectory.final.component(Slot.M, "prior_grain_size").std()
 
+    observe("erased_std_before", float(erased_std_before), "narrative only, not asserted")
+    observe("erased_std_after", float(erased_std_after), "< 0.05 * erased_std_before")
+    observe("surviving_std_before", float(surviving_std_before), "== surviving_std_after")
+    observe("surviving_std_after", float(surviving_std_after), "== surviving_std_before")
+
     assert erased_std_after < 0.05 * erased_std_before
     assert surviving_std_after == surviving_std_before  # untouched exactly
 
 
-def test_contrast_chain_runs_end_to_end_with_no_erasure() -> None:
+def test_contrast_chain_runs_end_to_end_with_no_erasure(observe: ObservationRecorder) -> None:
     rng = np.random.default_rng(7)
     initial = contrast_incoming(200, rng)
     chain = contrast_chain(n_cycles=10, current=1.5)
@@ -54,4 +61,6 @@ def test_contrast_chain_runs_end_to_end_with_no_erasure() -> None:
     # with cycling, never shrinking.
     sei_before = initial.component(Slot.GAMMA, "sei_thickness").mean()
     sei_after = trajectory.final.component(Slot.GAMMA, "sei_thickness").mean()
+    observe("sei_thickness_before", float(sei_before), "< sei_thickness_after")
+    observe("sei_thickness_after", float(sei_after), "> sei_thickness_before")
     assert sei_after > sei_before

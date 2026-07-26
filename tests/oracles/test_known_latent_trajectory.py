@@ -19,6 +19,7 @@ from omi.observability import (
 )
 from omi.state import Metric, Slot, State
 
+from tests.conftest import ObservationRecorder
 from tests.oracles import Oracle
 from tests.oracles.known_latent_trajectory import KnownLatentTrajectoryOracle
 
@@ -27,7 +28,7 @@ def test_known_latent_trajectory_oracle_satisfies_the_protocol() -> None:
     assert isinstance(KnownLatentTrajectoryOracle(), Oracle)
 
 
-def test_smoother_recovers_the_hidden_trajectory_within_three_sigma() -> None:
+def test_smoother_recovers_the_hidden_trajectory_within_three_sigma(observe: ObservationRecorder) -> None:
     """M5 exit gate: the smoother's posterior mean for the never-observed
     ``hidden`` component must lie within a stated (3-sigma) interval of the
     truth at every chain index, even though the prior ensemble (M3's
@@ -41,16 +42,19 @@ def test_smoother_recovers_the_hidden_trajectory_within_three_sigma() -> None:
     filter_result = run_filter(oracle.chain, initial, obs, rng)
     smoothed = smooth(filter_result, obs)
 
+    per_index_error_in_sigma = []
     for k in range(oracle.n_steps + 1):
         estimate = smoothed[k].component(Slot.Z, "hidden")
         mean, std = estimate.mean(), estimate.std()
+        per_index_error_in_sigma.append(float(abs(mean - truth[k]) / std))
         assert abs(mean - truth[k]) < 3 * std, (
             f"index {k}: smoothed mean {mean} is more than 3 sigma ({3*std}) "
             f"from truth {truth[k]}"
         )
+    observe("per_index_error_in_sigma", per_index_error_in_sigma, "all < 3.0")
 
 
-def test_smoother_beats_the_raw_prior_at_the_unobserved_initial_index() -> None:
+def test_smoother_beats_the_raw_prior_at_the_unobserved_initial_index(observe: ObservationRecorder) -> None:
     """The initial ``hidden`` prior (mean 0, far from the truth of 4.0) is
     uninformed by construction; only retrospective smoothing through later
     ``v`` observations can correct it (Core §3.8: "retrospective inference...
@@ -69,10 +73,12 @@ def test_smoother_beats_the_raw_prior_at_the_unobserved_initial_index() -> None:
     smoothed = smooth(filter_result, obs)
     smoothed_error = abs(smoothed[0].component(Slot.Z, "hidden").mean() - truth[0])
 
+    observe("prior_error", prior_error, "> smoothed_error * 5")
+    observe("smoothed_error", smoothed_error, "< prior_error / 5")
     assert smoothed_error < prior_error / 5
 
 
-def test_hidden_direction_is_classified_inferred_by_m3_triage() -> None:
+def test_hidden_direction_is_classified_inferred_by_m3_triage(observe: ObservationRecorder) -> None:
     """Closing the loop with M3 (docs/ROADMAP.md M5): using the same
     instrumented-``v``-only design (no sensor ever touches ``hidden``),
     `danger_triage` must label the eigendirection dominated by ``hidden`` as
@@ -96,6 +102,11 @@ def test_hidden_direction_is_classified_inferred_by_m3_triage() -> None:
     )
 
     hidden_dominated = [d for d in triage.directions if abs(d.eigenvector[1]) > abs(d.eigenvector[0])]
+    observe(
+        "hidden_dominated_labels",
+        [d.label.name for d in hidden_dominated],
+        "at least one is INFERRED",
+    )
     assert hidden_dominated, "no eigendirection is hidden-dominated"
     assert any(d.label is Triage.INFERRED for d in hidden_dominated)
     for d in hidden_dominated:

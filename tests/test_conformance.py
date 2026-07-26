@@ -23,6 +23,8 @@ from omi.state import Metric
 from omi_domains.flagship.build import build_chain, build_incoming_ensemble
 from omi_domains.flagship.interface import FLAGSHIP_DECLARATION
 
+from tests.conftest import ObservationRecorder
+
 
 def _minimal_inputs() -> ConformanceInputs:
     rng = np.random.default_rng(0)
@@ -136,7 +138,9 @@ def test_automated_check_suite_reports_unavailable_checks_with_a_reason_not_sile
     assert "M8" in constraints.detail
 
 
-def test_calibration_report_distinguishes_well_calibrated_from_overconfident_ensembles() -> None:
+def test_calibration_report_distinguishes_well_calibrated_from_overconfident_ensembles(
+    observe: ObservationRecorder,
+) -> None:
     rng = np.random.default_rng(0)
     n_cases, n_ensemble = 500, 200
     truth = rng.normal(0, 1, n_cases)
@@ -147,6 +151,11 @@ def test_calibration_report_distinguishes_well_calibrated_from_overconfident_ens
 
     good = calibration_report(well_calibrated, observations, nominal_coverage_level=0.9)
     bad = calibration_report(overconfident, observations, nominal_coverage_level=0.9)
+
+    observe("good_pit_uniformity_residual", good.pit_uniformity_residual, "< bad_pit_uniformity_residual")
+    observe("bad_pit_uniformity_residual", bad.pit_uniformity_residual, "> good_pit_uniformity_residual")
+    observe("good_empirical_coverage", good.empirical_coverage, "> bad_empirical_coverage")
+    observe("bad_empirical_coverage", bad.empirical_coverage, "< good_empirical_coverage")
 
     assert good.pit_uniformity_residual < bad.pit_uniformity_residual
     assert good.empirical_coverage > bad.empirical_coverage

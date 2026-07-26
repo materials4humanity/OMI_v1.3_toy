@@ -14,6 +14,7 @@ from scipy import stats
 from omi.classb import subset_simulation
 from omi.state import FloatArray
 
+from tests.conftest import ObservationRecorder
 from tests.oracles.known_tail import KnownTailOracle
 
 
@@ -41,10 +42,11 @@ def _rosenblatt_evaluate(oracle: KnownTailOracle) -> Callable[[FloatArray], Floa
     return evaluate
 
 
-def test_subset_simulation_recovers_a_known_rare_exceedance_probability() -> None:
+def test_subset_simulation_recovers_a_known_rare_exceedance_probability(observe: ObservationRecorder) -> None:
     oracle = KnownTailOracle(alpha_a=3.0, beta=0.5, k=1.0, x_m=1.0)
     target = 50.0
     truth = _exact_survival(oracle, target)
+    observe("truth", truth, "< 1e-9 (rarity precondition)")
     assert truth < 1e-9, "test is only meaningful if the target is genuinely rare"
 
     rng = np.random.default_rng(3)
@@ -52,15 +54,19 @@ def test_subset_simulation_recovers_a_known_rare_exceedance_probability() -> Non
         _rosenblatt_evaluate(oracle), target, rng, dimension=1, n_per_level=500, conditional_probability=0.1
     )
 
-    assert result.probability > 0.0
     log_ratio = np.log10(result.probability / truth)
+    observe("estimated_probability", result.probability, "> 0.0")
+    observe("log10_ratio_to_truth", log_ratio, "abs < 1.0")
+    assert result.probability > 0.0
     assert abs(log_ratio) < 1.0, (
         f"subset-simulation estimate {result.probability:.3e} is more than one "
         f"order of magnitude from the exact truth {truth:.3e}"
     )
 
 
-def test_subset_simulation_uses_far_fewer_evaluations_than_direct_sampling_would() -> None:
+def test_subset_simulation_uses_far_fewer_evaluations_than_direct_sampling_would(
+    observe: ObservationRecorder,
+) -> None:
     """Spec §4.5's cost claim: subset simulation reaches a rare target at a
     cost of `O(c * n_per_level)`, not `O(1 / P_f)` direct samples."""
     oracle = KnownTailOracle(alpha_a=3.0, beta=0.5, k=1.0, x_m=1.0)
@@ -73,16 +79,19 @@ def test_subset_simulation_uses_far_fewer_evaluations_than_direct_sampling_would
     )
 
     direct_sampling_cost = 1.0 / truth
+    observe("n_evaluations", result.n_evaluations, "< direct_sampling_cost / 1000")
+    observe("direct_sampling_cost", direct_sampling_cost, "narrative only, not asserted")
     assert result.n_evaluations < direct_sampling_cost / 1000
 
 
-def test_subset_simulation_reports_its_level_thresholds() -> None:
+def test_subset_simulation_reports_its_level_thresholds(observe: ObservationRecorder) -> None:
     """Never a bare probability (CLAUDE.md §8): the per-level thresholds
     climbing toward the target are always reported alongside the estimate."""
     oracle = KnownTailOracle(alpha_a=3.0, beta=0.5, k=1.0, x_m=1.0)
     rng = np.random.default_rng(4)
     result = subset_simulation(_rosenblatt_evaluate(oracle), 50.0, rng, dimension=1)
 
+    observe("level_thresholds", result.level_thresholds, "strictly increasing, non-empty")
     assert len(result.level_thresholds) > 0
     thresholds = np.array(result.level_thresholds)
     assert np.all(np.diff(thresholds) > 0), "level thresholds must climb monotonically"

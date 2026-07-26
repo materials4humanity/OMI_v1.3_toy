@@ -23,6 +23,8 @@ from omi.constraints import (
 )
 from omi.state import FloatArray
 
+from tests.conftest import ObservationRecorder
+
 TRAINING_SCALE = 5.0
 """Typical magnitude of inputs a network would see in training — the
 adversarial checks below probe far outside this, per CLAUDE.md §5 invariant
@@ -81,28 +83,36 @@ def test_conserve_total_holds_on_and_off_manifold(scale: float) -> None:
     assert np.isclose(float(np.sum(y)), 10.0)
 
 
-def test_positive_grad_matches_finite_difference() -> None:
+def test_positive_grad_matches_finite_difference(observe: ObservationRecorder) -> None:
     rng = np.random.default_rng(4)
     x = rng.normal(0.0, TRAINING_SCALE, 20)
     numeric = (positive(x + 1e-6) - positive(x - 1e-6)) / 2e-6
-    assert np.max(np.abs(positive_grad(x) - numeric)) < 1e-6
+    max_abs_error = float(np.max(np.abs(positive_grad(x) - numeric)))
+    observe("max_abs_error", max_abs_error, "< 1e-6", units="grad units")
+    assert max_abs_error < 1e-6
 
 
-def test_simplex_jacobian_matches_finite_difference() -> None:
+def test_simplex_jacobian_matches_finite_difference(observe: ObservationRecorder) -> None:
     rng = np.random.default_rng(5)
     x = rng.normal(0.0, TRAINING_SCALE, 5)
-    assert np.max(np.abs(simplex_jacobian(x) - _numeric_jacobian(simplex, x))) < 1e-6
+    max_abs_error = float(np.max(np.abs(simplex_jacobian(x) - _numeric_jacobian(simplex, x))))
+    observe("max_abs_error", max_abs_error, "< 1e-6")
+    assert max_abs_error < 1e-6
 
 
-def test_monotone_increasing_jacobian_matches_finite_difference() -> None:
+def test_monotone_increasing_jacobian_matches_finite_difference(observe: ObservationRecorder) -> None:
     rng = np.random.default_rng(6)
     deltas = rng.normal(0.0, TRAINING_SCALE, 5)
     f = lambda d: monotone_increasing(d, initial=1.0)  # noqa: E731
-    assert np.max(np.abs(monotone_increasing_jacobian(deltas) - _numeric_jacobian(f, deltas))) < 1e-6
+    max_abs_error = float(np.max(np.abs(monotone_increasing_jacobian(deltas) - _numeric_jacobian(f, deltas))))
+    observe("max_abs_error", max_abs_error, "< 1e-6")
+    assert max_abs_error < 1e-6
 
 
-def test_conserve_total_jacobian_matches_finite_difference() -> None:
+def test_conserve_total_jacobian_matches_finite_difference(observe: ObservationRecorder) -> None:
     rng = np.random.default_rng(7)
     x = rng.normal(0.0, TRAINING_SCALE, 5)
     f = lambda v: conserve_total(v, total=10.0)  # noqa: E731
-    assert np.max(np.abs(conserve_total_jacobian(5) - _numeric_jacobian(f, x))) < 1e-6
+    max_abs_error = float(np.max(np.abs(conserve_total_jacobian(5) - _numeric_jacobian(f, x))))
+    observe("max_abs_error", max_abs_error, "< 1e-6")
+    assert max_abs_error < 1e-6

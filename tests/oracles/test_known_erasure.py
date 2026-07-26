@@ -11,6 +11,7 @@ import numpy as np
 from omi.erasure import component_recoverability, measure_erasure
 from omi.state import Metric, Slot
 
+from tests.conftest import ObservationRecorder
 from tests.oracles import Oracle
 from tests.oracles.known_erasure import KnownErasureOracle
 
@@ -19,7 +20,7 @@ def test_known_erasure_oracle_satisfies_the_protocol() -> None:
     assert isinstance(KnownErasureOracle(), Oracle)
 
 
-def test_measured_rank_matches_the_designed_rank() -> None:
+def test_measured_rank_matches_the_designed_rank(observe: ObservationRecorder) -> None:
     oracle = KnownErasureOracle()
     rng = np.random.default_rng(0)
     ensemble = oracle.build_ensemble(2000, rng)
@@ -27,6 +28,9 @@ def test_measured_rank_matches_the_designed_rank() -> None:
 
     measurement = measure_erasure(oracle.operator, ensemble[0], oracle.null_control, metric)
     truth = oracle.truth()
+
+    observe("measured_rank", measurement.rank, "== truth.rank")
+    observe("truth_rank", truth.rank, "constructed, not measured")
 
     assert measurement.rank == truth.rank
     assert measurement.surviving_basis.shape[1] == truth.rank
@@ -61,7 +65,7 @@ def test_surviving_and_erased_subspaces_match_the_designed_directions() -> None:
         assert np.linalg.norm(e_i - projection) < 1e-8
 
 
-def test_oq2_naive_magnitude_heuristic_disagrees_with_recoverability() -> None:
+def test_oq2_naive_magnitude_heuristic_disagrees_with_recoverability(observe: ObservationRecorder) -> None:
     """OQ-2 (docs/COVERAGE.md Part IV): "a component can lose 85% of its
     magnitude while the residual remains a deterministic function of the
     input, hence still assimilable." Here the small-gain (0.15) component
@@ -87,6 +91,15 @@ def test_oq2_naive_magnitude_heuristic_disagrees_with_recoverability() -> None:
     r2_full = component_recoverability(oracle.operator, ensemble, oracle.null_control, Slot.M, "surviving_full")
     r2_small = component_recoverability(oracle.operator, ensemble, oracle.null_control, Slot.M, "surviving_small")
     r2_erased = component_recoverability(oracle.operator, ensemble, oracle.null_control, Slot.Z, "erased")
+
+    observe("naive_full", naive_full, "> 0.99")
+    observe("naive_small", naive_small, "< 0.05")
+    observe("naive_erased", naive_erased, "< 0.01")
+    observe("r2_full", r2_full, "> 0.999")
+    observe("r2_small", r2_small, "> 0.999")
+    observe("r2_erased", r2_erased, "< 0.01")
+    observe("naive_small_variance_loss_pct", (1.0 - naive_small) * 100.0, "narrative only, not asserted")
+    observe("r2_small_minus_naive_small", r2_small - naive_small, "> 0.9")
 
     # The naive heuristic and the correct measurement agree on the two
     # unambiguous cases...

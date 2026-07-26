@@ -17,6 +17,8 @@ from omi_domains.contrast.readouts import DendriteRisk
 from omi_domains.flagship.build import build_incoming_ensemble as flagship_incoming
 from omi_domains.flagship.readouts import AggregateHardness, ExtractHardness
 
+from tests.conftest import ObservationRecorder
+
 SCHEMA = StateSchema(((Slot.M, "x", 1),))
 
 
@@ -43,7 +45,7 @@ def test_weakest_link_rejects_class_a_readout() -> None:
         readout.weakest_link(ensemble, n_sub=5, n_trials=100, rng=np.random.default_rng(0))
 
 
-def test_weakest_link_distribution_grows_with_n_sub() -> None:
+def test_weakest_link_distribution_grows_with_n_sub(observe: ObservationRecorder) -> None:
     """Core §3.6: P(rho_V > x) = [P(rho_0 > x)]^N — the max over more
     sub-elements should be stochastically larger (CLAUDE.md §7: qualitative
     orderings, not decimals)."""
@@ -61,6 +63,8 @@ def test_weakest_link_distribution_grows_with_n_sub() -> None:
 
     small_n = readout.weakest_link(ensemble, n_sub=2, n_trials=4000, rng=rng)
     large_n = readout.weakest_link(ensemble, n_sub=50, n_trials=4000, rng=rng)
+    observe("small_n_sub_mean", float(small_n.mean()), "< large_n_sub_mean", units="n_sub=2")
+    observe("large_n_sub_mean", float(large_n.mean()), "> small_n_sub_mean", units="n_sub=50")
     assert large_n.mean() > small_n.mean()
 
 
@@ -86,7 +90,9 @@ def test_flagship_type0_and_type1_readouts_agree_by_construction() -> None:
     )
 
 
-def test_flagship_constitutive_operator_accrues_hardening_under_real_driving() -> None:
+def test_flagship_constitutive_operator_accrues_hardening_under_real_driving(
+    observe: ObservationRecorder,
+) -> None:
     rng = np.random.default_rng(3)
     ensemble = flagship_incoming(1, rng)
     state = ensemble[0]
@@ -94,10 +100,14 @@ def test_flagship_constitutive_operator_accrues_hardening_under_real_driving() -
     driving_control = Control(0.0, 2.0, lambda t: np.array([3.0]))
 
     _, updated_state = operator.respond(driving_control)
-    assert updated_state.get(Slot.Z, "accumulated_hardening")[0] > state.get(Slot.Z, "accumulated_hardening")[0]
+    before = float(state.get(Slot.Z, "accumulated_hardening")[0])
+    after = float(updated_state.get(Slot.Z, "accumulated_hardening")[0])
+    observe("hardening_before", before, "< hardening_after")
+    observe("hardening_after", after, "> hardening_before")
+    assert after > before
 
 
-def test_contrast_dendrite_risk_is_class_b_and_weakest_link_works() -> None:
+def test_contrast_dendrite_risk_is_class_b_and_weakest_link_works(observe: ObservationRecorder) -> None:
     rng = np.random.default_rng(4)
     initial = contrast_incoming(100, rng)
     trajectory = contrast_chain(n_cycles=15, current=2.0).rollout(initial)
@@ -108,4 +118,6 @@ def test_contrast_dendrite_risk_is_class_b_and_weakest_link_works() -> None:
     assert base.shape == (100, 1)
 
     worst = readout.weakest_link(trajectory.final, n_sub=10, n_trials=2000, rng=rng)
+    observe("base_mean", float(base.mean()), "<= worst_mean")
+    observe("worst_mean", float(worst.mean()), ">= base_mean")
     assert worst.mean() >= base.mean()

@@ -17,6 +17,8 @@ from omi.observability import nominal_trajectory, propagate_jvp, propagate_vjp
 from omi.operators import Control, EvolutionOperator
 from omi.state import FloatArray, Slot, State, StateSchema
 
+from tests.conftest import ObservationRecorder
+
 SCHEMA = StateSchema(((Slot.M, "a", 1), (Slot.M, "b", 1), (Slot.Z, "c", 1)))
 NULL_CONTROL = Control(0.0, 1.0, lambda t: np.array([0.0]))
 
@@ -78,7 +80,7 @@ def test_vjp_matches_the_dense_transpose_product() -> None:
     np.testing.assert_allclose(actual, expected, atol=1e-10)
 
 
-def test_jvp_vjp_adjoint_identity_holds_for_a_partial_subinterval() -> None:
+def test_jvp_vjp_adjoint_identity_holds_for_a_partial_subinterval(observe: ObservationRecorder) -> None:
     """w . (Phi_{j,k} v) == (Phi_{j,k}^T w) . v for arbitrary v, w — the
     defining property of an adjoint pair, checked on a sub-interval (k=1,
     j=3) rather than the whole chain, since Spec Sec3.1's Phi is defined
@@ -89,8 +91,9 @@ def test_jvp_vjp_adjoint_identity_holds_for_a_partial_subinterval() -> None:
     v = rng.normal(size=3)
     w = rng.normal(size=3)
 
-    lhs = w @ propagate_jvp(chain, nominal, 1, 3, v)
-    rhs = propagate_vjp(chain, nominal, 1, 3, w) @ v
+    lhs = float(w @ propagate_jvp(chain, nominal, 1, 3, v))
+    rhs = float(propagate_vjp(chain, nominal, 1, 3, w) @ v)
+    observe("adjoint_identity_abs_diff", abs(lhs - rhs), "< 1e-10")
     assert abs(lhs - rhs) < 1e-10
 
 

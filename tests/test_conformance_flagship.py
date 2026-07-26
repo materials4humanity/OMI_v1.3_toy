@@ -41,6 +41,8 @@ from omi_domains.flagship.operators import HEATING_AND_SOAK, TRANSFER
 from omi_domains.flagship.readouts import AggregateHardness, CoatingGauge, ForceTorqueSensor
 from omi_domains.flagship.state import FLAGSHIP_SCHEMA
 
+from tests.conftest import ObservationRecorder
+
 MEASUREMENT_NOISE_STD = 0.5
 """A hardness tester's repeat noise (Spec §1.2's ``σ²_rep``) — small
 relative to the ~100-unit hardness scale, standing in for real repeat-trial
@@ -163,13 +165,15 @@ def _flagship_rollout_curve(rng: np.random.Generator, metric: Metric, chain: Cha
     return rollout_length_error_curve(chain, baseline, perturbed, metric)
 
 
-def test_flagship_matched_pair_deficit_is_at_noise_level() -> None:
+def test_flagship_matched_pair_deficit_is_at_noise_level(observe: ObservationRecorder) -> None:
     """Sanity check on the campaign itself before it feeds a conformance
     claim: the deficit must clamp to (near) zero, and for the honestly
     stated reason (no cross-component coupling reaches AggregateHardness
     from the erased components), not because the campaign is degenerate."""
     rng = np.random.default_rng(20260726)
     result = _matched_pair_sufficiency_campaign(rng)
+    observe("deficit_squared", result.deficit_squared, "< repeat_variance_term")
+    observe("repeat_variance_term", result.repeat_variance_term, "> deficit_squared")
     assert result.deficit_squared < result.repeat_variance_term
 
 

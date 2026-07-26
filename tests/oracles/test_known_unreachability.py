@@ -9,6 +9,7 @@ import numpy as np
 from omi.inverse import ReachabilityCertificate, achievable_bound, is_provably_unreachable, nearest_reachable_state
 from omi.state import State
 
+from tests.conftest import ObservationRecorder
 from tests.oracles import Oracle
 from tests.oracles.known_unreachability import KnownUnreachabilityOracle
 
@@ -71,7 +72,9 @@ def test_nearest_reachable_state_projects_exactly_onto_the_boundary() -> None:
     assert np.isclose(certificate.phi(nearest), oracle.truth())
 
 
-def test_nearest_reachable_state_is_the_true_closest_point_on_the_boundary() -> None:
+def test_nearest_reachable_state_is_the_true_closest_point_on_the_boundary(
+    observe: ObservationRecorder,
+) -> None:
     """The projection must minimise Euclidean distance to the target among
     all points satisfying `Φ(s) = bound` — checked against a coarse grid
     search over the boundary line, an independent (if crude) verification
@@ -89,4 +92,6 @@ def test_nearest_reachable_state_is_the_true_closest_point_on_the_boundary() -> 
     grid_distances = np.sqrt((grid_a - far_target.values[0]) ** 2 + (grid_b - far_target.values[1]) ** 2)
     best_grid_distance = float(np.min(grid_distances))
 
+    observe("projected_distance", projected_distance, "<= best_grid_distance + 1e-3")
+    observe("best_grid_distance", best_grid_distance, "grid-search cross-check")
     assert projected_distance <= best_grid_distance + 1e-3
