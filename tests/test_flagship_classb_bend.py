@@ -4,6 +4,11 @@ repository has ever had — exercised end to end through `omi.classb`'s
 driver/tail separation, correlation-length estimation, dimensional
 reduction, and validation ladder, against a real (not hand-supplied) driver
 field. Cites Core §3.6, Core §7.1, Spec §4 in full.
+
+The campaign (`run_bend_classb_campaign`) is expensive — bulk-regime rung 4
+is now genuine Monte Carlo sampling (V1.4-EDITS.md E-12), not a closed-form
+formula — so it runs once per test session via :func:`campaign_result`
+rather than once per test.
 """
 
 from __future__ import annotations
@@ -13,6 +18,7 @@ import pytest
 
 from omi.readouts import ComponentReadout, ReadoutType, Type2Geometry
 from omi_domains.flagship.classb_bend import (
+    BendCampaignResult,
     bulk_regime_thicknesses,
     run_bend_classb_campaign,
     thin_regime_thicknesses,
@@ -21,6 +27,12 @@ from omi_domains.flagship.interface import FLAGSHIP_DECLARATION
 from omi_domains.flagship.readouts import BendAngle, ExtractHardness
 
 from tests.conftest import ObservationRecorder
+
+
+@pytest.fixture(scope="module")
+def campaign_result() -> BendCampaignResult:
+    rng = np.random.default_rng(0)
+    return run_bend_classb_campaign(rng)
 
 
 def test_type2geometry_accepts_only_two_scalars() -> None:
@@ -75,9 +87,10 @@ def test_flagship_declares_bend_angle_with_item_4b_filled() -> None:
     assert "inclusion_content" in catalogue_text
 
 
-def test_bend_classb_campaign_runs_end_to_end(observe: ObservationRecorder) -> None:
-    rng = np.random.default_rng(0)
-    result = run_bend_classb_campaign(rng)
+def test_bend_classb_campaign_runs_end_to_end(
+    campaign_result: BendCampaignResult, observe: ObservationRecorder
+) -> None:
+    result = campaign_result
 
     observe("correlation_length", result.correlation_length.correlation_length, "> 0, reliable")
     observe("correlation_length_reliable", result.correlation_length.reliable, "True")
@@ -90,54 +103,114 @@ def test_bend_classb_campaign_runs_end_to_end(observe: ObservationRecorder) -> N
     assert result.xi_a_hat > 0.0
     assert result.xi_d_hat == pytest.approx(result.xi_a_hat)  # beta = 1.0
 
-    observe("p0", result.p0, "in (0, 1), from the fitted join model")
+    observe("p0_model_based", result.p0, "in (0, 1), fitted from join_driver_tail, not calibrated against sampling")
     assert 0.0 < result.p0 < 1.0
 
 
-def test_bulk_regime_failure_probability_increases_with_thickness(observe: ObservationRecorder) -> None:
-    """n_eff's bulk-regime formula (volume/ell_D^3) grows with volume, so
-    holding the per-site exceedance probability fixed, failure probability
-    must strictly increase across the swept thicknesses (Proposition 4.2's
-    ordinary, non-reduced size effect)."""
-    rng = np.random.default_rng(0)
-    result = run_bend_classb_campaign(rng)
+def test_bulk_regime_rung_4_is_empirical_and_p0_is_reported_not_reconciled(
+    campaign_result: BendCampaignResult, observe: ObservationRecorder
+) -> None:
+    """Rung 4 (Spec §4.6), bulk regime: `P_fail` at each thickness now comes
+    from direct Monte Carlo simulation of the weakest-link construction
+    (V1.4-EDITS.md E-12), not from feeding `n_eff`'s own output back into
+    the formula being validated — so the residual is genuine sampling
+    disagreement, not floating-point identity, and the tolerance below is
+    sized for sampling noise, not machine epsilon.
+
+    `p0` (model-based, fitted from `join_driver_tail`) and
+    `bulk_p0_implied` (backed out of the empirical `P_fail` via
+    `1 - (1-Pf)**(1/N_eff)`) are reported side by side. They are not
+    expected to match exactly, and neither is adjusted to match the
+    other — a persistent gap here is itself the finding (per the review
+    that produced E-12), not something to calibrate away.
+    """
+    result = campaign_result
 
     observe("bulk_thicknesses", bulk_regime_thicknesses(result.correlation_length.correlation_length), "> ell_D")
-    observe("bulk_failure_probabilities", result.bulk_failure_probabilities, "strictly increasing")
+    observe("bulk_n_eff", result.bulk_n_eff, "grows with volume (bulk regime)")
+    observe("bulk_failure_probabilities", result.bulk_failure_probabilities, "strictly increasing, empirical")
     assert np.all(np.diff(result.bulk_failure_probabilities) > 0)
 
-    observe("bulk_volume_scaling_residual", result.bulk_volume_scaling_residual, "~0 (predicted_exponent=1.0)")
-    assert abs(result.bulk_volume_scaling_residual) < 1e-6
+    observe("p0_model_based", result.p0, "compare only, not reconciled with bulk_p0_implied")
+    observe("bulk_p0_implied", result.bulk_p0_implied, "compare only, not reconciled with p0_model_based")
+
+    observe(
+        "bulk_volume_scaling_residual",
+        result.bulk_volume_scaling_residual,
+        "sampling-noise-sized, e.g. < 0.1 in magnitude (not ~0 — this is now an empirical comparison)",
+    )
+    assert abs(result.bulk_volume_scaling_residual) < 0.1
 
 
-def test_thin_regime_failure_probability_is_suppressed_across_thickness(
-    observe: ObservationRecorder,
+def test_thin_regime_n_eff_formula_is_thickness_independent_at_fixed_footprint(
+    campaign_result: BendCampaignResult, observe: ObservationRecorder
 ) -> None:
-    """Proposition 4.2's dimensional reduction: once thickness falls below
-    the estimated correlation length, n_eff = area/ell_D^2 no longer depends
-    on thickness at fixed footprint area — so failure probability must stay
-    (near-)constant across the thin-regime sweep, "the size effect with
-    respect to thickness is suppressed" (Spec §4.4)."""
-    rng = np.random.default_rng(0)
-    result = run_bend_classb_campaign(rng)
+    """This asserts an arithmetic property of `n_eff`'s own in-plane-regime
+    formula — `(volume/thickness)/ell_D**2` reduces to a constant once
+    `volume = FIXED_FOOTPRINT_AREA * thickness` — and nothing about Class
+    B's physical claim that this suppression is an *emergent* consequence
+    of the driver field's spatial correlation. See
+    `test_thin_regime_dimensional_reduction_is_not_empirically_validated`
+    (skipped) for why that stronger claim is not checked here, and
+    `docs/V1.4-EDITS.md` E-14 for the full finding. A green result below
+    means "the formula is self-consistent," not "Proposition 4.2 is
+    validated" — do not read it as the latter.
+    """
+    result = campaign_result
 
     observe("thin_thicknesses", thin_regime_thicknesses(result.correlation_length.correlation_length), "< ell_D")
-    observe("thin_failure_probabilities", result.thin_failure_probabilities, "constant across thickness")
+    observe(
+        "thin_failure_probabilities",
+        result.thin_failure_probabilities,
+        "constant across thickness (formula identity, not sampled)",
+    )
     assert np.allclose(result.thin_failure_probabilities, result.thin_failure_probabilities[0])
 
-    observe("thin_volume_scaling_residual", result.thin_volume_scaling_residual, "~0 (predicted_exponent=0.0)")
+    observe(
+        "thin_volume_scaling_residual",
+        result.thin_volume_scaling_residual,
+        "~0 (predicted_exponent=0.0; this is a formula-consistency check, not a physical validation)",
+    )
     assert abs(result.thin_volume_scaling_residual) < 1e-6
 
 
-def test_validation_ladder_is_constructed_with_finite_rungs(observe: ObservationRecorder) -> None:
-    rng = np.random.default_rng(0)
-    result = run_bend_classb_campaign(rng)
+@pytest.mark.skip(
+    reason=(
+        "Blocked, not failing: Proposition 4.2's dimensional reduction (Spec §4.4) "
+        "cannot be validated as an emergent consequence of sampling a "
+        "through-thickness-correlated driver field at Tier I/Tier I½. The flagship "
+        "state schema has no spatial coordinate through the thickness (every "
+        "FLAGSHIP_SCHEMA component is scalar, src/omi_domains/flagship/state.py), "
+        "and BendAngle's through-thickness quadrature varies only the driving "
+        "control, never inclusion_content, across z (src/omi_domains/flagship/"
+        "readouts.py). Giving the state that spatial extent is Core §2.5's "
+        "body-indexed state, marked [Pass C] and listed as a CLAUDE.md §9 "
+        "anti-goal (Spec §5.2). Not synthesised to force this test green. "
+        "See docs/V1.4-EDITS.md E-14."
+    )
+)
+def test_thin_regime_dimensional_reduction_is_not_empirically_validated() -> None:
+    """This test exists to keep the suite from reporting green, by omission,
+    on the claim that Class B's thin-regime suppression is physically
+    validated here. It is not: see the skip reason and E-14. Do not remove
+    this test to "clean up" a permanent skip — its presence is the record."""
+    raise AssertionError("unreachable — this test is always skipped")
+
+
+def test_validation_ladder_is_constructed_with_finite_rungs(
+    campaign_result: BendCampaignResult, observe: ObservationRecorder
+) -> None:
+    result = campaign_result
     ladder = result.validation_ladder
 
     observe("rung1_bulk_residual", ladder.bulk_residual, "finite, in [0, 1] (KS statistic)")
     observe("rung3_fractography_residual", ladder.fractography_residual, "finite, in [0, 1] (KS statistic)")
     observe("rung3_voids_construction", ladder.voids_construction, "bool")
-    observe("rung4_volume_scaling_residual", ladder.volume_scaling_residual, "worse of the two regime residuals")
+    observe(
+        "rung4_volume_scaling_residual",
+        ladder.volume_scaling_residual,
+        "worse of an empirical (bulk) and an arithmetic-identity (thin) residual — see classb_bend.py",
+    )
 
     assert 0.0 <= ladder.bulk_residual <= 1.0
     assert 0.0 <= ladder.fractography_residual <= 1.0

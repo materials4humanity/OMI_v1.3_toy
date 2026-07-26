@@ -16,16 +16,30 @@ constitutive operator's own response formula is affine in
 directly off :class:`~omi_domains.flagship.readouts.HardnessConstitutiveOperator`,
 not invented here or in `omi.classb`.
 
-The per-site exceedance probability ``p0`` (:attr:`BendCampaignResult.p0`)
-is measured *once*, at one reference geometry
-(:data:`REFERENCE_THICKNESS`/:data:`REFERENCE_CURVATURE`), and then held
-fixed while :func:`bulk_regime_thicknesses` / :func:`thin_regime_thicknesses`
-sweep thickness for :func:`~omi.classb.n_eff`. This is the modelling
-assumption "the same bend severity, different specimen size" — isolating
-the volume/thickness effect Proposition 4.2 concerns from a confound of
-also changing how hard each specimen is driven — and it is why the sweep
-needs no further site-level simulation: only :func:`~omi.classb.n_eff`'s
-own formula is evaluated at each swept thickness, not `BendAngle` again.
+**Rung 4 (Spec §4.6), bulk regime, is empirical, not closed-form** (a Phase
+2 review found the original closed-form version circular, V1.4-EDITS.md
+E-12): :func:`_empirical_bulk_failure_probabilities` draws ``round(N_eff)``
+i.i.d. sub-volume defect samples per trial, runs each through the real
+`BendAngle`, takes the per-trial maximum driver value, thresholds, and
+repeats over many trials — the observed exponent this produces is
+independent of the exponent :func:`~omi.classb.n_eff` predicts, so a
+residual now reflects genuine sampling agreement rather than
+floating-point identity. The per-site exceedance probability ``p0``
+(:attr:`BendCampaignResult.p0`) is separately *model-based*: fit once, at
+one reference geometry, from :func:`~omi.classb.join_driver_tail`'s GPD
+tail. It is **not** calibrated against the empirical bulk sampling above,
+and the two are not reconciled — :attr:`BendCampaignResult.bulk_p0_implied`
+reports what the empirical trials themselves imply per thickness (by
+inverting `1 - (1-p0)**N_eff`), for comparison only.
+
+The thin regime remains closed-form (`_failure_probabilities`, `p0` held
+fixed while :func:`~omi.classb.n_eff`'s own formula is evaluated at each
+swept thickness): the algebraic identity behind its thickness-independence
+is exactly what
+`tests/test_flagship_classb_bend.py`'s thin-regime test now marks as
+blocked rather than validated (V1.4-EDITS.md E-14) — see that test for why
+no amount of resampling here would make the reduction emergent without
+Core §2.5's body-indexed state.
 """
 
 from __future__ import annotations
@@ -106,6 +120,13 @@ thickness`` isolates the effect of thickness (relative to the estimated
 correlation length) on the weakest-link count — the experiment
 :func:`n_eff`'s two-regime formula is stated for."""
 
+N_EMPIRICAL_TRIALS_BULK = 1500
+"""Monte Carlo trial count for :func:`_empirical_bulk_failure_probabilities`
+(V1.4-EDITS.md E-12). Chosen for a standard error on each empirical
+``P_fail`` of roughly 1-1.5 percentage points (``sqrt(p(1-p)/n)`` at the
+observed ``p`` ~ 0.5-0.9) at a runtime the test suite can absorb — not
+tuned to produce any particular residual."""
+
 
 def _nominal_state(inclusion_content: float) -> State:
     """A synthetic flagship state varying only ``inclusion_content``; every
@@ -181,8 +202,18 @@ class BendCampaignResult:
     joined_tail_model: JoinedTailModel
     join_diagnostics: JoinDiagnostics
     p0: float
+    """Model-based (fitted GPD tail), not calibrated against the empirical
+    bulk sampling below — see :attr:`bulk_p0_implied` for the comparison,
+    reported rather than reconciled."""
     bulk_volumes: FloatArray
     bulk_failure_probabilities: FloatArray
+    """Empirical (Monte Carlo), not closed-form — see module docstring,
+    V1.4-EDITS.md E-12."""
+    bulk_n_eff: FloatArray
+    bulk_p0_implied: FloatArray
+    """Per-thickness per-sub-volume exceedance probability implied by
+    :attr:`bulk_failure_probabilities` and :attr:`bulk_n_eff` — compare
+    against :attr:`p0`, do not use to adjust it."""
     bulk_volume_scaling_residual: float
     thin_volumes: FloatArray
     thin_failure_probabilities: FloatArray
@@ -203,10 +234,50 @@ def thin_regime_thicknesses(ell_d: float) -> FloatArray:
 
 
 def _failure_probabilities(thicknesses: FloatArray, ell_d: float, p0: float) -> tuple[FloatArray, FloatArray]:
+    """Closed-form: ``1 - (1-p0)**n_eff(...)``. Used only for the thin
+    regime (see module docstring on why the bulk regime no longer uses
+    this — V1.4-EDITS.md E-12)."""
     volumes = FIXED_FOOTPRINT_AREA * thicknesses
     counts = np.array([n_eff(float(v), ell_d, float(t)) for v, t in zip(volumes, thicknesses)])
     failure_probabilities = 1.0 - (1.0 - p0) ** counts
     return volumes, failure_probabilities
+
+
+def _empirical_bulk_failure_probabilities(
+    thicknesses: FloatArray, ell_d: float, rng: np.random.Generator, n_trials: int = N_EMPIRICAL_TRIALS_BULK
+) -> tuple[FloatArray, FloatArray, FloatArray, FloatArray]:
+    """Rung 4 (Spec §4.6), bulk regime, by direct Monte Carlo simulation of
+    the weakest-link construction (V1.4-EDITS.md E-12) — never the closed
+    form fed back into itself. At each thickness: ``n_sub = round(n_eff(...))``
+    i.i.d. Pareto-marginal ``inclusion_content`` draws stand in for that many
+    statistically independent sub-volumes; the real `BendAngle` is run on
+    each (via :func:`driver_field_for_sites`); the trial "fails" if the
+    maximum of the ``n_sub`` responses exceeds :data:`DRIVER_THRESHOLD`.
+    Repeated *n_trials* times per thickness; the failure fraction is the
+    empirical ``P_fail``.
+
+    Returns ``(volumes, empirical_failure_probabilities, n_eff_counts,
+    p0_implied)`` — the last is each thickness's per-sub-volume exceedance
+    probability *implied* by the empirical result
+    (``1 - (1 - Pf)**(1/n_eff)``), reported for comparison against the
+    separately fitted, model-based ``p0`` (:attr:`BendCampaignResult.p0`)
+    and never used to adjust it.
+    """
+    volumes = FIXED_FOOTPRINT_AREA * thicknesses
+    counts = np.array([n_eff(float(v), ell_d, float(t)) for v, t in zip(volumes, thicknesses)])
+    failure_probabilities = np.empty(thicknesses.shape[0])
+    for i, count in enumerate(counts):
+        n_sub = max(1, int(round(float(count))))
+        failures = 0
+        for _ in range(n_trials):
+            u = rng.uniform(size=n_sub)
+            inclusion = X_M_INCLUSION * (1.0 - u) ** (-XI_A_INCLUSION)
+            driver = driver_field_for_sites(inclusion, REFERENCE_THICKNESS, REFERENCE_CURVATURE)
+            if driver.max() > DRIVER_THRESHOLD:
+                failures += 1
+        failure_probabilities[i] = failures / n_trials
+    p0_implied = 1.0 - (1.0 - failure_probabilities) ** (1.0 / counts)
+    return volumes, failure_probabilities, counts, p0_implied
 
 
 def run_bend_classb_campaign(rng: np.random.Generator) -> BendCampaignResult:
@@ -234,7 +305,9 @@ def run_bend_classb_campaign(rng: np.random.Generator) -> BendCampaignResult:
 
     bulk_thicknesses = bulk_regime_thicknesses(ell_d)
     thin_thicknesses = thin_regime_thicknesses(ell_d)
-    bulk_volumes, bulk_pf = _failure_probabilities(bulk_thicknesses, ell_d, p0)
+    bulk_volumes, bulk_pf, bulk_n_eff_counts, bulk_p0_implied = _empirical_bulk_failure_probabilities(
+        bulk_thicknesses, ell_d, rng
+    )
     thin_volumes, thin_pf = _failure_probabilities(thin_thicknesses, ell_d, p0)
     bulk_residual = validate_volume_scaling_exponent(bulk_volumes, bulk_pf, predicted_exponent=1.0)
     thin_residual = validate_volume_scaling_exponent(thin_volumes, thin_pf, predicted_exponent=0.0)
@@ -265,6 +338,13 @@ def run_bend_classb_campaign(rng: np.random.Generator) -> BendCampaignResult:
         predicted_initiator_sizes, observed_initiator_sizes, tolerance=0.35
     )
 
+    # volume_scaling_residual mixes two different epistemic kinds: bulk_residual
+    # is a genuine empirical-vs-predicted comparison (E-12); thin_residual is
+    # an arithmetic identity of n_eff's own formula against itself (E-14,
+    # `tests/test_flagship_classb_bend.py`'s thin-regime test is blocked, not
+    # asserted, for exactly this reason). Reporting the worse of the two is a
+    # documented, not a hidden, choice — Spec §4.6 does not say how to combine
+    # a multi-regime rung 4 into one number.
     ladder = ValidationLadderResult(
         bulk_residual=bulk_residual_rung1,
         fractography_residual=fractography_residual,
@@ -283,6 +363,8 @@ def run_bend_classb_campaign(rng: np.random.Generator) -> BendCampaignResult:
         p0=p0,
         bulk_volumes=bulk_volumes,
         bulk_failure_probabilities=bulk_pf,
+        bulk_n_eff=bulk_n_eff_counts,
+        bulk_p0_implied=bulk_p0_implied,
         bulk_volume_scaling_residual=bulk_residual,
         thin_volumes=thin_volumes,
         thin_failure_probabilities=thin_pf,
