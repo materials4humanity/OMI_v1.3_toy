@@ -40,8 +40,8 @@ Status codes:
 | C-3.9c | §3.9 | **Refusal criterion**; `L_phys × L_num` | **PASS-B** → Spec §2.5–2.7 | refuse |
 | C-4 | §4 | Seven-item instantiation interface | SPEC | `omi_domains/*/interface.py` |
 | C-5a | §5 | Inverse design as constrained optimal control | SPEC (formulation) | `inverse.py` |
-| C-5b | §5 | Reachability certificates | **PASS-B** → Spec §7.1 | ADR required |
-| C-5c | §5 | Decision layer within the degenerate set | **PASS-C** → Spec §7.3 | ADR required |
+| C-5b | §5 | Reachability certificates | **PASS-B** → Spec §7.1 | ADR-031: linear `Φ`, exact halfspace projection |
+| C-5c | §5 | Decision layer within the degenerate set | **PASS-C** → Spec §7.3 | ADR-033: probability of conformance, CVaR, OQ-4 |
 | C-6.1 | §6.1 | Six falsification criteria | **PASS-D** (thresholds) | criteria as tests; thresholds via ADR |
 | C-6.2 | §6.2 | Open problems (research questions, not framework claims) | CLAIM | non-implementable; distinct from DECISIONS.md's OQ-1..OQ-5, which are hypotheses this repo generates from reading the specs, not Core's own list — do not conflate the two when recording outcomes |
 | C-7 | §7 | Two instantiations, declared and diffable | **PASS-D** | `omi_domains/` |
@@ -86,9 +86,9 @@ Status codes:
 | S-5.3 | §5.3 | Data reality; closed-loop confounding; grouped splits | **PASS-C** (remedies) / SPEC (grouped splits) | grouped splits only |
 | S-6 | §6 | **Closure-defect measurement** | **PASS-C** — entire section | refuse |
 | S-7.0 | §7.0 | `ℳ_real` vs `ℳ_reach` | SPEC | `inverse.py` |
-| S-7.1 | §7.1 | **Reachability certificates** | **SPEC** (certificate definition and verification, given a domain-declared `Φ`) / **PASS-B** (the practical hierarchy for constructing or selecting `Φ`; nearest-reachable-state computation) | verification only, given a declared `Φ`; ADR (or refuse) for construction |
-| S-7.2 | §7.2 | **Apparatus parameterisation** | **SPEC** (the "parameterise in apparatus settings, never driving paths" requirement — enforceable as an architectural invariant) / **PASS-C** (constraint-manifold construction, rate limits, mixed-integer handling) | requirement is testable now; ADR required for manifold construction |
-| S-7.3 | §7.3 | **Decision layer** | **PASS-C** | ADR |
+| S-7.1 | §7.1 | **Reachability certificates** | **SPEC** (certificate definition and verification, given a domain-declared `Φ`) / **PASS-B** (the practical hierarchy for constructing or selecting `Φ`; nearest-reachable-state computation) | `inverse.py` — ADR-031 restricts `Φ` to linear functionals; verification and nearest-reachable-state both implemented on that scope; general nonlinear `Φ` and the forward-sampling/over-approximation hierarchy rungs remain unimplemented |
+| S-7.2 | §7.2 | **Apparatus parameterisation** | **SPEC** (the "parameterise in apparatus settings, never driving paths" requirement — enforceable as an architectural invariant) / **PASS-C** (constraint-manifold construction, rate limits, mixed-integer handling) | `inverse.py` — ADR-032's `ApparatusParameterization` enforces the requirement structurally for a box `𝒰_adm`; coupled/rate-limited manifold construction and mixed-integer handling remain unimplemented |
+| S-7.3 | §7.3 | **Decision layer** | **PASS-C** | `inverse.py` — ADR-033: probability of conformance, CVaR, asymmetric cost, candidate selection, and OQ-4's infeasibility diagnosis |
 | S-8 | §8 | **Sufficiency campaign; power analysis** | **SPEC** (power-analysis formula `n ≈ 2(z_{1-α/2}+z_{1-β})²(σ/δ)²`; campaign-matrix design principle) / **PASS-C** (worked numeric values per response class; pre-simulation prediction of which pairs diverge) | formula usable directly; ADR required for worked values |
 | S-9.1 | §9.1 | Conformance levels OMI-0/1/2 | SPEC | `conformance.py` |
 | S-9.2 | §9.2 | Automated test suite (nine checks) | SPEC | `conformance.py`, CI |
@@ -245,12 +245,37 @@ populations of differing severity is non-conforming, since the fit is
 dominated by whichever population is most numerous in the fitting window,
 not by whichever population actually governs the design point."
 
-**OQ-4 — Does inverse design report *which* variance is binding?**
+**OQ-4 — Does inverse design report *which* variance is binding? Answered M9.**
 Spec §7.3 selects within a feasible set. When the set is empty — e.g. aleatoric
 spread wider than the specification window — the useful output is which term
 made it empty: aleatoric (reduce incoming variation), `𝒰_adm` (apparatus
 limits), or trust region (surrogate not calibrated there).
 **Test:** oracle with an arithmetically infeasible specification.
+
+**Evidence.** `omi.inverse.diagnose_infeasibility` (ADR-033) checks the
+three candidate terms in a fixed, principled order — trust region, then
+control/`𝒰_adm`, then aleatoric spread at a declared coverage fraction —
+and `tests/oracles/test_known_infeasible_specification.py` constructs four
+scenarios (one per binding term, plus a genuinely feasible case) sharing
+one linear response model, each engineered so exactly one term is
+responsible; the diagnostic recovers the constructed truth in all four.
+
+**Answer.** Yes — inverse design can and should report which term binds,
+not merely that the set is empty. The three terms are logically ordered,
+not merely enumerable: a trust-region violation means the model was never
+asked to extrapolate there (a modelling-scope question), a control
+violation means the apparatus cannot reach the window regardless of noise
+(a capability question), and only when both are satisfied does the
+aleatoric question ("is incoming variation too wide") become meaningful at
+all. Checking them in any other order, or reporting all three
+simultaneously as an unordered set, would obscure this dependency.
+
+**Proposed wording for v1.4 (Spec §7.3, as an explicit requirement):**
+append — "When the decision layer's feasible set is empty, an
+implementation MUST report which of trust region, apparatus admissibility
+(`𝒰_adm`), or aleatoric spread is responsible, checked in that order (a
+violation earlier in the order makes the later checks not yet meaningful).
+Reporting only that the set is empty is non-conforming."
 
 **OQ-5 — Metric dependence of every reported `L`.**
 Core §3.9 and the erasure definition (`L ≪ 1`) are metric-dependent statements,

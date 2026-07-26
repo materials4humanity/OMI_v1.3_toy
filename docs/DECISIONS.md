@@ -1543,6 +1543,187 @@ off-manifold").
 
 ---
 
+## ADR-031 — Reachability certificates are restricted to linear functionals `Φ(s) = w·s`, giving an exact halfspace-projection nearest-reachable-state
+
+**Status.** Accepted **Gap.** S-7.1 (Decide: the certificate/`Φ` *construction* and the nearest-reachable-state computation, both PASS-B — "to be written") **Milestone.** M9
+
+**What the framework leaves open.**
+Spec §7.1 gives the certificate's verification inequality exactly —
+`Φ(s_{k+1}) ≤ Φ(s_k) + c(u_k)`, any target beyond the accumulated bound is
+provably unreachable — and names candidate sources for `Φ` ("conservation
+balances, monotone accumulations, equilibrium-limited fractions"), but its
+own text says the practical hierarchy for *constructing or selecting* `Φ`,
+and the nearest-reachable-state computation, are both `[Pass B]`, "to be
+written."
+
+**Decision.**
+`Φ` is restricted to **linear functionals of the flat state vector**,
+`Φ(s) = w · s` for a declared weight vector `w` (`ReachabilityCertificate`).
+This is not an arbitrary restriction: every candidate Spec §7.1 itself
+names is naturally linear in the state's own flat-array representation —
+a conservation balance is a weighted sum of components summing to a
+constant; a monotone accumulation (CLAUDE.md §3's `z`-slot driving
+measures) is itself already one component of the state, i.e. `w` a one-hot
+vector. Given a linear `Φ` and a declared per-step worst-case increment
+`c_max_k` (itself domain-declared — Spec never gives a formula for
+computing `sup_u c(u)` over `𝒰_adm` either, so this is accepted as an input,
+not derived), the boxed inequality accumulates exactly:
+`achievable_bound = Φ(s_0) + Σ_k c_max_k`, and `Φ(s_target) > achievable_bound`
+is a sound, exact non-reachability certificate — no approximation beyond
+what the caller already declared. The **nearest reachable state** is then
+the exact Euclidean projection onto the halfspace `{s : w·s ≤ bound}`:
+`s_target - ((w·s_target - bound) / ‖w‖²) · w` — closed-form, because the
+constraint set (post-restriction) is a halfspace, not an approximation of
+one.
+
+**Alternatives rejected.**
+*A general nonlinear `Φ`, with nearest-reachable-state found by numerical
+optimisation.* Rejected — Spec's own candidate list is linear in every
+example given, and a general nonlinear projection would need an iterative
+solver with its own convergence caveats, adding machinery Spec does not
+ask for and this milestone's oracle does not need.
+*Learned reachable-set over-approximation (interval/zonotope/ellipsoidal),
+per Spec's own "practical hierarchy."* Rejected for now — Spec explicitly
+ranks this below invariant certificates ("sound, necessary conditions
+only") in soundness, and Spec's own text says learned reachable sets "are
+unsound and cannot discharge" the output contract; the hierarchy's
+intermediate rungs are a real future extension, not required to satisfy
+the SPEC-given inequality itself.
+
+**What would change this.** A domain whose natural invariant is
+genuinely nonlinear (e.g. a quadratic energy bound) would force a more
+general `Φ` and a corresponding (likely iterative) nearest-point
+computation.
+
+**Pinned by.** `tests/oracles/test_known_unreachability.py` (docs/ROADMAP.md
+M9 exit gate: "certificate fires exactly outside the bound").
+
+---
+
+## ADR-032 — Apparatus parameterisation is a structural wrapper: inverse design never receives a raw `Control`
+
+**Status.** Accepted **Gap.** none — the requirement itself is SPEC; the wrapper shape is an implementation choice **Milestone.** M9
+
+**What the framework leaves open.**
+Spec §7.2's requirement is unconditional and already SPEC: "Inverse design
+MUST be parameterised in apparatus settings, never in desired driving
+paths. Optimising over idealised histories produces recipes the apparatus
+cannot execute." COVERAGE.md's own note calls this "enforceable as an
+architectural invariant," but Spec gives no shape for how that enforcement
+is expressed in code — only the *general* constraint-manifold construction
+(rate limits, mixed-integer handling) is `[Pass C]`.
+
+**Decision.**
+`ApparatusParameterization` wraps a domain-declared
+`to_control: apparatus parameters (a small FloatArray) -> Control` together
+with a declared admissible box (`𝒰_adm`, per-parameter `(low, high)`
+bounds — the simplest non-trivial case of Spec §7.2's "structured
+low-dimensional set"; a full constraint-manifold construction for coupled,
+rate-limited apparatus geometry remains `[Pass C]` and is not attempted).
+Every function in `inverse.py` that searches over controls — candidate
+generation, the decision layer — takes an `ApparatusParameterization` and
+an apparatus-parameter array, **never** a `Control` directly; a `Control`
+only ever comes out of `to_control`, never goes in. This makes Spec §7.2's
+requirement structurally true of this module's API, the same discipline
+ADR-029 (M8) used for grouped splits: the violation is not merely
+discouraged, the calling convention makes it inexpressible.
+
+**Alternatives rejected.**
+*Accepting an arbitrary `Control` in the optimiser and relying on a
+docstring/convention not to construct one directly from an idealised
+history.* Rejected — this is exactly the failure mode Spec warns against,
+and CLAUDE.md's general preference (ADR-029) is for structural
+impossibility over convention wherever the two are both available.
+
+**What would change this.** A domain whose apparatus has genuine rate
+limits or discrete/mixed-integer settings would extend
+`ApparatusParameterization` with those constraints; Spec's own text says
+"scenario enumeration is usually sufficient" for the discrete case, which
+would layer on top of (not replace) the continuous box declared here.
+
+**Pinned by.** `tests/test_inverse_apparatus_parameterisation.py`.
+
+---
+
+## ADR-033 — Decision layer: probability of conformance and CVaR by their standard formulas; OQ-4's infeasibility diagnosis as an ordered three-way check
+
+**Status.** Accepted **Gap.** S-7.3 (Decide: PASS-C, "selects within the degenerate solution set... but does not resolve" how) **Milestone.** M9
+
+**What the framework leaves open.**
+Spec §7.3 names the objectives ("optimise probability of conformance...
+not expected value," "carry asymmetric costs," "connect CVaR to the
+conformance and defect-rate language") without formulas, and separately
+poses OQ-4 (docs/COVERAGE.md Part IV): when the feasible set is empty,
+which term is binding — aleatoric spread, `𝒰_adm` (apparatus limits), or
+the trust region (surrogate not calibrated there)?
+
+**Decision.**
+
+1. **Probability of conformance** is the plain empirical fraction of a
+   candidate's predictive ensemble landing inside the declared
+   specification window — a direct Monte Carlo estimate reusing this
+   repository's ensemble machinery (`omi.state.Ensemble`), not an invented
+   convention.
+2. **CVaR** is the standard formula (Rockafellar & Uryasev 2000): the mean
+   of the worst `alpha`-fraction tail of a *loss* (higher = worse) —
+   `mean(losses[losses >= quantile(losses, 1-alpha)])`. Callers needing a
+   "worse = lower" quantity (e.g. a response that must stay *above* a
+   floor) negate it first, the standard convention, not a new one.
+3. **Asymmetric cost** is left as a plain piecewise-linear function of
+   signed deviation from a target, with independently declared per-side
+   slopes — Spec names the *requirement* ("asymmetric costs... differ by
+   orders of magnitude") not a formula, and a piecewise-linear cost is the
+   simplest object that is asymmetric by construction and needs no
+   further justification.
+4. **OQ-4's answer**: `diagnose_infeasibility` checks the three candidate
+   binding terms in a fixed order, each a strictly necessary condition for
+   the ones after it to even be checkable meaningfully:
+   (a) **trust region** — does the specification window overlap the
+   surrogate's declared validated domain at all? If not, nothing else
+   matters: the model was never asked to extrapolate and answering "the
+   controller can't get there" is not the same claim as "the model doesn't
+   know," and Spec's own list keeps the two textually distinct.
+   (b) **control / `𝒰_adm`** — within the trust-region overlap, does *any*
+   achievable mean response land inside the specification window at all
+   (ignoring aleatoric spread entirely, i.e. the noise-free question)? If
+   not, the apparatus itself cannot reach the window regardless of
+   incoming variation.
+   (c) **aleatoric** — if an achievable mean does land inside the window,
+   is the incoming population's spread nonetheless too wide to keep a
+   declared coverage fraction inside it? This is the only one of the three
+   whose remedy is "reduce incoming variation," per OQ-4's own framing.
+   This ordering is a declared convention (an ADR, not a derivation):
+   Spec poses the question but not the priority among the three when more
+   than one might technically apply; checking trust region first and
+   control second reflects that a modelling-domain violation and an
+   apparatus-capability violation are prior, logically, to a statement
+   about noise.
+
+**Alternatives rejected.**
+*Checking all three simultaneously and reporting a set rather than a single
+binding term.* Rejected as the *default* — OQ-4 asks "which term," singular,
+and a caller wanting the full diagnostic detail still has every intermediate
+quantity (`achievable_mean_range`, `aleatoric_std`, the trust region and
+specification window themselves) available in the result, not hidden by
+the single-term summary.
+*A coverage fraction of exactly 100% for the aleatoric check (i.e. the
+whole distribution must fit).* Rejected — CLAUDE.md's own conventions
+prefer a declared, parameterised coverage level (default matches the
+"±3σ / 99.7%"-style, or a caller-declared fraction) over an invented exact
+100%, which no real distribution with unbounded support (e.g. Gaussian
+aleatoric noise) could ever satisfy.
+
+**What would change this.** A domain where two binding terms are
+genuinely simultaneous and the priority ordering hides real information —
+at which point the full three-way breakdown (already computed internally)
+should become the primary return value instead of a summary label.
+
+**Pinned by.** `tests/oracles/test_known_infeasible_specification.py`
+(docs/ROADMAP.md M9 exit gate: "the binding term is correctly identified");
+OQ-4 marked answered in docs/COVERAGE.md Part IV.
+
+---
+
 ## Open questions
 
 Not decisions — hypotheses the code should settle. Full statements in
@@ -1553,7 +1734,7 @@ Not decisions — hypotheses the code should settle. Full statements in
 | OQ-1 | Fingerprint: single probe or contrast between probes? | M4 | answered — see COVERAGE.md Part IV |
 | OQ-2 | Erasure completeness: operator-level or component-level? | M2 | partially answered — see COVERAGE.md Part IV |
 | OQ-3 | Class B under competing defect populations | M6 | answered — see COVERAGE.md Part IV |
-| OQ-4 | Does inverse design report which variance is binding? | M9 | open |
+| OQ-4 | Does inverse design report which variance is binding? | M9 | answered — see COVERAGE.md Part IV |
 | OQ-5 | Metric dependence of reported `L` | M2 | answered — see COVERAGE.md Part IV |
 
 When one resolves: record the evidence, update `COVERAGE.md`, and if it implies
