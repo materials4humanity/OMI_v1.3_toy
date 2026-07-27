@@ -2103,6 +2103,91 @@ which point `BendAngleAtReferenceGeometry` becomes unnecessary and
 
 ---
 
+## ADR-038 — Interface-only sketches (M10.1): a flat module per sketch under `src/omi_domains/sketches/`, prose in `docs/SKETCHES.md`, "machine-diffable" means `omi.interface.diff` actually runs
+
+**Status.** Accepted **Gap.** none — implementation choice; Spec §11.4 and
+Core §7.3 require "a third and fourth short sketch, interface-only" and
+ROADMAP M10.1 requires each be "machine-diffable against the two
+implemented domains (reuse `omi.interface.diff`)," but neither states where
+a no-implementation sketch's declaration should live or what "one page"
+means as an artefact. **Milestone.** M10.1 (docs/ROADMAP.md)
+
+**What the framework leaves open.** Spec §11.4 requires "one page each"
+declaring the seven items of Core §4, with no implementation. ROADMAP
+M10.1 additionally requires the result be machine-diffable, reusing
+`omi.interface.diff` — but that function operates on
+`omi.interface.InstantiationDeclaration` objects (ADR-016), not prose. A
+sketch that is prose only would make "machine-diffable" aspirational
+rather than true, and neither Spec nor ROADMAP say where the
+Python-side declaration should live, given that every declaration this
+repository has built so far (`omi_domains/flagship/interface.py`,
+`omi_domains/contrast/interface.py`) is one file inside a full domain
+package that also has `operators.py`, `readouts.py`, and `build.py` behind
+it — exactly what Spec §11.4/Core §7.3 say a sketch must **not** have.
+
+**Decision.**
+- The "one page" lives in a new `docs/SKETCHES.md`: one `##` section per
+  sketch domain, filling Core §4's seven items in the Core's own order —
+  the same order ADR-016 already fixed `InstantiationDeclaration`'s fields
+  in — plus a short framing paragraph (why this sketch, what it tests) and
+  an honesty paragraph (which items filled cleanly, which strained, if
+  any).
+- Each sketch additionally gets one flat module,
+  `src/omi_domains/sketches/<name>.py`, exporting exactly a `StateSchema`
+  and an `InstantiationDeclaration` built from it — no `operators.py`, no
+  `readouts.py`, no `build.py`. `src/omi_domains/sketches/` is a new
+  sibling of `flagship/`/`contrast/`, not a thinner subpackage of either:
+  a sketch is not an unfinished domain, it is deliberately a declaration
+  and nothing else, and the directory boundary makes that structural
+  rather than a convention someone has to remember not to violate later.
+- "Machine-diffable" is operationalised as: `tests/test_sketches.py` calls
+  `omi.interface.diff` between each sketch's declaration and both
+  `FLAGSHIP_DECLARATION` and `CONTRAST_DECLARATION`, and records every
+  per-item result via the `observe` fixture (CLAUDE.md §7, the R1.1
+  convention) rather than asserting a specific expected diff pattern.
+  This is deliberately weaker than `test_interface_diff.py`'s
+  flagship-vs-contrast test, which pins "differs on six of seven items"
+  (ADR-034) — that pin exists because flagship and contrast were
+  *designed* to invert each other, a prior claim worth checking. A sketch
+  carries no such prior claim; the test only needs to confirm the diff
+  actually runs against real declaration objects and to put the resulting
+  per-item comparison on record, not to assert what it should find.
+- Any Core §4 item a sketch's own author judges cannot be filled without
+  stretching is recorded directly in that sketch's `docs/SKETCHES.md`
+  section — not silently smoothed into a clean-looking fill — and
+  escalated to `docs/V1.4-EDITS.md` if the strain looks like it says
+  something about the interface itself, per ROADMAP M10.1's own
+  instruction ("Any item a sketch cannot fill is a finding for
+  `docs/V1.4-EDITS.md`, and a more valuable one than a clean fill").
+
+**Alternatives rejected.**
+*Prose only, no Python object.* Rejected — this would make "machine-
+diffable," ROADMAP's own phrase, false advertising: nothing would actually
+invoke `omi.interface.diff`.
+*A full `omi_domains/<name>/` package mirroring flagship/contrast's shape,
+with stub `operators.py`/`readouts.py` raising `NotImplementedError`.*
+Rejected — the stub files would misrepresent "no implementation" (a
+deliberate scope boundary, Spec §11.4/Core §7.3) as "implementation not
+yet written" (an open TODO), inviting a later contributor to fill them in
+as if this were ordinary M-milestone work rather than paper evidence for
+generality. A single flat module per sketch makes the interface-only
+status structural, not a naming convention to remember.
+*One shared `sketches.py` module holding all four sketches.* Rejected —
+matches neither existing domain's one-module-per-declaration granularity,
+and would make reviewing each sketch independently (ROADMAP's own
+ordering — device yield first, then the others) harder than it needs to
+be.
+
+**What would change this.** A later decision to build one sketch out into
+a full domain (operators, readouts, oracles) — itself a different kind of
+decision than declaring the interface, needing its own ADR, at which
+point that sketch would move out of `src/omi_domains/sketches/` into its
+own package the way flagship/contrast are structured.
+
+**Pinned by.** `tests/test_sketches.py`.
+
+---
+
 ## Open questions
 
 Not decisions — hypotheses the code should settle. Full statements in
