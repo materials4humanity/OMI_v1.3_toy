@@ -23,6 +23,7 @@ from scipy import stats
 from omi.chain import Chain
 from omi.gaps import NotSpecified
 from omi.interface import InstantiationDeclaration
+from omi.inverse import ReachabilityCertificate
 from omi.observability import TriageResult
 from omi.state import FloatArray, Metric, State
 from omi.sufficiency import DeficitResult
@@ -218,8 +219,16 @@ class ConformanceInputs:
     the honest, current state, not a placeholder standing in for a value."""
 
     class_b_volume_scaling_residual: float | None = None
-    reachability_certificates: tuple[str, ...] | None = None
-    """Not available until M9 introduces `inverse.py`."""
+    reachability_certificates: tuple[ReachabilityCertificate, ...] | None = None
+    """Typed against `omi.inverse.ReachabilityCertificate` (docs/V1.4-EDITS.md
+    E-17), not a bare label — Core §5 is unconditional that "learned
+    reachable sets are unsound and cannot discharge this contract," and a
+    string tuple gave the type system nothing to reject. This does not by
+    itself guarantee the *content* of a supplied certificate is honest (a
+    caller can still construct a `ReachabilityCertificate` for an invariant
+    it does not actually hold), only that whatever is reported is at least
+    an instance of the sound, `Φ(s)=w·s` artefact Spec §7.1 defines — not a
+    forward-sampling result or any other unsound stand-in."""
     prospective_inverse_design_trial: tuple[float, float] | None = None
     """``(hit_rate, interval_calibration)`` — not available until M9."""
 
