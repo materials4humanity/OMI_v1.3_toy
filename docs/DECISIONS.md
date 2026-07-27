@@ -2188,6 +2188,99 @@ own package the way flagship/contrast are structured.
 
 ---
 
+## ADR-039 — M10.2 baseline characterisation: numpy-only tabular baselines, a learned operator (not the exact simulator) as the operator-graph contestant, and the sweep/scoring design
+
+**Status.** Accepted **Gap.** Spec §9.3 (`[Pass C]`) requires comparison
+against "gradient-boosted trees and tabular regression" and a "scored
+go/no-go table" but supplies neither an implementation nor a sweep/scoring
+methodology. **Milestone.** M10.2 (docs/ROADMAP.md)
+
+**What the framework leaves open.** Spec §9.3 names the baseline classes
+(gradient-boosted trees, tabular regression) and the comparison axes in
+prose (process-window width relative to measurement noise, labelled-
+record count, presence of geometry-dependent responses) and requires
+inverse-design hit rate alongside forward accuracy, but does not specify:
+which tabular-baseline implementation to use, what the "operator graph"
+side of the comparison actually is (the exact analytic simulator, which
+has zero error by construction and would make the comparison vacuous, or
+a *learned* operator trained under the same data budget as the tabular
+models), how many levels each swept axis should take, or how a "hit" is
+defined for inverse design.
+
+**Decision.**
+- **Tabular baselines are implemented from scratch in numpy/scipy**
+  (`src/omi/baseline.py`): a closed-form ridge regressor and a boosted
+  ensemble of depth-limited regression trees (greedy per-feature
+  threshold search, boosted by fitting each successive tree to the
+  current residual). No new pinned dependency (`scikit-learn` or
+  equivalent) is added — CLAUDE.md §8 already commits this repository to
+  "numpy + scipy required... torch optional with a numpy fallback," and
+  `src/omi/learning.py` (ADR-029) already implements a full neural
+  architecture from scratch for exactly this reason; a from-scratch GBT
+  is a smaller instance of the same policy, not an exception to it.
+- **The operator-graph contestant is a `DeepONetOperator` (M8,
+  `src/omi/learning.py`), trained on the *same* record count as the
+  tabular models at each swept configuration** — not the exact analytic
+  simulator. Spec §9.3's comparison is about data efficiency and
+  generalisation under a shared data budget; comparing a zero-error exact
+  simulator against a data-fitted tabular model would not test that claim
+  at all, and would trivially "win" every configuration for a reason
+  unrelated to the framework's actual claim (operator structure, not
+  omniscience). The exact simulator is retained as the *ground truth*
+  every model (tabular and operator-graph alike) is scored against on a
+  held-out test set — never as a contestant itself.
+- **Sweep axes and levels**: labelled-record count `N ∈ {20, 50, 200}`;
+  process-window-width-to-noise ratio `∈ {2, 10, 50}` (window width = the
+  range of the swept control parameter used to generate training records;
+  noise = the fixed label-noise standard deviation added at generation);
+  readout type `∈ {AggregateHardness (Type-0), BendAngleAtReferenceGeometry
+  (Type-2 adapted to a fixed reference geometry, ADR-037)}` for the
+  geometry-dependence axis. Three small, deliberately tractable levels
+  per axis, not an exhaustive grid — the exit criterion is "the go/no-go
+  table populated with the regime boundary identified," which needs
+  enough points to see a crossover, not a dense scan.
+- **Inverse-design "hit"**: for a declared target response value, invert
+  each trained model by grid search over the model's *own* predicted
+  response as a function of the control parameter, select the control
+  value whose predicted response is closest to the target, then evaluate
+  the *true* simulator at that selected control. A "hit" is `|true
+  achieved − target| < tolerance` (tolerance stated per run, not a single
+  invented global constant) — this scores whether a model trained on N
+  records supports search over control values it may not have seen
+  directly, which forward RMSE alone does not test.
+- **Report**: `docs/M10.2-BASELINE-CHARACTERISATION.md`, populated
+  entirely from a single reproducible run's actual output (CLAUDE.md §8:
+  "never hardcode a narrative number... anything quoted must be
+  computed"), with the exact seed and configuration stated so the numbers
+  are re-derivable, not merely asserted.
+
+**Alternatives rejected.**
+*Add `scikit-learn` as a pinned dependency.* Rejected — no network access
+assumption should be built into a milestone's own deliverable when the
+repository's stated convention (CLAUDE.md §8, ADR-029) is already to
+implement ML machinery from scratch in numpy for exactly this class of
+need, and a from-scratch GBT is a modest, bounded addition, not a
+significant undertaking, at the depth/estimator counts this comparison
+needs.
+*Compare tabular baselines against the exact analytic simulator directly.*
+Rejected — see Decision above; this would not test the claim Spec §9.3
+is actually making (data efficiency, not omniscience).
+*An exhaustive grid over many levels per axis.* Rejected as
+disproportionate to the milestone's own exit criterion, which asks for a
+located crossover, not a dense characterisation surface — three levels
+per axis is the minimum that can show a trend and a crossover at all.
+
+**What would change this.** If a future milestone needs a denser sweep or
+a real (non-synthetic) dataset, this ADR's ground-truth-simulator
+assumption ("both domains are ground-truth simulators, so this is
+answerable without field data," docs/ROADMAP.md M10.2) would need
+revisiting; that is out of scope here.
+
+**Pinned by.** `tests/test_baseline_characterisation.py`;
+`docs/M10.2-BASELINE-CHARACTERISATION.md`.
+
+---
+
 ## Open questions
 
 Not decisions — hypotheses the code should settle. Full statements in
