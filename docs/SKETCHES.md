@@ -166,6 +166,140 @@ recorded.
 
 ---
 
-*(Layer-wise additive processing, Crystallisation and formulation, and the
-deliberately awkward fourth sketch are scheduled next per ROADMAP M10.1 and
-are not yet written.)*
+## Layer-wise additive processing
+
+**Why this sketch.** Metal powder-bed-fusion additive manufacturing (laser
+or electron-beam powder bed fusion) is chosen because it exercises "hybrid
+structure and body-indexed state at their most extreme" (docs/ROADMAP.md
+M10.1): the process is a textbook hybrid system (Core §3.4 — continuous
+melt-pool evolution within a layer, punctuated by discrete recoat/new-layer
+events), and its state is a field over a body that is itself under
+construction, one layer at a time — more extreme than Core §2.5's own
+framing usually envisions (a fixed body indexed by material coordinate),
+since here the body's spatial extent is growing during the very process
+being modelled. **This sketch does not fill cleanly**, and the strain is
+recorded here rather than smoothed over, per this document's own opening
+paragraph.
+
+**1. State schema — the item that strains.** `omi.state.StateSchema`
+(ADR-011, docs/DECISIONS.md) is a flat, finite-dimensional vector. It can
+declare one representative build location's state — the same Tier I move
+flagship, contrast, and the device-yield sketch all make — but it cannot
+express that this domain's actual state is a field over a growing body.
+`src/omi_domains/sketches/layerwise_additive.py`'s `LAYERWISE_ADDITIVE_SCHEMA`
+is exactly that forced approximation, not a genuine fill:
+- **m** — `local_melt_pool_geometry` (in-situ camera's melt-pool
+  descriptor), `layer_surface_roughness_field` (recoated-layer surface
+  topography). Point-valued fine, at one location.
+- **z** — `subsurface_porosity_density` (sub-resolution until post-build
+  CT — "inferable only through dynamics," exactly Core §3.1's own
+  description), `local_thermal_history_moments` (constitutive-operator
+  memory: cumulative reheating from subsequent layers' passes at this
+  location).
+- **ν** — `part_scale_residual_stress_field`: whole-part residual stress
+  and thermal state, set by a global heat-conduction balance across the
+  whole build and the build plate — not localisable to a point, exactly
+  Core §3.1's requirement for this slot. **This is the slot where the
+  approximation costs the most**: whole-part distortion and warpage is
+  often this domain's dominant commercial failure mode, and it is
+  *definitionally* a whole-body quantity, more centrally so than either
+  implemented domain's own nonlocal field (flagship's `levelling_field`,
+  contrast's `potential`/`concentration_overpotential`) — those matter,
+  but neither domain's *dominant* slot (Core §7.1/§7.2 both name `m`/`z`
+  or `Γ` as dominant, not `ν`) is the one Tier I's point-valued treatment
+  most damages. Here it is.
+- **Γ** — `interlayer_bond_state`: bond quality between the current and
+  previous layer, controlling delamination and interlaminar fracture —
+  not cosmetic, exactly Core §3.1's requirement.
+
+Declaring this schema as *the* state, full stop, silently reverts the
+domain to Tier I and discards exactly the physics that makes this domain
+commercially hard. See `docs/V1.4-EDITS.md` E-21 for the resulting
+framework finding: Core §4 item 1 does not currently ask a domain to
+declare whether its state is point-valued or requires body-indexing, so an
+instantiation attempt can under-declare a genuinely field-valued domain
+without anything in item 1 flagging it — this sketch is the second,
+independent piece of evidence (after E-14's Class-B-validation finding)
+that Core §2.5's `[Pass C]` status blocks more than one thing.
+
+**2. Control space.** Apparatus-controlled: laser/beam power, scan speed,
+hatch spacing, layer thickness as a time-dependent recipe across the whole
+build, with discrete layer-boundary events (recoat, new-layer start) as
+points of discontinuity within that one programme. Core §3.2's control
+space already admits an arbitrary function of time, so — unlike item 1 —
+this item fills without needing the hybrid/jump-map machinery of Core §3.4
+(anti-goal, CLAUDE.md §9) to be built: one long, highly discontinuous
+control function over the whole build suffices to *declare* the item,
+even though *simulating* it faithfully would need mode-labelling. `𝒰_adm`
+is bounded by the machine's qualified process window. A control (process)
+inverse exists: target part quality/density → recipe.
+
+**3. Erasure inventory.** `hot_isostatic_pressing` (HIP) — a genuine,
+strongly damping post-build step that closes internal porosity under
+combined heat and pressure. Unlike flagship's `heating_and_soak`
+(mid-chain) or the device-yield sketch's `cmp_planarization` (mid-chain),
+HIP is **terminal**: during the build itself, defects tend to *compound*
+rather than erase (layer-to-layer stress concentration, propagating
+lack-of-fusion), so condition (a) of Core §3.9's error-control dichotomy is
+not satisfied mid-build. Condition (b) is weak too during the build — the
+richest observation (post-build CT, item 5) is not available until the
+build is already finished. This domain's error control comes almost
+entirely from the terminal HIP + CT combination, not from anything
+continuous during the process — worth stating explicitly, since it is a
+genuinely different profile from every domain and sketch so far.
+
+**4. Readout catalogue.**
+- `final_density_mean: Type-0/Class-A` — self-averaging bulk density
+  (e.g. Archimedes measurement).
+- `melt_pool_constitutive: Type-1` — local thermal-mechanical constitutive
+  operator, local scan parameters → local response + updated local state.
+- `porosity_induced_fatigue_life: Type-0/Class-B` — process-zone volume =
+  the *completed* part's volume. Unlike item 1's build-time state, this
+  readout is only ever evaluated post-build, so its volume is fixed at
+  evaluation time — the growing-body concern above is specific to the
+  build-time state, not to this readout. **Item 4b:** driver field = the
+  built part's internal pore size/location field; defect population =
+  independently measured pore-size distribution from post-build X-ray CT
+  (standard AM qualification practice; lack-of-fusion pore sizes are
+  heavy-tailed); physics map `Ψ` = a fracture-mechanics defect-size-to-
+  fatigue-limit relation (Murakami's `√area` model), exponent read
+  directly from that published model, not invented inside `omi.classb`.
+
+**5. Observation suite.** In-situ melt-pool monitoring (photodiode/camera,
+per layer); layer-wise optical imaging of the recoated surface; post-build
+X-ray CT. The CT scan is rich but available only once, after the build is
+already complete — too late to correct anything during the build, unlike
+every other domain and sketch declared so far (flagship's/contrast's/
+device-yield's observations all arrive during their respective processes).
+This is a genuinely different temporal-availability profile Core §4 item 5
+("latency and coverage") is well suited to state, and this sketch is the
+first case in this repository where it matters this much.
+
+**6. Invariants.** `mass_conservation_across_melting_and_solidification`
+(conservation: powder mass becomes part mass, minus spatter/evaporative
+losses) and `cumulative_build_height_monotone_nondecreasing`
+(monotonicity: build height only grows as layers are added — physically
+obvious, not manufactured to fit the taxonomy).
+
+**7. Scale structure — the second item that strains, same root cause as
+item 1.** Tier I only, as declared: one representative location's analytic
+melt-pool response. But the domain's dominant mechanism — whole-part
+residual-stress accumulation and distortion, carried in `ν` — is
+fundamentally Tier II/body-indexed (Core §2.5, `[Pass C]`), and the scale
+separation a homogenisation step would need to bridge (melt-pool scale,
+microseconds and microns, to whole-part scale, hours and the full build)
+is far wider than flagship's SVE-to-component bridge. Full Tier II remains
+an anti-goal per CLAUDE.md §9.
+
+**Machine-diff status.** See `tests/test_sketches.py` and
+`build/observations.json`; no pattern is asserted, only recorded — this
+sketch's Tier I schema still diffs mechanically against
+`FLAGSHIP_DECLARATION`/`CONTRAST_DECLARATION` even though it is a forced
+approximation on item 1, since `omi.interface.diff` compares whatever
+`StateSchema` object it is given, not whether that object is a faithful
+representation of the domain.
+
+---
+
+*(Crystallisation and formulation, and the deliberately awkward fourth
+sketch, are scheduled next per ROADMAP M10.1 and are not yet written.)*
