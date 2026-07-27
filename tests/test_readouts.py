@@ -7,7 +7,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from omi.operators import Control
+from omi.operators import Control, finite_difference_jacobian
 from omi.readouts import FunctionalReadout, ReadoutClass
 from omi.state import Ensemble, FloatArray, Slot, State, StateSchema
 
@@ -121,3 +121,36 @@ def test_contrast_dendrite_risk_is_class_b_and_weakest_link_works(observe: Obser
     observe("base_mean", float(base.mean()), "<= worst_mean")
     observe("worst_mean", float(worst.mean()), ">= base_mean")
     assert worst.mean() >= base.mean()
+
+
+def test_contrast_dendrite_risk_jacobian_is_analytic_not_finite_difference(observe: ObservationRecorder) -> None:
+    """Phase 3.3(a) (docs/ROADMAP.md): before this, `DendriteRisk` fell back
+    to `FunctionalReadout.jacobian`'s central-difference default — the one
+    real-domain Class-B sensitivity in the repository computed
+    approximately. Checks the exact analytic derivative against a
+    finite-difference estimate away from the clamp's kink (where both are
+    well-defined and should agree tightly), and separately confirms the
+    clamped branch returns an exact zero Jacobian (a point no
+    finite-difference comparison alone would distinguish from "small but
+    nonzero").
+    """
+    from omi_domains.contrast.state import CONTRAST_SCHEMA
+
+    readout = DendriteRisk()
+    values = np.zeros(CONTRAST_SCHEMA.size)
+    values[CONTRAST_SCHEMA.slice_for(Slot.NU, "concentration_overpotential")] = 1.0
+    values[CONTRAST_SCHEMA.slice_for(Slot.GAMMA, "sei_thickness")] = 2.0
+    active_state = State(CONTRAST_SCHEMA, values)
+    assert readout.evaluate(active_state)[0] > 0.0  # away from the kink, clamp inactive
+
+    analytic = readout.jacobian(active_state)
+    numeric = finite_difference_jacobian(lambda v: readout.evaluate(State(CONTRAST_SCHEMA, v)), active_state.values)
+    observe("jacobian_max_abs_diff", float(np.max(np.abs(analytic - numeric))), "< 1e-4")
+    assert np.max(np.abs(analytic - numeric)) < 1e-4
+
+    clamped_values = values.copy()
+    clamped_values[CONTRAST_SCHEMA.slice_for(Slot.NU, "concentration_overpotential")] = -10.0
+    clamped_state = State(CONTRAST_SCHEMA, clamped_values)
+    assert readout.evaluate(clamped_state)[0] == 0.0  # clamp active
+    observe("clamped_jacobian", readout.jacobian(clamped_state), "all zero")
+    assert np.all(readout.jacobian(clamped_state) == 0.0)

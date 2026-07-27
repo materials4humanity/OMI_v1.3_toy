@@ -195,3 +195,37 @@ class BendAngle(ComponentReadout):
         process_zone_fraction = float(np.mean(driver_field > self.driver_threshold))
         process_zone_volume = process_zone_fraction * geometry.thickness
         return np.array([outer_fibre_response]), process_zone_volume
+
+
+@dataclass(frozen=True)
+class BendAngleAtReferenceGeometry(FunctionalReadout):
+    """`BendAngle` (Type-2/Class-B) adapted to a Type-0/1-shaped
+    `FunctionalReadout` at one declared, fixed geometry (ADR-037,
+    docs/DECISIONS.md), so it can be used as an observability-triage target
+    (Spec §3.3) — `sensitivity_operator`/`danger_triage` are typed for
+    state-only readouts, and `BendAngle.evaluate` needs a geometry argument
+    `sensitivity_operator` has nowhere to supply. The process-zone volume is
+    discarded here — Spec §3.3's sensitivity operator wants a scalar
+    response's derivative, not Class B's volume-coupling half, so nothing
+    about that argument is lost by omitting it.
+
+    `.jacobian` is not overridden: it falls back to
+    `~omi.readouts.FunctionalReadout.jacobian`'s central-difference default
+    (ADR-012), since no analytic derivative through the geometry-fixed
+    quadrature composition has been derived — an honest numerical estimate,
+    the same convention every other undifferentiated readout in this
+    repository already uses.
+    """
+
+    readout_class: ReadoutClass = field(default=ReadoutClass.B)
+    geometry: Type2Geometry = field(default_factory=lambda: Type2Geometry(thickness=1.0, curvature=2.0))
+    """Same values as `classb_bend.py`'s own `REFERENCE_THICKNESS`/
+    `REFERENCE_CURVATURE` (ADR-037), for consistency with the rest of the
+    Class B campaign — declared here independently, not imported, to avoid
+    a circular import between this module and `classb_bend.py`."""
+    bend_angle: BendAngle = field(default_factory=BendAngle)
+
+    def evaluate(self, state: State) -> FloatArray:
+        operator = ExtractHardness()(state)
+        response, _process_zone_volume = self.bend_angle.evaluate(operator, self.geometry)
+        return response

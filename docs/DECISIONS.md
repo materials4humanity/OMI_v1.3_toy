@@ -783,6 +783,26 @@ would be exactly the invented-number problem ADR-005 and ADR-017 both avoid.
 unhelpful triage (e.g. a strongly bimodal influence distribution where the
 median falls inside a cluster) — the convention is a parameter, not hard-coded.
 
+**Confirmed at Phase 3.3 (docs/ROADMAP.md).** The anticipated failure mode
+above materialises on *both* declared domains, for a related but distinct
+reason: when a declared target set is low-dimensional relative to state
+size (true of both flagship's and contrast's current readouts), well over
+half the eigendirections carry *exactly zero* influence, pushing
+`influence_median` to exactly `0.0` — combined with the inclusive `>=`
+comparison, every direction becomes "influential" by definition, so
+`Triage.OBSERVED_BUT_IRRELEVANT` and `Triage.MARGINALISABLE` are
+structurally unreachable at that query point. Separately, at `time_index=0`
+with every declared sensor placed strictly downstream in both domains,
+`Triage.OBSERVED` is also unreachable (no near-diagonal observation
+exists). Only two of the four cells — `INFERRED` and `DANGEROUS` — are ever
+populated on either domain's own first full-classification check
+(`tests/test_domain_triage.py::test_full_triage_classification_is_asserted_for_both_domains`).
+This is not a new defect — it is exactly the parameter-sensitivity this ADR
+already names as a possibility — but it had never been checked against real
+domain data before Phase 3.3, since prior tests asserted only
+`dangerous_set()`, which cannot reveal that two whole categories were
+unreachable.
+
 **Pinned by.** `tests/oracles/test_known_blind_spot.py` (a designed
 unobservable direction must land in the unidentifiable/marginalisable or
 dangerous cells, never "observed") and the domain triage tests
@@ -2006,6 +2026,80 @@ proper.
 **Pinned by.** `tests/test_sufficiency_learning_error.py` (all-analytic
 flagship chain returns `0.0`; a chain containing a `DeepONetOperator`
 raises `NotSpecified` citing `"S-1.4"`).
+
+---
+
+## ADR-037 — A Type-2 readout is adapted to a Type-0/1-shaped triage target at one declared reference geometry, discarding the process-zone volume; `sensitivity_operator` itself is not extended to accept `ComponentReadout`
+
+**Status.** Accepted **Gap.** none — implementation choice; Spec §3.3 does
+not restrict target readouts by type, but this repository's
+`sensitivity_operator`/`danger_triage` are typed `Sequence[FunctionalReadout]`
+**Milestone.** Phase 3.3(b) (post-M9 remediation)
+
+**What the framework leaves open.**
+Spec §3.3 defines the sensitivity operator generically, for "target readouts
+`ρ^(1),...,ρ^(M)`" with no restriction to a particular readout type — any
+readout with a derivative with respect to state qualifies in principle.
+CLAUDE.md invariant 10 and Spec §3.3's own requirement ("`𝒟_i` is defined
+relative to a *declared* target set; if targets change, triage MUST be
+re-run") both require flagship's triage to be re-run now that Phase 2 added
+`bend_angle` to `FLAGSHIP_DECLARATION.readout_catalogue` — but `BendAngle`
+(`ComponentReadout`, Type-2) has a structurally different `evaluate`
+signature than `FunctionalReadout` (`evaluate(operator, geometry)` versus
+`evaluate(state)`), and no `.jacobian(state)` method at all. M3's
+`sensitivity_operator` (`src/omi/observability.py`) predates Phase 2's
+Type-2 readouts by six milestones and is typed
+`target_readouts: Sequence[FunctionalReadout]`, calling
+`readout.jacobian(terminal_state)` uniformly — a genuine type mismatch,
+discovered only now that a real Type-2 readout exists to attempt this with.
+
+**Decision.**
+`BendAngleAtReferenceGeometry` (`src/omi_domains/flagship/readouts.py`), a
+`FunctionalReadout` wrapping a `BendAngle` instance at one declared,
+fixed `Type2Geometry` (`thickness=1.0, curvature=2.0`, the same values
+`classb_bend.py`'s own `REFERENCE_THICKNESS`/`REFERENCE_CURVATURE` use, for
+consistency with the rest of the Class B campaign, not re-derived
+independently to avoid a circular import between `readouts.py` and
+`classb_bend.py`). Its `evaluate(state)` builds the bound
+`HardnessConstitutiveOperator` from *state* (the same construction
+`driver_field_for_sites` uses) and returns `BendAngle.evaluate(operator,
+geometry)`'s response, **discarding the process-zone volume** — Spec
+§3.3's `Dρ^(m)` wants a scalar response's derivative for the sensitivity
+operator, not Class B's volume-coupling half, so nothing about that
+argument is lost by omitting it here. `.jacobian` is not overridden — it
+falls back to `FunctionalReadout`'s central-difference default (ADR-012),
+since no analytic derivative through the geometry-fixed quadrature
+composition has been derived; this is an honest numerical estimate, the
+same convention every other undifferentiated readout in this repository
+already uses, not a new precedent.
+
+`sensitivity_operator`/`danger_triage` themselves are **not** extended to
+accept `ComponentReadout` directly — that would require deciding how a
+Type-2 readout's process-zone volume participates in a sensitivity
+operator built for scalar responses, a larger question than "re-run
+flagship's triage with the declared target set," and out of scope for
+this specific remediation item.
+
+**Alternatives rejected.**
+*Add a `jacobian(operator, geometry)` method to `ComponentReadout` and
+extend `sensitivity_operator` to dispatch on readout type.* Rejected for
+this ADR — a real, larger design question (what does "sensitivity" mean
+for a readout whose interface includes geometry as well as state; does the
+process-zone volume also carry a danger score) that deserves its own
+decision, not one folded into re-running an existing test with an expanded
+target list.
+*Skip `bend_angle` and re-run triage with the target set unchanged.*
+Rejected — this is exactly the staleness CLAUDE.md invariant 10 and Spec
+§3.3 forbid: the declared target set changed at Phase 2, and the existing
+`tests/test_domain_triage.py` result predates it.
+
+**What would change this.** A future decision to give `ComponentReadout` a
+first-class sensitivity interface (the rejected alternative above), at
+which point `BendAngleAtReferenceGeometry` becomes unnecessary and
+`sensitivity_operator` accepts `bend_angle` directly, geometry included.
+
+**Pinned by.** `tests/test_domain_triage.py` (flagship triage re-run with
+`[AggregateHardness(), BendAngleAtReferenceGeometry()]`).
 
 ---
 
