@@ -303,3 +303,26 @@ for the exact output.
    added and following the citations into the code.
 5. Run the verification suite yourself (above) rather than trusting this
    document's numbers.
+
+---
+
+## Addenda (post-`e43d858`, dated)
+
+This document is a snapshot stamped to a commit range (CLAUDE.md §10); later
+findings are appended here, not edited into the sections above.
+
+**On M6's "A designed ranking inversion between two materials reproduces via
+Proposition 4.2's dimensional reduction" (above, M6 section).** A later
+circularity review found this overclaims: the oracle behind that sentence
+(`tests/oracles/known_ranking_inversion.py`) calls `omi.classb.n_eff`
+directly with hand-supplied `ℓ_D`/`p0` constants for two materials — it
+samples no driver field and never calls `estimate_correlation_length`. What
+it demonstrates is that `n_eff`'s own two-regime branch arithmetic produces
+the sign-flip the two-tier structure predicts under chosen constants — a
+legitimate formula-correctness check, not empirical evidence that the
+reduction is an emergent effect of a real spatially-correlated field. See
+`docs/V1.4-EDITS.md` E-14 for the full finding (it names this oracle as the
+same blocker as the later flagship bend campaign's thin regime) and
+`tests/oracles/test_known_ranking_inversion.py::test_ranking_inversion_is_not_empirically_validated_as_an_emergent_effect`
+(added and permanently skipped, same review) for the record that the
+stronger claim remains unchecked.

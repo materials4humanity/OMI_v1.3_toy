@@ -296,3 +296,15 @@ that looks finished.
   finding later (or never) is how a genuine defect gets silently absorbed
   into a repository-specific convention instead of reaching the paper it is
   evidence for.
+- **Snapshot documents are corrected by addendum; live documents are
+  corrected in place.** A document that stamps a commit SHA or commit range
+  in its own header (`docs/REVIEW_PACK.md`, `build/REVIEW-EXTRACT.md`) is a
+  point-in-time record of what was true *at that commit* — editing its body
+  later to match new findings falsifies the record it exists to be. Correct
+  it by appending a dated addendum that names what changed and why,
+  immediately after the passage it corrects or in a clearly marked section,
+  never by rewriting the original text. A document that describes the
+  repository's *current* state with no commit stamp (`CLAUDE.md` itself,
+  `docs/COVERAGE.md`, `docs/DECISIONS.md`, `docs/ROADMAP.md`,
+  `docs/V1.4-EDITS.md`) is live — it is supposed to always be accurate, so
+  correct it in place the same way any other stale documentation gets fixed.
