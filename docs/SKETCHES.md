@@ -301,5 +301,159 @@ representation of the domain.
 
 ---
 
-*(Crystallisation and formulation, and the deliberately awkward fourth
-sketch, are scheduled next per ROADMAP M10.1 and are not yet written.)*
+## Crystallisation and formulation
+
+**Why this sketch.** Batch cooling/antisolvent crystallisation, chosen per
+ROADMAP M10.1 for "polymorph selection as a bifurcating evolution operator,
+dissolution as a Class B readout" — and written third, deliberately,
+because Core §3.1 names *supersaturation* as its own worked example of
+`ν`, and this domain's headline phenomenon (polymorph selection) is itself
+supersaturation-driven (classical nucleation theory; Ostwald's rule of
+stages). E-21/E-22 (docs/V1.4-EDITS.md) predicted `ν` would plausibly be
+dominant here too, on physics with nothing in common with either metal
+processing (flagship, device yield, layer-wise additive) or
+electrochemistry (contrast). **The prediction holds** — see item 1 below
+and E-22's addendum.
+
+**1. State schema.** All four slots occupied, none forced:
+- **m** — `particle_size_distribution_moments` (bulk PSD summary, laser
+  diffraction), `crystal_habit_descriptor` (aspect ratio/morphology,
+  imaging). Point-valued fine, matching every other domain's `m`.
+- **z** — `subcritical_nuclei_density` (below detection limit; "inferable
+  only through dynamics," Core §3.1's own phrase, exactly the induction-
+  time-dependent nucleation-rate inference this domain actually uses),
+  `crystal_defect_density` (dislocation/inclusion accumulation, the
+  constitutive-operator memory term).
+- **ν** — `supersaturation`: Core §3.1's own named example. In the
+  well-mixed idealisation common to batch crystallisers, supersaturation
+  is not merely a field satisfying a global PDE (as flagship's residual
+  stress and layer-wise additive's part-scale stress are) — it collapses
+  further, to a **single shared scalar** for the whole vessel, since every
+  growing crystal draws from the same mother-liquor solute reservoir and
+  no crystal's local growth model can account for how much solute remains
+  without reference to what every other crystal has already consumed.
+  This is, if anything, a *purer* instance of "pointwise evolution
+  operators cannot own them" (Core §3.1) than either previous domain's
+  `ν`: residual stress at least has *a* value at each point (just one
+  that depends on the whole body); the well-mixed limit of supersaturation
+  does not even have a meaningful local value to approximate. In an
+  imperfectly-mixed real vessel, supersaturation reverts to a genuine
+  spatial field with the same globally-coupled structure as the other two
+  domains' `ν` — both regimes are worth naming, since real industrial
+  crystallisers sit at different points between them.
+  **`ν` is plausibly this domain's dominant slot**, confirming E-21's
+  prediction on a third, structurally unrelated domain: polymorph
+  selection — the phenomenon this sketch exists to test — is itself
+  governed by supersaturation level via the relative nucleation barriers
+  of competing polymorphs, more centrally than layer-wise additive's `ν`
+  governed distortion (a real but secondary commercial concern there).
+- **Γ** — `crystal_surface_state`: surface defect/roughness state,
+  controlling both dissolution rate (this domain's own declared Class-B
+  readout, item 4) and further growth/agglomeration — not cosmetic,
+  matching Core §3.1's requirement and echoing flagship's own
+  Γ→adhesion coupling.
+
+**Bifurcation does not strain the interface.** Polymorph selection near
+the metastable-zone boundary is a genuine bifurcation: a small
+perturbation in supersaturation or seeding selects a qualitatively
+different polymorphic outcome, with very different downstream properties
+(solubility, stability, bioavailability). This does not require anything
+beyond `S × 𝒰 → S` (or its ensemble lift) to represent — a bifurcating map
+is still just a map, highly sensitive in a narrow region — and Core §3.9
+already names this exact case directly: "Where dynamics are genuinely
+expansive... a better surrogate is not the answer... predict the
+invariant or **the bifurcation label** rather than the trajectory." This
+sketch is the clearest real-world instance of that clause found in this
+repository so far, not a gap in it — recorded here as a confirming
+observation, not escalated to `docs/V1.4-EDITS.md`, since Core's text
+already anticipates it in full.
+
+**2. Control space.** Apparatus-controlled: cooling-rate profile,
+antisolvent addition rate, seeding schedule as a time-dependent recipe.
+`𝒰_adm` bounded by the crystalliser's equipment limits. A control
+(process) inverse exists: target polymorph/particle-size distribution →
+recipe, a live crystallisation-process-design problem.
+
+**3. Erasure inventory.** `full_dissolution_recrystallization` — fully
+dissolving the crystalline material and recrystallising under controlled
+conditions genuinely erases prior crystal history (habit, defect
+structure, even polymorph), a strong contractive erasure comparable in
+role to flagship's `heating_and_soak`. Unlike device yield's
+`cmp_planarization` or layer-wise additive's `hot_isostatic_pressing`
+(both terminal, post-process), this erasure is naturally **mid-chain** —
+usable as an intermediate reprocessing step, or as the very first step
+(dissolving raw starting material before crystallising). Combined with
+item 5's genuinely rich, real-time observation suite (below), this domain
+plausibly satisfies **both** conditions of Core §3.9's error-control
+dichotomy robustly, the same profile as flagship — on completely
+unrelated physics. Useful confirming evidence that flagship's profile
+(real erasure + rich sensing) is not a metallurgy-specific artefact.
+Contrast with layer-wise additive (E-23): that domain's only erasure and
+richest observation are *both* terminal, so neither condition holds
+mid-chain in practice — this sketch shows the opposite is equally
+possible on unrelated physics, i.e. the dichotomy's profile is not
+domain-family-clustered.
+
+**4. Readout catalogue.**
+- `bulk_yield_mean: Type-0/Class-A` — self-averaging total
+  crystallised yield/purity across a batch.
+- `crystal_growth_constitutive: Type-1` — supersaturation and
+  temperature → growth rate + updated local crystal state, the classical
+  crystal-growth-kinetics operator.
+- `dissolution_time_to_90pct: Type-0/Class-B` — process-zone volume =
+  the *finished* batch's particle population, fixed at evaluation time
+  (dissolution testing runs on an isolated, dried sample, not the growing
+  in-process population — the same "fixed at evaluation, not at
+  build/process time" pattern device yield's critical area and
+  layer-wise additive's fatigue life both already established). **Item
+  4b:** driver field = local particle-surface dissolution flux, correlated
+  with the particle-size-distribution field; defect population =
+  independently measured particle-size distribution (laser diffraction;
+  heavy-tailed coarse fraction); physics map `Ψ` = Noyes-Whitney/
+  Hixson-Crowell dissolution kinetics (dissolution time ∝ particle
+  radius²for diffusion-limited dissolution), exponent read directly from
+  that textbook model, not invented inside `omi.classb` — the same
+  discipline as every prior domain's item 4b.
+
+**5. Observation suite.** In-line FBRM (focused beam reflectance,
+real-time particle count/chord-length), in-line Raman/NIR spectroscopy
+(real-time polymorph identification *and* supersaturation monitoring —
+directly observing the dominant slot, unlike either prior sketch), at-line
+laser diffraction (particle size distribution). This is the richest,
+most continuous, most genuinely *real-time* observation suite of any
+domain or sketch so far — crystallisation is one of the pharmaceutical
+industry's most PAT (process analytical technology)-instrumented unit
+operations, precisely because real-time supersaturation control is the
+lever that determines polymorphic outcome. A sharp contrast to layer-wise
+additive's strictly terminal richest observation (E-23).
+
+**6. Invariants.** `solute_mass_conservation_across_crystallisation`
+(conservation) and `cumulative_crystallised_mass_monotone_nondecreasing`
+(monotonicity). **One honest scoping note**: this domain's own declared
+erasure (`full_dissolution_recrystallization`) is precisely a controlled
+violation of the monotonicity invariant when invoked — crystallised mass
+genuinely drops back toward zero on dissolution. This is not a
+contradiction: the invariant holds *between* erasures, not across the
+whole chain unconditionally, the same way any domain's monotonicity
+invariant should be read as scoped to the segment it actually governs.
+Worth stating explicitly here since this is the first domain or sketch in
+this repository whose own declared erasure directly targets the same
+physical quantity one of its own invariants governs.
+
+**7. Scale structure.** Tier I only: a single representative-batch,
+well-mixed-limit population-balance-style state (classical
+supersaturation-driven growth/nucleation kinetics) — a natural, commonly-
+used industrial idealisation, unlike layer-wise additive's Tier I
+stand-in (which discards a dominant physical mechanism rather than
+merely coarsening it). Tier II (spatially-resolved CFD-coupled population
+balance, capturing genuine within-vessel supersaturation gradients)
+remains an anti-goal per CLAUDE.md §9.
+
+**Machine-diff status.** See `tests/test_sketches.py` and
+`build/observations.json`; no pattern is asserted, only recorded.
+
+---
+
+*(The deliberately awkward fourth sketch, chosen specifically to attack
+Core §6.2's open "does some domain need a fifth slot" question, is
+scheduled next per ROADMAP M10.1 and is not yet written.)*

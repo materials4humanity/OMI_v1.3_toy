@@ -15,6 +15,10 @@ from omi.interface import InstantiationDeclaration, diff
 from omi_domains.contrast.interface import CONTRAST_DECLARATION
 from omi_domains.flagship.interface import FLAGSHIP_DECLARATION
 from omi_domains.sketches.device_yield import DEVICE_YIELD_DECLARATION, DEVICE_YIELD_SCHEMA
+from omi_domains.sketches.crystallisation_formulation import (
+    CRYSTALLISATION_FORMULATION_DECLARATION,
+    CRYSTALLISATION_FORMULATION_SCHEMA,
+)
 from omi_domains.sketches.layerwise_additive import (
     LAYERWISE_ADDITIVE_DECLARATION,
     LAYERWISE_ADDITIVE_SCHEMA,
@@ -127,4 +131,48 @@ def test_layerwise_additive_diffs_against_contrast(observe: ObservationRecorder)
 
 def test_layerwise_additive_diff_with_itself_is_empty() -> None:
     result = diff(LAYERWISE_ADDITIVE_DECLARATION, LAYERWISE_ADDITIVE_DECLARATION)
+    assert not any(result.values())
+
+
+def test_crystallisation_formulation_declaration_is_a_real_instantiation_declaration() -> None:
+    """Same shape check as the first two sketches, ADR-038."""
+    assert isinstance(CRYSTALLISATION_FORMULATION_DECLARATION, InstantiationDeclaration)
+    assert CRYSTALLISATION_FORMULATION_DECLARATION.state_schema is CRYSTALLISATION_FORMULATION_SCHEMA
+    assert CRYSTALLISATION_FORMULATION_DECLARATION.erasure_inventory != ()
+    assert len(CRYSTALLISATION_FORMULATION_DECLARATION.readout_catalogue) > 0
+    assert len(CRYSTALLISATION_FORMULATION_DECLARATION.observation_suite) > 0
+    assert len(CRYSTALLISATION_FORMULATION_DECLARATION.invariants) > 0
+
+
+def test_crystallisation_formulation_schema_occupies_all_four_slots() -> None:
+    """All four slots fill without forcing here too (docs/SKETCHES.md) --
+    unlike layer-wise additive, this sketch's nu strain (E-22's addendum)
+    is about typing, not about an empty slot; both sketches share that
+    same distinction."""
+    from omi.state import Slot
+
+    for slot in Slot:
+        assert not CRYSTALLISATION_FORMULATION_SCHEMA.is_empty(slot), f"{slot.value} unexpectedly empty"
+
+
+def test_crystallisation_formulation_diffs_against_flagship(observe: ObservationRecorder) -> None:
+    result = diff(CRYSTALLISATION_FORMULATION_DECLARATION, FLAGSHIP_DECLARATION)
+    observe("crystallisation_formulation_vs_flagship_diff", result, "recorded, not asserted against a pattern")
+    assert set(result) == _ALL_SEVEN_ITEMS
+
+
+def test_crystallisation_formulation_diffs_against_contrast(observe: ObservationRecorder) -> None:
+    result = diff(CRYSTALLISATION_FORMULATION_DECLARATION, CONTRAST_DECLARATION)
+    observe("crystallisation_formulation_vs_contrast_diff", result, "recorded, not asserted against a pattern")
+    assert set(result) == _ALL_SEVEN_ITEMS
+
+    # Crystallisation's erasure is mid-chain (like flagship's), unlike
+    # contrast's declared absence -- and unlike device yield's/layer-wise
+    # additive's terminal-only candidates.
+    assert CRYSTALLISATION_FORMULATION_DECLARATION.erasure_inventory != ()
+    assert CONTRAST_DECLARATION.erasure_inventory == ()
+
+
+def test_crystallisation_formulation_diff_with_itself_is_empty() -> None:
+    result = diff(CRYSTALLISATION_FORMULATION_DECLARATION, CRYSTALLISATION_FORMULATION_DECLARATION)
     assert not any(result.values())
