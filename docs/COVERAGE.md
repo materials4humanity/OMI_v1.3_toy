@@ -56,8 +56,8 @@ the sweep note at the end of Part II).
 | C-3.5 | §3.5 | Readout types 0/1/2 | SPEC | `readouts.py` — ADR-035 (docs/DECISIONS.md) adds `ComponentReadout`/`Type2Geometry`, the first concrete Type-2 base (Tier I½, bounded); `ReadoutType` is now a class attribute on all three readout bases (`FunctionalReadout`/`ConstitutiveReadout`/`ComponentReadout`), no longer referenced nowhere outside its own definition | `src/omi/readouts.py` | — | `tests/test_readouts.py` (flagship, contrast, Type-0/1); `tests/test_flagship_classb_bend.py` (flagship, Type-2 via `BendAngle`, the first domain-exercised Type-2 readout in the repository) | **C-2.5** (PASS-C) — same as C-2.6: general Type-2 needs richer geometry; the Tier I½ case does not |
 | C-3.6 | §3.6 | Class A/B; tail-index transfer; dimensional reduction | SPEC → Spec §4 | `classb.py` | `src/omi/classb.py` | `tests/oracles/test_known_tail.py`, `tests/oracles/test_known_ranking_inversion.py`, `tests/test_classb_competing_risks.py` | `tests/test_readouts.py::test_contrast_dendrite_risk_is_class_b_and_weakest_link_works` (contrast, `weakest_link` only); `tests/test_conformance_omi2_refusal.py` (contrast, `validate_volume_scaling_exponent` at 3 volumes); `tests/test_flagship_classb_bend.py` + `src/omi_domains/flagship/classb_bend.py` (flagship, Tier I½/ADR-035, Phase 2.3): the first Type-2/Class-B readout (`BendAngle`) exercised against a real, spatially-correlated driver field — nine of `src/omi/classb.py`'s ten previously-dead symbols are now called from production domain code; `SubsetSimulationResult` remains the only one with zero name references anywhere (its constructor function, `subset_simulation`, is exercised by `tests/test_classb_subset_simulation.py`, but nothing names the result type itself) | **C-2.5** (PASS-C) — confirmed this session: Prop 4.2's *emergent* dimensional-reduction claim needs body-indexed state (`docs/V1.4-EDITS.md` E-14); the formula-self-consistency half does not |
 | C-3.7 | §3.7 | Homogenisation; closure defect *definition*; RG scope | SPEC (definition) / **PASS-C** (measurement, Spec §6) | definition only | — (definition only; `measure_closure_defect` in `src/omi/conformance.py` is an unconditional refusal stub, not an implementation of the definition) | — | — | — (own status SPEC/PASS-C mixed; the measurement half is itself the PASS-C row) |
-| C-3.8 | §3.8 | Assimilation; Gramian; danger score; erasure truncation | SPEC → Spec §3 | `observability.py`, `assimilate.py` | `src/omi/observability.py`, `src/omi/assimilate.py` | `tests/oracles/test_known_blind_spot.py`, `tests/oracles/test_erasure_truncates_gramian.py`, `tests/oracles/test_known_latent_trajectory.py`, `tests/test_innovation_drift_monitor.py` | `tests/test_domain_triage.py` (flagship, contrast) exercises `src/omi/observability.py`'s Gramian/danger-triage only; `src/omi/assimilate.py`'s EnKF/smoother/drift-monitor has no domain test (its oracles — `tests/oracles/known_latent_trajectory.py`, `tests/oracles/known_drift.py` — are synthetic schemas, not `omi_domains`) | — |
-| C-3.9a | §3.9 | Error compounding bound; erasure definition and consequences | SPEC | `erasure.py`, `operators.py` | `src/omi/erasure.py`, `src/omi/operators.py` (`.is_erasure`) | `tests/oracles/test_known_erasure.py` | `tests/test_error_compounding.py` (flagship, `HEATING_AND_SOAK`) demonstrates the damping *effect* directly on perturbed states; `tests/test_flagship_real_erasure.py` (Phase 3.1, flagship, `HEATING_AND_SOAK`): the first domain-exercise of `measure_erasure`/`component_recoverability` themselves, not only the oracle's exact-zero-gain construction — finds `measure_erasure` reports full rank (7/7) at ADR-017's default tolerance since `HEATING_AND_SOAK`'s decay is finite (`exp(-5)~0.0067`), never exactly zero, with the erasure visible only by reading the spectrum (a ~150x gap, correctly isolating `prior_deformation`/`substructure_density`); and finds `component_recoverability` (R², correlation-based) cannot see the erasure at all on this noiseless deterministic operator — R²≈1.0 for every non-degenerate component regardless of how much magnitude it lost, extending OQ-2's M2 finding (previously shown only on the synthetic oracle) to a real domain |
+| C-3.8 | §3.8 | Assimilation; Gramian; danger score; erasure truncation | SPEC → Spec §3 | `observability.py`, `assimilate.py` | `src/omi/observability.py`, `src/omi/assimilate.py` | `tests/oracles/test_known_blind_spot.py`, `tests/oracles/test_erasure_truncates_gramian.py`, `tests/oracles/test_known_latent_trajectory.py`, `tests/oracles/test_known_drift.py` | `tests/test_domain_triage.py` (flagship, contrast) exercises `src/omi/observability.py`'s Gramian/danger-triage only; `src/omi/assimilate.py`'s EnKF/smoother/drift-monitor has no domain test (its oracles — `tests/oracles/known_latent_trajectory.py`, `tests/oracles/known_drift.py` — are synthetic schemas, not `omi_domains`) | — |
+| C-3.9a | §3.9 | Error compounding bound; erasure definition and consequences | SPEC | `erasure.py`, `operators.py` | `src/omi/erasure.py` (`measure_erasure`, `component_recoverability`, and — new at Phase 3.4 — `component_surviving_overlap`, a pure geometric per-component diagnostic, OQ-2/E-18), `src/omi/operators.py` (`.is_erasure`) | `tests/oracles/test_known_erasure.py` (diagonal); `tests/oracles/test_known_mixing_erasure.py` (Phase 3.4, mixing: rank recovered exactly, but per-component overlap — `0.833`/`0.833`/`0.333` designed, recovered to within `0.01` — is not derivable from rank alone, answering OQ-2's deferred half) | `tests/test_error_compounding.py` (flagship, `HEATING_AND_SOAK`) demonstrates the damping *effect* directly on perturbed states; `tests/test_flagship_real_erasure.py` (Phase 3.1, flagship, `HEATING_AND_SOAK`): the first domain-exercise of `measure_erasure`/`component_recoverability` themselves, not only the oracle's exact-zero-gain construction — finds `measure_erasure` reports full rank (7/7) at ADR-017's default tolerance since `HEATING_AND_SOAK`'s decay is finite (`exp(-5)~0.0067`), never exactly zero, with the erasure visible only by reading the spectrum (a ~150x gap, correctly isolating `prior_deformation`/`substructure_density`); and finds `component_recoverability` (R², correlation-based) cannot see the erasure at all on this noiseless deterministic operator — R²≈1.0 for every non-degenerate component regardless of how much magnitude it lost, extending OQ-2's M2 finding (previously shown only on the synthetic oracle) to a real domain |
 | C-3.9b | §3.9 | **Error-control dichotomy** (erasure or observation) | **PASS-B** | test only; do not implement a scoping check | — (deliberately no scoping-check module) | — | `tests/test_conformance_flagship.py::test_flagship_matched_pair_deficit_is_at_noise_level` (flagship) exercises condition (a) only; condition (b) — continuous assimilation controlling error where no erasure exists — is untested on the contrast domain: `tests/test_conformance_contrast.py` only checks `erasure_inventory == ()` declaratively, no contrast-domain assimilation campaign runs anywhere | — (own status PASS-B; a provider, not a dependent, row) |
 | C-3.9c | §3.9 | **Refusal criterion**; `L_phys × L_num` | **PASS-B** → Spec §2.5–2.7 | refuse | `src/omi/operators.py::amplification_decomposition` (unconditional `NotSpecified`, cites S-2.5) | — (nothing to verify; the function always refuses) | `tests/test_lipschitz_report.py::test_amplification_decomposition_refuses_citing_s_2_5` (flagship, `HEATING_AND_SOAK`) — the refusal path itself is domain-exercised, not the (nonexistent) decomposition | — (own status PASS-B; a provider, not a dependent, row; see S-2.5) |
 | C-4 | §4 | Seven-item instantiation interface | SPEC | `omi_domains/*/interface.py` — ADR-034 (docs/DECISIONS.md) supersedes ADR-003's pinning test: Core §7.2's seven rows name six distinct Core §4 items, not seven, and `interface.diff()` now also reports a structural (kind-based) comparison for item 6's invariants alongside the literal one. Item 4b (per-Class-B-readout driver field/defect population/physics map Ψ) is now filled for the flagship's `bend_angle` (Phase 2.2, ADR-035) — the first domain to fill 4b at all; the contrast's `dendrite_risk` (Type-0/Class-B) still does not declare it | `src/omi/interface.py`, `src/omi_domains/flagship/interface.py`, `src/omi_domains/contrast/interface.py` | — (no synthetic oracle; the cross-domain diff is the check) | `tests/test_interface_diff.py` (flagship, contrast); `tests/test_flagship_classb_bend.py::test_flagship_declares_bend_angle_with_item_4b_filled` (flagship, item 4b specifically) | — (the interface-declaration/diff claim itself needs no PASS machinery; the OMI-2-level dependency lives at S-9.3, not here) |
@@ -119,7 +119,7 @@ Same verification axis as Part I (see the note above Part I's table).
 | S-9.3 | §9.3 | Baselines; grouped splits; prospective validation | SPEC / **PASS-C** (go-no-go table) | `conformance.py` | partial — grouped splits (`src/omi/learning.py::grouped_train_test_split`, see S-5.3) implemented; a distinct baseline-comparison or prospective-validation function is not implemented, only a completeness-gate requirement name in `src/omi/conformance.py` | — | `tests/test_learning_oracle.py` (contrast, grouped splits only) | **S-7.1** (PASS-B) — chased this session: `ReachabilityCertificate`'s `Φ(s)=w·s` is architecturally linear-only (ADR-031), so a domain whose only declared item-6 invariant is nonlinear could never construct one with this repo's `inverse.py`. **Revised, `docs/V1.4-EDITS.md` E-17**: Spec's own text (§7.1's definition box, chased fully) already restricts "reachability certificate" to the sound kind, so this is not a Spec-text gap. `conformance.py`'s `reachability_certificates` field — previously `tuple[str, ...]`, entirely decoupled from `omi.inverse.ReachabilityCertificate` — is now typed `tuple[ReachabilityCertificate, ...] \| None`, closing the loophole structurally; no existing test's conformance level changed, since none supplied a non-`None` value. E-17 proposes Spec §9.1 also restate the soundness requirement inline (not only by cross-reference), which remains open. |
 | S-9.4 | §9.4 | **Falsification thresholds** | **PASS-D** | ADR per application | — (deliberately, PASS-D) | — | — | — (own status PASS-D; a provider, not a dependent, row) |
 | S-9.5 | §9.5 | Uncertainty taxonomy; calibration reporting | SPEC | `conformance.py` | `src/omi/conformance.py::calibration_report` | `tests/test_conformance.py::test_calibration_report_distinguishes_well_calibrated_from_overconfident_ensembles` (synthetic ensembles) | `tests/test_conformance_flagship.py` (flagship, hardness-rollout calibration) | — |
-| S-10 | §10 | Operations; innovation drift; lifecycle | **PASS-C** (procedure) / SPEC (proposition) | `assimilate.py` — innovation sequence (SPEC) + NIS chi-squared drift monitor (ADR-026 declares the procedure); recalibration/champion-challenger/rollback remain unimplemented anti-goals | `src/omi/assimilate.py::innovation_drift_monitor` | `tests/test_innovation_drift_monitor.py` (synthetic `tests/oracles/known_drift.py` oracle; not under `tests/oracles/` despite testing against a constructed planted-drift scenario) | — | — (own status PASS-C/SPEC mixed; the procedure half is itself the PASS-C row) |
+| S-10 | §10 | Operations; innovation drift; lifecycle | **PASS-C** (procedure) / SPEC (proposition) | `assimilate.py` — innovation sequence (SPEC) + NIS chi-squared drift monitor (ADR-026 declares the procedure); recalibration/champion-challenger/rollback remain unimplemented anti-goals | `src/omi/assimilate.py::innovation_drift_monitor` | `tests/oracles/test_known_drift.py` (Phase 3.4: moved under `tests/oracles/` and renamed to match `tests/oracles/known_drift.py`'s own pairing, the naming/placement inconsistency every other row here used to note) | — | — (own status PASS-C/SPEC mixed; the procedure half is itself the PASS-C row) |
 | S-11 | §11 | Full instantiation declarations | **PASS-D** | `omi_domains/` | `src/omi_domains/flagship/interface.py`, `src/omi_domains/contrast/interface.py` | — (same as C-4) | `tests/test_interface_diff.py` (flagship, contrast) | — (own status PASS-D; a provider, not a dependent, row) |
 | S-12 | §12 | **Reference implementation architecture** | **PASS-C** | **this repo is the synthesis — ADR every choice** | — (describes the whole repository; no single module to cite) | — | — | — (own status PASS-C; a provider, not a dependent, row) |
 
@@ -213,36 +213,46 @@ erasure is not a reason to enlarge the state") fails for surviving components.
 **Test:** oracle with designed per-component contraction; check whether a
 single operator-level rank predicts downstream influence.
 
-> **Status: partially answered at M2** (`tests/oracles/test_known_erasure.py`).
-> The first hypothesis is confirmed with evidence: on a diagonal (non-mixing)
-> designed-rank Jacobian with one full-gain, one small-gain (0.15), and one
-> exactly-zero-gain component, a naive "fraction of variance retained"
-> reading calls the small-gain component >95% erased, while the
-> operator-level rank (`omi.erasure.measure_erasure`, via SVD) and a
-> per-component recoverability estimate (`omi.erasure.component_recoverability`,
-> R² of post-step regressed on pre-step — operationalising the "residual
-> variance explained by upstream variables" candidate; mutual information is
-> not implemented) **agree with each other** and correctly call it fully
+> **Status: answered — diagonal case at M2, mixing case at Phase 3.4**
+> (`tests/oracles/test_known_erasure.py`; `tests/oracles/
+> test_known_mixing_erasure.py`). The first hypothesis is confirmed with
+> evidence: on a diagonal (non-mixing) designed-rank Jacobian with one
+> full-gain, one small-gain (0.15), and one exactly-zero-gain component, a
+> naive "fraction of variance retained" reading calls the small-gain
+> component >95% erased, while the operator-level rank
+> (`omi.erasure.measure_erasure`, via SVD) and a per-component
+> recoverability estimate (`omi.erasure.component_recoverability`, R² of
+> post-step regressed on pre-step — operationalising the "residual variance
+> explained by upstream variables" candidate; mutual information is not
+> implemented) **agree with each other** and correctly call it fully
 > surviving/assimilable (R² > 0.999). The naive heuristic is the one that is
 > wrong, not the operator-level/component-level split as such.
 >
-> **Refined open question, not yet tested:** the oracle above is diagonal —
-> each named component aligns with exactly one singular direction, so
-> operator-level rank and per-component recoverability could not help but
-> agree. The genuinely open case is a *mixing* erasure (non-diagonal
-> Jacobian, surviving subspace spanning a linear combination of several named
-> components) — there, does operator-level rank still predict per-component
-> influence, or does the framework need a per-component projection onto the
-> surviving subspace as a distinct diagnostic? Left open for M3+
-> (`observability.py`'s Gramian gives the natural machinery for this).
+> **Deferred half, answered at Phase 3.4 (docs/ROADMAP.md).** The oracle
+> above is diagonal — each named component aligns with exactly one singular
+> direction, so operator-level rank and per-component recoverability could
+> not help but agree. Built a genuinely *mixing* erasure oracle (a symmetric
+> rank-2 Jacobian whose surviving subspace and kernel both span linear
+> combinations of all three named components, none axis-aligned,
+> `tests/oracles/known_mixing_erasure.py`): operator-level rank (the single
+> integer 2) is silent on per-component influence — the three components'
+> designed overlaps with the surviving subspace are `0.833`, `0.833`,
+> `0.333` respectively, none 0 or 1. `component_recoverability` gives an
+> intermediate, correctly-ordered but not numerically identical picture
+> (`~0.78`, `~0.76`, `~0.33`); a new function,
+> `omi.erasure.component_surviving_overlap` (a pure geometric projection
+> needing no ensemble), recovers the designed values to within `0.01`.
+> **Answer: operator-level rank does not predict per-component influence
+> under a mixing erasure, and a per-component projection is a genuinely
+> distinct, needed diagnostic** — added to `src/omi/erasure.py` rather than
+> left as a finding with no corresponding capability.
 >
 > **Second hypothesis (Core §2.2's suppression rule for surviving
 > components) is deferred to M4**, when `sufficiency.py` exists to test it
 > against.
 >
 > **Proposed wording for v1.4:** moved to `docs/V1.4-EDITS.md` E-04 (the
-> diagonal-erasure half only; the mixing-erasure half above remains open with
-> no wording proposed).
+> diagonal-erasure half) and E-18 (the mixing-erasure half, now answered).
 
 **OQ-3 — Competing risks in Class B. Answered M6.**
 Spec §4.3 transfers a tail index from one defect population. With several

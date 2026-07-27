@@ -18,7 +18,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from omi.operators import Control, EvolutionOperator
-from omi.state import Ensemble, FloatArray, Metric, Slot, State
+from omi.state import Ensemble, FloatArray, Metric, Slot, State, StateSchema
 
 
 @dataclass(frozen=True)
@@ -114,3 +114,35 @@ def component_recoverability(
         return 0.0
     correlation = np.corrcoef(pre, post)[0, 1]
     return float(correlation**2)
+
+
+def component_surviving_overlap(measurement: ErasureMeasurement, schema: StateSchema, slot: Slot, name: str) -> float:
+    """A named component's own squared overlap with the surviving subspace
+    (Core §3.9 consequence 3; Spec §3.2 Corollary 3.3), ``‖P_survive e_i‖²``
+    for ``e_i`` the component's standard basis direction in the flat state
+    vector and ``P_survive`` the projector onto
+    :attr:`ErasureMeasurement.surviving_basis`.
+
+    Answers OQ-2's deferred question (docs/COVERAGE.md Part IV): for a
+    *mixing* (non-diagonal) erasure, :func:`component_recoverability`'s
+    univariate correlation and operator-level rank need not agree on
+    per-component influence, because no named component need align with
+    any single singular direction — every component can have a genuinely
+    intermediate overlap with the surviving subspace, unlike the diagonal
+    case (`tests/oracles/known_erasure.py`) where each component aligns
+    with exactly one singular vector and the two measures cannot help but
+    agree. This is a pure geometric projection, needing no ensemble at all,
+    unlike :func:`component_recoverability` — a distinct diagnostic, not a
+    replacement for it.
+
+    Only defined for a single-dimensional component (as
+    :func:`component_recoverability` already assumes); raises if *schema*
+    declares *slot*.*name* with dimension other than 1.
+    """
+    index_slice = schema.slice_for(slot, name)
+    if index_slice.stop - index_slice.start != 1:
+        raise ValueError(f"{slot.value}.{name} is not a single-dimensional component")
+    e_i = np.zeros(measurement.surviving_basis.shape[0])
+    e_i[index_slice.start] = 1.0
+    projection = measurement.surviving_basis @ (measurement.surviving_basis.T @ e_i)
+    return float(np.dot(projection, projection))

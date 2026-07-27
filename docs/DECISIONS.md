@@ -1149,7 +1149,7 @@ the SPEC proposition without inventing framework.
 appearing in a future Spec revision, at which point this ADR is superseded
 rather than silently edited.
 
-**Pinned by.** `tests/test_innovation_drift_monitor.py` (a planted drift
+**Pinned by.** `tests/oracles/test_known_drift.py` (a planted drift
 must trip the monitor; a nominal, undrifted run must not).
 
 ---
@@ -2111,7 +2111,7 @@ Not decisions — hypotheses the code should settle. Full statements in
 | id | Question | Milestone | Status |
 |---|---|---|---|
 | OQ-1 | Fingerprint: single probe or contrast between probes? | M4 | answered — see COVERAGE.md Part IV |
-| OQ-2 | Erasure completeness: operator-level or component-level? | M2 | partially answered — see COVERAGE.md Part IV |
+| OQ-2 | Erasure completeness: operator-level or component-level? | M2, deferred half at Phase 3.4 | answered — see COVERAGE.md Part IV |
 | OQ-3 | Class B under competing defect populations | M6 | answered — see COVERAGE.md Part IV |
 | OQ-4 | Does inverse design report which variance is binding? | M9 | answered — see COVERAGE.md Part IV |
 | OQ-5 | Metric dependence of reported `L` | M2 | answered — see COVERAGE.md Part IV |
