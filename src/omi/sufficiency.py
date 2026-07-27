@@ -19,6 +19,9 @@ from typing import Callable, Sequence
 import numpy as np
 from scipy import stats
 
+from omi.chain import Chain
+from omi.gaps import NotSpecified
+from omi.learning import DeepONetOperator
 from omi.observability import TriageResult
 from omi.state import FloatArray, Slot, StateSchema
 
@@ -80,17 +83,34 @@ def variance_term(triage: TriageResult) -> float:
     return sum(d.danger_score for d in triage.directions)
 
 
-def learning_error() -> float:
+def learning_error(chain: Chain) -> float:
     """``Err_learn(𝒮)`` (Spec §1.4): measured from a learned model's
-    rollout-length curve at matched data budget.
+    rollout-length curve at matched data budget (ADR-036, docs/DECISIONS.md).
 
-    Every module through M7 (ADR-001, docs/DECISIONS.md) uses exact
-    analytic operators, which are not fit to any data budget and therefore
-    have no learning error by construction — this is the *correct* value
-    for this instantiation, ``0.0``, not a placeholder standing in for a
-    future estimate. Replaced by a genuine measurement once M8 introduces
-    learned operators behind the same protocol.
+    Returns ``0.0`` when *chain* contains no `~omi.learning.DeepONetOperator`
+    — every segment is exact analytic (ADR-001), which has no learning error
+    by construction; this is the *correct* value for that case, not a
+    placeholder. Raises `NotSpecified` citing S-1.4 when *chain* contains a
+    learned operator: Spec §1.4's procedure needs a comparison against the
+    operator's own analytic ground truth, and neither `Chain` nor
+    `DeepONetOperator` retains a reference to it — that comparison exists
+    only in domain-specific training/validation code
+    (`tests/test_learning_oracle.py`'s `_learned_vs_analytic_rollout_curve`),
+    not in any object this domain-neutral function can reach. A silent
+    ``0.0`` regardless of chain content — the previous behaviour — is
+    exactly what ADR-036 replaces: it made Core §2.2's learning term inert
+    while appearing measured (E-02, docs/V1.4-EDITS.md).
     """
+    for i, segment in enumerate(chain.segments):
+        if isinstance(segment.operator, DeepONetOperator):
+            raise NotSpecified(
+                "S-1.4",
+                "Spec §1.4",
+                f"chain segment {i} is a DeepONetOperator (a learned operator), and Err_learn's "
+                "rollout-length-curve-at-matched-budget procedure requires comparison against that "
+                "operator's own analytic ground truth — neither Chain nor DeepONetOperator retains a "
+                "reference to it, so no defensible estimate is reachable from the chain alone (ADR-036)",
+            )
     return 0.0
 
 
@@ -216,8 +236,15 @@ def augmentation_loop(
     *candidate_pool* is tried in the given order — the caller supplies it
     already ordered by divergence-fingerprint priority (Spec §1.6); this
     function does not read fingerprints itself, only accepts or rejects the
-    nominated candidate per Spec §1.5 step 6. ``Err_learn`` is
-    :func:`learning_error`, exactly zero for analytic operators (ADR-023).
+    nominated candidate per Spec §1.5 step 6. ``Err_learn``'s delta between
+    two schema candidates is ``0.0`` at this call site specifically — the
+    loop operates entirely on `StateSchema` via caller-supplied callables
+    (ADR-021/022), with no `Chain` or operator available to ask
+    :func:`learning_error` about (ADR-036 gave that function a `Chain`
+    parameter precisely because a bare chain-less call cannot distinguish
+    "correctly zero" from "unknowable"); this is unaffected, since this
+    call site is genuinely the schema-only, chain-less case, not the
+    chain-with-a-learned-operator case ADR-036 addresses.
     """
     schema = initial_schema
     remaining = list(candidate_pool)
@@ -241,7 +268,7 @@ def augmentation_loop(
 
             delta_bias_squared = current_deficit.deficit_squared - candidate_deficit.deficit_squared
             delta_variance = candidate_variance - current_variance
-            delta_learning = learning_error() - learning_error()
+            delta_learning = 0.0  # no Chain at this level (ADR-036) — see docstring above
 
             if delta_bias_squared > delta_variance + delta_learning:
                 accepted = candidate

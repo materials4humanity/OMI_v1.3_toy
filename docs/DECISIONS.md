@@ -1905,6 +1905,110 @@ response and a process-zone volume; the wired Class B machinery below).
 
 ---
 
+## ADR-036 — `learning_error(chain)` distinguishes "no learning error because the chain is analytic" from "no defensible estimate reachable"; it does not attempt to derive a learned operator's ground-truth comparison from the chain alone
+
+**Status.** Accepted **Gap.** S-1.4 (SPEC) — implementation choice; E-02
+(docs/V1.4-EDITS.md) is the underlying framework finding this responds to,
+not resolves **Milestone.** Phase 3.2 (post-M9 remediation)
+
+**What the framework leaves open.**
+Spec §1.4 defines `Err_learn(𝒮)` as "measured from a learned model's
+rollout-length curve at matched data budget" — implicitly, a comparison
+between the learned operator's rollout and an analytic (ground-truth)
+counterpart's rollout from the same initial condition. ADR-023 (M4) set
+`learning_error()` to unconditionally return `0.0`, correct at the time
+since every operator through M7 was exact analytic (ADR-001) and explicitly
+deferred "a genuine measurement" to M8. M8 (`src/omi/learning.py`,
+`DeepONetOperator`) introduced a learned operator, but never touched
+`sufficiency.py` — `learning_error()` took (and still takes) zero
+parameters, unconditionally returning `0.0` regardless of what chain, if
+any, it is asked about. This is E-02's finding, restated in code: a section
+marked SPEC has an implemented function that is only ever correct on the
+trivial (all-analytic) sub-case, silently, with no signal that the sub-case
+even holds.
+
+The obstacle to a full fix is architectural, not a missing formula.
+`tests/test_learning_oracle.py`'s own comparison
+(`_learned_vs_analytic_rollout_curve`) computes exactly what Spec §1.4
+wants — a learned operator's rollout against the contrast domain's analytic
+`CYCLING` oracle, at every prefix length — but it needs the analytic
+ground-truth operator as an explicit, separately-supplied argument, because
+neither `Chain`/`Segment` nor `DeepONetOperator` itself retains any
+reference to what a trained operator approximates. `DeepONetOperator`'s
+only fields are its trained parameters and a caller-declared `erasure`
+flag (ADR-012's pattern, not a ground-truth pointer); `TrainingReport`
+stores loss history, not a rollout curve or a ground-truth handle. A
+domain-neutral function given only a `Chain` — as CLAUDE.md §5 invariant 3
+requires `sufficiency.py` to remain — has no channel to reach a domain's
+analytic counterpart for a learned segment it finds. Building one (e.g.
+requiring every `DeepONetOperator` to carry a reference to the operator it
+was trained to approximate) is a real architectural extension, not a
+one-line fix, and would need its own ADR weighing the cost against
+alternatives — out of scope for closing this specific gap.
+
+**Decision.**
+`learning_error(chain: Chain) -> float` now takes the chain (previously,
+no parameters at all). Behaviour:
+
+- If no segment's operator is an instance of `omi.learning.DeepONetOperator`
+  (the chain is purely analytic), return `0.0` — unchanged from ADR-023,
+  and still the *correct* value for this case, documented as such rather
+  than as a placeholder.
+- If any segment's operator *is* a `DeepONetOperator`, raise `NotSpecified`
+  citing S-1.4, naming the chain position of the learned segment. This is
+  not a failure of this fix — it is the honest answer given what a `Chain`
+  and a `DeepONetOperator` actually carry: no rollout-curve-at-matched-
+  -budget estimate is derivable from the chain alone, because the
+  comparison Spec §1.4 wants needs a ground-truth reference this
+  repository's types do not retain anywhere reachable from a chain.
+
+This closes E-02's actual complaint (a SPEC-derived function silently
+wrong on a case it has no way of detecting) without inventing the
+cross-module ground-truth-retention architecture a genuine measurement
+would need. `sufficiency.py` gains a dependency on `omi.learning` for the
+`DeepONetOperator` isinstance check only — both domain-neutral core
+modules, no domain vocabulary crosses in either direction (CLAUDE.md §5
+invariant 3 unaffected), and no circular import (`omi.learning` imports
+neither `omi.sufficiency` nor `omi.chain`).
+
+**Alternatives rejected.**
+*Compute a rollout-length curve using `rollout_length_error_curve` (already
+public in `conformance.py`) as a stand-in.* Rejected — that function
+compares two *states* through the *same* chain (a composability/error-
+-compounding curve), not a learned operator against its own analytic
+ground truth; `TrainingReport`'s docstring claims this reuse is what M8
+does, but `test_learning_oracle.py`'s own code contradicts that claim,
+building a bespoke comparison instead because the signature genuinely
+does not fit — reusing it here would silently compute the wrong quantity
+under the right-sounding function name, worse than refusing.
+*Extend `DeepONetOperator` to carry a reference to its ground-truth
+operator, so `learning_error` can look it up and compute a real curve.*
+Rejected for this ADR specifically, not permanently — it is a real,
+worthwhile architectural change (and would fully satisfy Spec §1.4), but it
+touches `learning.py`'s public type, every existing construction site of a
+`DeepONetOperator`, and training entry points, which is a larger and
+differently-scoped decision than "fix the function that currently lies by
+omission." Flagged under "What would change this" below rather than
+attempted inline.
+*Leave `learning_error()` at zero parameters, unconditionally `0.0`.*
+Rejected — this is E-02's status quo, and CLAUDE.md's own instruction for
+this fix is explicit: "a silent constant is the one option that's not
+acceptable."
+
+**What would change this.** A future decision to extend
+`DeepONetOperator` (or a wrapping type) with an explicit, typed reference
+to the analytic operator it approximates — at which point the `raise
+NotSpecified` branch above is replaced with a genuine rollout-length-curve
+measurement reusing `test_learning_oracle.py`'s existing comparison logic,
+promoted from a test helper into `sufficiency.py` or `conformance.py`
+proper.
+
+**Pinned by.** `tests/test_sufficiency_learning_error.py` (all-analytic
+flagship chain returns `0.0`; a chain containing a `DeepONetOperator`
+raises `NotSpecified` citing `"S-1.4"`).
+
+---
+
 ## Open questions
 
 Not decisions — hypotheses the code should settle. Full statements in
