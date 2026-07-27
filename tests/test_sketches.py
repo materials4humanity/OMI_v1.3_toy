@@ -11,10 +11,15 @@ R1.1 convention), not what the comparison should find.
 from __future__ import annotations
 
 from omi.interface import InstantiationDeclaration, diff
+from omi.state import Slot
 
 from omi_domains.contrast.interface import CONTRAST_DECLARATION
 from omi_domains.flagship.interface import FLAGSHIP_DECLARATION
 from omi_domains.sketches.device_yield import DEVICE_YIELD_DECLARATION, DEVICE_YIELD_SCHEMA
+from omi_domains.sketches.catalyst_under_operation import (
+    CATALYST_UNDER_OPERATION_DECLARATION,
+    CATALYST_UNDER_OPERATION_SCHEMA,
+)
 from omi_domains.sketches.crystallisation_formulation import (
     CRYSTALLISATION_FORMULATION_DECLARATION,
     CRYSTALLISATION_FORMULATION_SCHEMA,
@@ -175,4 +180,61 @@ def test_crystallisation_formulation_diffs_against_contrast(observe: Observation
 
 def test_crystallisation_formulation_diff_with_itself_is_empty() -> None:
     result = diff(CRYSTALLISATION_FORMULATION_DECLARATION, CRYSTALLISATION_FORMULATION_DECLARATION)
+    assert not any(result.values())
+
+
+def test_catalyst_under_operation_declaration_is_a_real_instantiation_declaration() -> None:
+    """Same shape check as every other sketch, ADR-038."""
+    assert isinstance(CATALYST_UNDER_OPERATION_DECLARATION, InstantiationDeclaration)
+    assert CATALYST_UNDER_OPERATION_DECLARATION.state_schema is CATALYST_UNDER_OPERATION_SCHEMA
+    assert CATALYST_UNDER_OPERATION_DECLARATION.erasure_inventory != ()
+    assert len(CATALYST_UNDER_OPERATION_DECLARATION.readout_catalogue) > 0
+    assert len(CATALYST_UNDER_OPERATION_DECLARATION.observation_suite) > 0
+    assert len(CATALYST_UNDER_OPERATION_DECLARATION.invariants) > 0
+
+
+def test_catalyst_under_operation_schema_leaves_m_and_nu_empty() -> None:
+    """The deliberately awkward sketch (docs/SKETCHES.md, ROADMAP M10.1):
+    Gamma is almost the entire state, z is minimal, and m/nu are
+    genuinely empty -- the first time `StateSchema.is_empty` has ever
+    been exercised returning True anywhere in this repository (every
+    prior domain and sketch asserts `not is_empty(...)` for all four
+    slots; grep confirms no prior test ever asserted the True case).
+    This is the direct, mechanical answer to whether Core §4 item 1's
+    "which slots are empty" is more than a formality: it is -- the
+    schema carries and reports this correctly.
+    """
+    assert CATALYST_UNDER_OPERATION_SCHEMA.is_empty(Slot.M)
+    assert not CATALYST_UNDER_OPERATION_SCHEMA.is_empty(Slot.Z)
+    assert CATALYST_UNDER_OPERATION_SCHEMA.is_empty(Slot.NU)
+    assert not CATALYST_UNDER_OPERATION_SCHEMA.is_empty(Slot.GAMMA)
+
+    # Gamma dominant by construction; z minimal (one component).
+    assert len(CATALYST_UNDER_OPERATION_SCHEMA.names(Slot.GAMMA)) == 4
+    assert len(CATALYST_UNDER_OPERATION_SCHEMA.names(Slot.Z)) == 1
+
+
+def test_catalyst_under_operation_diffs_against_flagship(observe: ObservationRecorder) -> None:
+    result = diff(CATALYST_UNDER_OPERATION_DECLARATION, FLAGSHIP_DECLARATION)
+    observe("catalyst_under_operation_vs_flagship_diff", result, "recorded, not asserted against a pattern")
+    assert set(result) == _ALL_SEVEN_ITEMS
+
+
+def test_catalyst_under_operation_diffs_against_contrast(observe: ObservationRecorder) -> None:
+    result = diff(CATALYST_UNDER_OPERATION_DECLARATION, CONTRAST_DECLARATION)
+    observe("catalyst_under_operation_vs_contrast_diff", result, "recorded, not asserted against a pattern")
+    assert set(result) == _ALL_SEVEN_ITEMS
+
+    assert CATALYST_UNDER_OPERATION_DECLARATION.erasure_inventory != ()
+    assert CONTRAST_DECLARATION.erasure_inventory == ()
+
+
+def test_catalyst_under_operation_diff_with_itself_is_empty() -> None:
+    """The diff mechanism itself is unaffected by empty slots -- confirms
+    the mechanical half of docs/SKETCHES.md's "does the machinery break"
+    question, for the one piece of machinery an interface-only sketch can
+    actually exercise (StateSchema/diff, not erasure/triage/Class B,
+    which need a real operator this sketch deliberately does not build).
+    """
+    result = diff(CATALYST_UNDER_OPERATION_DECLARATION, CATALYST_UNDER_OPERATION_DECLARATION)
     assert not any(result.values())

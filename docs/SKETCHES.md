@@ -454,6 +454,185 @@ remains an anti-goal per CLAUDE.md §9.
 
 ---
 
-*(The deliberately awkward fourth sketch, chosen specifically to attack
-Core §6.2's open "does some domain need a fifth slot" question, is
-scheduled next per ROADMAP M10.1 and is not yet written.)*
+## Catalyst under operation
+
+**Why this sketch, and why its purpose changed.** ROADMAP M10.1 reserves
+the fourth sketch as "deliberately awkward," originally framed (by this
+document's own earlier entries) as an attack on Core §6.2's open
+question — "whether the four-slot schema is complete, or whether some
+domain requires a fifth." That question is **already answered** by the
+first three sketches: `docs/V1.4-EDITS.md` E-22's addendum shows none of
+device yield, layer-wise additive, or crystallisation and formulation
+needed a fifth slot — instead, one of the existing four (`ν`) is mistyped
+in the same way across all three. A fourth sketch built to chase a fifth
+slot would be attacking a question three domains have already answered
+in a different shape than expected. **This sketch tests something else**:
+whether the four slots are a **partition** — every domain occupies all
+four, in some proportion, the pattern every domain and sketch so far has
+shown — or a **convenience** that quietly assumes a non-trivial bulk most
+domains happen to have, but not all.
+
+A single heterogeneous catalyst pellet under steady operation is chosen
+because Core §3.1 justifies `Γ` by it being "the controlling state" for
+adhesion, interfacial transport, and initiation-controlled failure "in a
+large class of systems." Here `Γ` is not one controlling slot among four —
+catalytic activity, selectivity, and deactivation are governed almost
+entirely by the exposed active-site/surface state, and the bulk support is
+*deliberately engineered* to be inert, thermally and chemically stable
+scaffolding whose only job is to hold the active phase highly dispersed.
+If any domain in this repository's reach should push `Γ` toward being the
+whole state, it is this one.
+
+**1. State schema — the item this sketch is built to strain.**
+- **Γ (four of five components, dominant by construction)** —
+  `active_site_fraction` (exposed/accessible active sites),
+  `surface_poison_coverage` (fraction blocked by poisons — sulfur, etc.),
+  `surface_reconstruction_state` (facetting/restructuring under reaction
+  conditions — a real, documented phenomenon, e.g. Pt surface
+  reconstruction under CO/O₂), `coke_layer_thickness` (carbonaceous
+  deposit at the gas/surface interface). All four are genuinely
+  interfacial, not cosmetic, exactly Core §3.1's requirement.
+- **z (one component)** — `active_phase_dispersion`: active-metal cluster/
+  nanoparticle size on the support (sintering state). Kept distinct from
+  `Γ` deliberately: sintering is a bulk-adjacent, sub-resolution property
+  of the active-phase clusters themselves (their 3D size), inferable only
+  through activity-decline dynamics — "not observable directly," exactly
+  Core §3.1's own phrase for this slot — whereas `Γ`'s four components
+  are genuinely 2D/interfacial. Keeping this one component non-empty
+  tests whether a *minimal but present* `z` is coherent alongside a
+  dominant `Γ`, not only the all-or-nothing case.
+- **m — declared EMPTY.** Under the operating regime this sketch is
+  scoped to (steady industrial operation, not upset or extreme
+  conditions), the support's resolved bulk structure — pore structure,
+  crystallite size — is treated as time-invariant background context that
+  does not evolve within the process chain being modelled, the same way
+  none of this repository's domains model their apparatus's own geometry
+  as evolving state. This is not a copout: it is this domain's own claim,
+  which Core §4 item 1 explicitly asks a declarer to make ("which slots
+  are empty"), and testing whether the framework can carry that claim
+  without breaking is exactly this sketch's job.
+- **ν — declared EMPTY, and this is a genuine, load-bearing modelling
+  choice, not an oversight.** A catalytic reactor plainly has a nonlocal,
+  self-consistent field in the physics sense — the bulk gas-phase
+  concentration/temperature profile across the reactor bed, set by an
+  overall mass/energy balance, exactly Core §3.1's description of `ν`.
+  Whether *this pellet's own state* includes that field depends entirely
+  on where the state/control boundary is drawn. Scoped to one catalyst
+  pellet (this sketch's choice), the surrounding bulk gas field is
+  external to the pellet — a boundary condition the reactor imposes on
+  it, i.e. **control** (`𝒰`), not state. Scoped to the whole reactor bed,
+  the same field would be internal, self-consistently determined by the
+  aggregate behaviour of every pellet, and would need to be `ν`. Both
+  scopings are legitimate; this sketch takes the single-pellet view
+  specifically because it is the one that empties `ν`, and states the
+  boundary choice explicitly rather than leaving it to be inferred.
+
+**Two of four slots empty, one minimal, one dominant — is this more than
+a formality?** `omi.state.StateSchema.is_empty` has existed since M1 but,
+before this sketch, had never been exercised anywhere in this repository
+— every declared domain (flagship, contrast) and every prior sketch
+(device yield, layer-wise additive, crystallisation and formulation) has
+all four slots non-empty, so `is_empty` had only ever been asserted
+`False` in this repository's tests. This sketch is the first genuine test
+of the `True` case. It works exactly as the type suggests it should:
+`StateSchema.__post_init__`, `.size`, `.slice_for`, `.names`, and
+`.is_empty` all operate on whatever `components` are actually declared,
+with no code path anywhere assuming all four slots are populated —
+confirmed directly (`tests/test_sketches.py`), not merely asserted. So:
+the answer to "is item 1's 'which slots are empty' more than a
+formality" is **yes, mechanically** — the schema and the diff machinery
+handle it correctly, and this is the first time that claim has actual
+evidence behind it rather than resting on the method existing.
+
+**But "does anything downstream break" is not fully answerable at this
+milestone, and that limit should be stated plainly rather than
+papered over.** `omi.erasure.measure_erasure`, `omi.observability.
+danger_triage`, and `omi.classb`'s estimators all require a real
+`EvolutionOperator`/`Chain`/ensemble to run against — none exist for an
+interface-only sketch (ADR-038's own scope decision). Nothing in their
+own code inspects which slots are empty before running (they operate
+generically on the flat state vector, regardless of how its dimensions
+are distributed across slots), so there is no *structural* reason to
+expect a numerical break — but this is a reasoned expectation, not a
+demonstrated one, and this document says so rather than claiming a test
+that was not actually run. Determining this for real would require
+building this sketch out into an actual domain (operators, a chain, an
+ensemble), which is explicitly out of scope for M10.1's interface-only
+sketches.
+
+**2. Control space.** Apparatus/process-controlled: feed composition,
+flow rate, reactor temperature and pressure as a time-dependent recipe.
+`𝒰_adm` bounded by the reactor's qualified operating envelope. A control
+(process) inverse exists: target activity/selectivity lifetime → feed/
+operating-condition recipe.
+
+**3. Erasure inventory.** `oxidative_regeneration` — coke burn-off (and,
+depending on mechanism, some reversal of surface reconstruction/
+poisoning) is a real, mid-chain erasure, comparable in role to flagship's
+`heating_and_soak` and crystallisation's `full_dissolution_
+recrystallization`. **Unlike either**, it is explicitly a *partial*
+erasure by physical necessity: regeneration does not reverse `z`
+(sintering is irreversible under regeneration conditions — once
+active-phase clusters have coarsened, oxidative treatment does not
+re-disperse them), and may not fully reverse `surface_reconstruction_
+state` either, depending on mechanism. A fourth distinct erasure profile
+across this sketch program: mid-chain (like flagship, crystallisation)
+but declared-partial across named components (unlike either), a genuine
+domain fact rather than a modelling simplification.
+
+**4. Readout catalogue.**
+- `conversion_mean: Type-0/Class-A` — self-averaging bulk conversion
+  across the reactor.
+- `surface_reaction_constitutive: Type-1` — local surface state and gas
+  conditions → local reaction rate and updated surface state.
+- `catalyst_lifetime_to_deactivation: Type-0/Class-B` — process-zone
+  volume = the pellet's total active surface area, decomposed into many
+  small sub-areas of heterogeneous local poison/coke susceptibility;
+  lifetime is governed by the most-susceptible sub-area's time to full
+  local deactivation, a weakest-link framing over surface heterogeneity
+  rather than over a particle population (device yield, crystallisation)
+  or a volume (layer-wise additive) — still the same underlying
+  construction. **Item 4b:** driver field = local poison/coke
+  accumulation rate; defect population = independently measured
+  site-reactivity/susceptibility distribution; physics map `Ψ` =
+  Langmuir-type site-blocking deactivation kinetics, a standard
+  catalysis-science framework, not invented inside `omi.classb`.
+
+**5. Observation suite — genuinely poor for the dominant slot, and poor
+in a different way than any prior domain or sketch.** Continuous bulk
+conversion/selectivity monitoring is in-chain, but an aggregate, indirect
+signal several steps removed from the actual surface state it is meant to
+say something about. The techniques that actually see `Γ` directly — XPS,
+chemisorption titration, TPO for coke quantification — are ex-situ and
+typically destructive, requiring the catalyst be removed from the
+reactor, unavailable during operation. Contrast's poverty (Core §7.2) is
+about *few* modalities; layer-wise additive's (E-23) is about the richest
+modality being strictly *terminal*; this domain's is a third kind: the
+only in-chain signal available is *indirect*, several causal steps away
+from the state that actually matters, while the *direct* signals all
+require stopping the process to obtain them.
+
+**6. Invariants.** `active_phase_mass_conservation_absent_volatilization`
+(conservation) and `cumulative_thermal_exposure_monotone_nondecreasing`
+(monotonicity — total time-at-temperature, which does not reset at
+regeneration, unlike coke thickness, which would; chosen for exactly that
+reason, echoing crystallisation's own scoping caveat about invariants and
+erasures without repeating the same tension here).
+
+**7. Scale structure.** Tier I only: one representative pellet's analytic
+surface-kinetics operator. State is scoped to a single pellet, not the
+reactor bed, per item 1's boundary choice — a reactor-bed-scale version
+of this same domain would need to restore a genuine `ν` and would look
+structurally different. Full reactor-bed coupling remains an anti-goal
+per CLAUDE.md §9.
+
+**Machine-diff status.** See `tests/test_sketches.py` and
+`build/observations.json`. This sketch's diff against
+`FLAGSHIP_DECLARATION`/`CONTRAST_DECLARATION` includes the same seven
+keys as every other sketch — the empty slots change `state_schema`'s
+*content*, not the diff mechanism's ability to compare it.
+
+---
+
+*(All four sketches Spec §11.4/ROADMAP M10.1 call for are now written.
+See the M10.1 gate report for the consolidated finding across all four.)*
