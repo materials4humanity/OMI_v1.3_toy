@@ -29,6 +29,7 @@ truth for generating labels and scoring held-out test/inversion targets.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Callable
 
 import numpy as np
 
@@ -44,6 +45,9 @@ from omi.operators import Control
 from omi.readouts import FunctionalReadout
 from omi.state import FloatArray, Slot, State, StateSchema
 
+from omi_domains.contrast.build import build_incoming_ensemble as contrast_incoming_ensemble
+from omi_domains.contrast.operators import CYCLING
+from omi_domains.contrast.readouts import DendriteRisk
 from omi_domains.flagship.operators import HEATING_AND_SOAK, TRANSFER
 from omi_domains.flagship.readouts import AggregateHardness, BendAngleAtReferenceGeometry
 from omi_domains.flagship.state import FLAGSHIP_SCHEMA
@@ -241,3 +245,198 @@ def test_harness_runs_and_produces_finite_scores_on_a_tiny_configuration(observe
         observe(f"{name}_hit_rate", scores.hit_rate, "finite, in [0, 1]")
         assert np.isfinite(scores.rmse) and scores.rmse >= 0.0
         assert 0.0 <= scores.hit_rate <= 1.0
+
+
+# ---------------------------------------------------------------------------
+# Contrast: the control-inverse sweep (Core §5), attempted after confirming
+# sensitivity. CONTRAST_DECLARATION's control_space declares no NUMERIC
+# U_adm (only prose: "bounded by manufacturer charge/discharge limits") --
+# U_ADM and U_TRUST below are this investigation's own stated assumptions,
+# not values drawn from the framework or the domain's own declared
+# interface, flagged explicitly rather than presented as given.
+# ---------------------------------------------------------------------------
+
+U_ADM = (0.2, 5.0)
+"""Declared, stated assumption (this investigation only): the admissible
+current range. No numeric bound exists in CONTRAST_DECLARATION to draw
+from -- see E-26 (docs/V1.4-EDITS.md) on item 2's own missing sensitivity
+requirement, and note separately that neither implemented domain declares
+U_adm numerically at all."""
+
+U_TRUST = (1.0, 3.0)
+"""Declared, stated assumption: the region training data is drawn from --
+Core §5's U_trust, "restrict to where the surrogate is calibrated." Targets
+requiring a current outside this range but still within U_ADM test
+extrapolation past the trust region -- "the optimiser is an adversary that
+seeks the region where the surrogate is most confidently wrong" (Core §5)."""
+
+N_CYCLES = 5
+CONTRAST_NOISE_STD = 0.1
+
+
+def _contrast_incoming_state() -> State:
+    rng = np.random.default_rng(0)
+    return contrast_incoming_ensemble(1, rng)[0]
+
+
+_CONTRAST_INCOMING = _contrast_incoming_state()
+
+
+def contrast_true_final_state(current: float) -> State:
+    control = Control(0.0, 1.0, lambda t: np.array([current]))
+    state = _CONTRAST_INCOMING
+    for _ in range(N_CYCLES):
+        state = CYCLING.step(state, control)
+    return state
+
+
+def contrast_true_risk(current: float) -> float:
+    return float(DendriteRisk().evaluate(contrast_true_final_state(current))[0])
+
+
+CONTRAST_CARRIER_SCHEMA = StateSchema(((Slot.M, "current", 1),))
+
+
+@dataclass(frozen=True)
+class ContrastConfig:
+    n_records: int
+
+
+@dataclass(frozen=True)
+class ContrastResult:
+    config: ContrastConfig
+    ridge: "ContrastModelScores"
+    gbt: "ContrastModelScores"
+    deeponet: "ContrastModelScores"
+
+
+@dataclass(frozen=True)
+class ContrastModelScores:
+    rmse_in_trust: float
+    rmse_extrapolation: float
+    hit_rate_in_trust: float
+    hit_rate_extrapolation: float
+
+
+def run_contrast_control_inverse_config(
+    config: ContrastConfig, seed: int, tolerance: float, n_epochs: int = 300, hidden_dim: int = 16
+) -> ContrastResult:
+    """The control-inverse analogue of run_config: train on *config*'s
+    record count, drawn from U_TRUST only (a realistic data-collection
+    assumption), score forward RMSE separately in-trust and in the
+    extrapolation band of U_ADM, and score inverse-design hit rate with the
+    grid search spanning the full U_ADM (a real search would consider the
+    whole admissible set) against targets split the same way."""
+    rng = np.random.default_rng(seed)
+    x_train = rng.uniform(U_TRUST[0], U_TRUST[1], size=(config.n_records, 1))
+    y_true_train = np.array([contrast_true_risk(float(c)) for c in x_train[:, 0]])
+    y_noisy = y_true_train + rng.normal(0.0, CONTRAST_NOISE_STD, size=config.n_records)
+
+    ridge = RidgeRegressor(alpha=1.0)
+    ridge.fit(x_train, y_noisy)
+    gbt = GradientBoostedTreeRegressor(n_estimators=50, max_depth=3, learning_rate=0.1)
+    gbt.fit(x_train, y_noisy)
+
+    y_mean = float(y_noisy.mean())
+    dummy_control = Control(0.0, 1.0, lambda t: np.array([0.0]))
+    records = [
+        TrainingRecord(
+            str(i), x_train[i], (dummy_control,), (x_train[i], np.array([y_noisy[i] - y_mean]))
+        )
+        for i in range(config.n_records)
+    ]
+    params = init_deeponet_params(
+        state_dim=1, control_dim=1, rng=np.random.default_rng(seed + 1), latent_dim=hidden_dim, hidden_dim=hidden_dim
+    )
+    params, _report = train_deeponet(params, records, np.random.default_rng(seed + 2), n_epochs=n_epochs, learning_rate=0.05)
+
+    def deeponet_predict(x: FloatArray) -> FloatArray:
+        operator = DeepONetOperator(params)
+        out = np.empty(x.shape[0])
+        for i in range(x.shape[0]):
+            state = State(CONTRAST_CARRIER_SCHEMA, x[i])
+            out[i] = float(operator.step(state, dummy_control).values[0]) + y_mean
+        return out
+
+    test_rng = np.random.default_rng(54321)
+    x_in_trust = test_rng.uniform(U_TRUST[0], U_TRUST[1], size=(100, 1))
+    y_in_trust = np.array([contrast_true_risk(float(c)) for c in x_in_trust[:, 0]])
+
+    def _extrapolation_draw(n: int, gen: np.random.Generator) -> FloatArray:
+        out: list[float] = []
+        while len(out) < n:
+            c = gen.uniform(U_ADM[0], U_ADM[1])
+            if c < U_TRUST[0] or c > U_TRUST[1]:
+                out.append(c)
+        return np.array(out).reshape(-1, 1)
+
+    x_extrap = _extrapolation_draw(100, test_rng)
+    y_extrap = np.array([contrast_true_risk(float(c)) for c in x_extrap[:, 0]])
+
+    def rmse_for(model_predict: Callable[[FloatArray], FloatArray], x: FloatArray, y: FloatArray) -> float:
+        return root_mean_squared_error(model_predict(x), y)
+
+    ridge_rmse_in = rmse_for(ridge.predict, x_in_trust, y_in_trust)
+    ridge_rmse_ex = rmse_for(ridge.predict, x_extrap, y_extrap)
+    gbt_rmse_in = rmse_for(gbt.predict, x_in_trust, y_in_trust)
+    gbt_rmse_ex = rmse_for(gbt.predict, x_extrap, y_extrap)
+    dn_rmse_in = rmse_for(deeponet_predict, x_in_trust, y_in_trust)
+    dn_rmse_ex = rmse_for(deeponet_predict, x_extrap, y_extrap)
+
+    grid = np.linspace(U_ADM[0], U_ADM[1], 400)
+    true_grid = np.array([contrast_true_risk(float(c)) for c in grid])
+    risk_trust_lo, risk_trust_hi = contrast_true_risk(U_TRUST[0]), contrast_true_risk(U_TRUST[1])
+    in_trust_targets = np.linspace(risk_trust_lo + tolerance, risk_trust_hi - tolerance, 4)
+    extrap_targets = np.array(
+        [
+            (contrast_true_risk(U_ADM[0]) + risk_trust_lo) / 2.0,
+            (contrast_true_risk(U_ADM[1]) + risk_trust_hi) / 2.0,
+        ]
+    )
+
+    def true_fn(current: float) -> float:
+        return contrast_true_risk(current)
+
+    ridge_grid = ridge.predict(grid.reshape(-1, 1))
+    gbt_grid = gbt.predict(grid.reshape(-1, 1))
+    dn_grid = deeponet_predict(grid.reshape(-1, 1))
+
+    ridge_hit_in = inverse_design_hit_rate(grid, ridge_grid, in_trust_targets, true_fn, tolerance)
+    ridge_hit_ex = inverse_design_hit_rate(grid, ridge_grid, extrap_targets, true_fn, tolerance)
+    gbt_hit_in = inverse_design_hit_rate(grid, gbt_grid, in_trust_targets, true_fn, tolerance)
+    gbt_hit_ex = inverse_design_hit_rate(grid, gbt_grid, extrap_targets, true_fn, tolerance)
+    dn_hit_in = inverse_design_hit_rate(grid, dn_grid, in_trust_targets, true_fn, tolerance)
+    dn_hit_ex = inverse_design_hit_rate(grid, dn_grid, extrap_targets, true_fn, tolerance)
+
+    return ContrastResult(
+        config,
+        ContrastModelScores(ridge_rmse_in, ridge_rmse_ex, ridge_hit_in, ridge_hit_ex),
+        ContrastModelScores(gbt_rmse_in, gbt_rmse_ex, gbt_hit_in, gbt_hit_ex),
+        ContrastModelScores(dn_rmse_in, dn_rmse_ex, dn_hit_in, dn_hit_ex),
+    )
+
+
+def test_contrasts_dendrite_risk_responds_to_the_declared_control(observe: ObservationRecorder) -> None:
+    """Pins the sensitivity check that had to be verified before attempting
+    the control-inverse sweep at all (per instruction): DendriteRisk varies
+    substantially and monotonically with current, unlike flagship's two
+    declared readouts."""
+    values = [contrast_true_risk(c) for c in (0.2, 1.0, 3.0, 5.0)]
+    observe("dendrite_risk_at_0.2_1.0_3.0_5.0", values, "strictly increasing, not constant")
+    assert values == sorted(values)
+    assert values[0] < values[-1]
+    assert len(set(round(v, 6) for v in values)) == 4
+
+
+def test_contrast_control_inverse_harness_runs_and_produces_finite_scores(observe: ObservationRecorder) -> None:
+    """A small, fast configuration exercising every stage of
+    run_contrast_control_inverse_config."""
+    config = ContrastConfig(n_records=20)
+    result = run_contrast_control_inverse_config(config, seed=0, tolerance=0.3, n_epochs=100, hidden_dim=8)
+    for name, scores in (("ridge", result.ridge), ("gbt", result.gbt), ("deeponet", result.deeponet)):
+        observe(f"contrast_{name}_rmse_in_trust", scores.rmse_in_trust, "finite, >= 0")
+        observe(f"contrast_{name}_rmse_extrapolation", scores.rmse_extrapolation, "finite, >= 0")
+        assert np.isfinite(scores.rmse_in_trust) and scores.rmse_in_trust >= 0.0
+        assert np.isfinite(scores.rmse_extrapolation) and scores.rmse_extrapolation >= 0.0
+        assert 0.0 <= scores.hit_rate_in_trust <= 1.0
+        assert 0.0 <= scores.hit_rate_extrapolation <= 1.0
