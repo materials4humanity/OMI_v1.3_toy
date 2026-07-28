@@ -195,6 +195,49 @@ def asymmetric_cost(value: FloatArray, target: float, cost_below: float, cost_ab
     return result
 
 
+def decision_sensitive_threshold(
+    standard_error: float, minimum_effect: float, cost_false_alarm: float, cost_miss: float
+) -> float:
+    """Sets a falsification threshold "derived from decision sensitivity"
+    (Spec §9.4, filling Core §6.1's `[Pass D]` gap, ADR-041 docs/DECISIONS.md)
+    rather than by convention: the Bayes-optimal decision boundary between
+    "the criterion's residual is noise" (`N(0, standard_error**2)`) and "the
+    residual reflects a real effect of at least *minimum_effect*"
+    (`N(minimum_effect, standard_error**2)`), under asymmetric
+    misclassification costs (Spec §7.3: "carry asymmetric costs... differ by
+    orders of magnitude") -- the same likelihood-ratio-test-with-costs result
+    used throughout classical detection theory for two equal-variance
+    Gaussians:
+
+    `τ = minimum_effect / 2 + (standard_error**2 / minimum_effect) *
+    ln(cost_false_alarm / cost_miss)`
+
+    *standard_error* is the criterion's residual estimator's own sampling
+    variability at the declared campaign size (not a tolerance -- an
+    empirical fact about the estimator, e.g. from repeated-campaign or
+    bootstrap variation). *minimum_effect* is the smallest true deviation
+    from "the criterion holds" an application declares worth catching --
+    like `𝒰_adm`'s numeric bound (E-27, docs/V1.4-EDITS.md), this is supplied
+    by the experimenter, not derived from Core or Spec. *cost_false_alarm*
+    and *cost_miss* are the declared costs (Spec §7.3's `asymmetric_cost`
+    inputs, in the same units) of wrongly flagging a passing criterion and
+    of wrongly clearing a genuinely failing one, respectively. Raising the
+    cost ratio `cost_false_alarm / cost_miss` raises τ (more tolerant of the
+    residual, since a false alarm is now relatively more expensive);
+    shrinking *minimum_effect* toward *standard_error* makes τ increasingly
+    sensitive to the cost ratio, since the two classes are no longer easily
+    separable by the estimator's own precision -- this sensitivity is the
+    reportable output Spec §9.4 asks for, not merely the number itself.
+    """
+    if minimum_effect <= 0.0:
+        raise ValueError("minimum_effect must be positive")
+    if cost_false_alarm <= 0.0 or cost_miss <= 0.0:
+        raise ValueError("costs must be positive")
+    return minimum_effect / 2.0 + (standard_error**2 / minimum_effect) * float(
+        np.log(cost_false_alarm / cost_miss)
+    )
+
+
 @dataclass(frozen=True)
 class Candidate:
     """One apparatus-parameter candidate and its predictive ensemble over

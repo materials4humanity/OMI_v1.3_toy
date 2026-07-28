@@ -5,8 +5,18 @@ probability of conformance, CVaR, asymmetric cost, and candidate selection.
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
-from omi.inverse import Candidate, asymmetric_cost, cvar, probability_of_conformance, select_best_candidate
+from scipy import stats
+
+from omi.inverse import (
+    Candidate,
+    asymmetric_cost,
+    cvar,
+    decision_sensitive_threshold,
+    probability_of_conformance,
+    select_best_candidate,
+)
 
 from tests.conftest import ObservationRecorder
 
@@ -60,3 +70,53 @@ def test_select_best_candidate_picks_the_higher_conformance_probability(observe:
     observe("probabilities_of_conformance", result.probabilities_of_conformance, "best is the 'good' candidate")
     assert result.best is good
     assert len(result.probabilities_of_conformance) == 2
+
+
+def _expected_cost(tau: float, se: float, minimum_effect: float, cost_fa: float, cost_miss: float) -> float:
+    """Brute-force expected cost at threshold *tau*, for the oracle check
+    below: `cost_fa * P(x > tau | H0=N(0,se))  +  cost_miss * P(x <= tau |
+    H1=N(minimum_effect, se))` -- the exact quantity
+    `decision_sensitive_threshold`'s closed form claims to minimise."""
+    p_false_alarm = float(stats.norm.sf(tau, loc=0.0, scale=se))
+    p_miss = float(stats.norm.cdf(tau, loc=minimum_effect, scale=se))
+    return cost_fa * p_false_alarm + cost_miss * p_miss
+
+
+def test_decision_sensitive_threshold_minimises_expected_cost_against_a_numerical_sweep(
+    observe: ObservationRecorder,
+) -> None:
+    """Oracle check (CLAUDE.md §7): `decision_sensitive_threshold`'s closed
+    form is the standard Bayes-optimal likelihood-ratio-test boundary
+    between two equal-variance Gaussians under asymmetric costs -- verified
+    here by brute-force sweeping the expected-cost function itself
+    (*_expected_cost*, independent of the formula under test) and checking
+    the closed-form threshold sits at the numerical minimum, not merely
+    plausible."""
+    se, minimum_effect, cost_fa, cost_miss = 0.02, 0.05, 1.0, 20.0
+
+    tau = decision_sensitive_threshold(se, minimum_effect, cost_fa, cost_miss)
+    sweep = np.linspace(-0.05, 0.15, 4001)
+    costs = np.array([_expected_cost(t, se, minimum_effect, cost_fa, cost_miss) for t in sweep])
+    numerical_tau = float(sweep[np.argmin(costs)])
+
+    observe("closed_form_tau", tau, "close to numerical_tau")
+    observe("numerical_tau", numerical_tau, "close to closed_form_tau")
+    assert abs(tau - numerical_tau) < 0.001
+
+
+def test_decision_sensitive_threshold_rises_with_the_false_alarm_to_miss_cost_ratio() -> None:
+    """A costlier miss (relative to a false alarm) should pull the threshold
+    down (more willing to flag on weaker evidence); a costlier false alarm
+    should push it up -- the qualitative sensitivity Spec §9.4 asks a
+    threshold-setting procedure to report, not only a single number."""
+    se, minimum_effect = 0.02, 0.05
+    tau_favor_catching = decision_sensitive_threshold(se, minimum_effect, cost_false_alarm=1.0, cost_miss=20.0)
+    tau_favor_caution = decision_sensitive_threshold(se, minimum_effect, cost_false_alarm=20.0, cost_miss=1.0)
+    assert tau_favor_catching < tau_favor_caution
+
+
+def test_decision_sensitive_threshold_requires_positive_effect_and_costs() -> None:
+    with pytest.raises(ValueError):
+        decision_sensitive_threshold(0.02, 0.0, 1.0, 1.0)
+    with pytest.raises(ValueError):
+        decision_sensitive_threshold(0.02, 0.05, 0.0, 1.0)

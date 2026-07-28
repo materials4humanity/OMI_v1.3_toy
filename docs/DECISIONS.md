@@ -2391,6 +2391,140 @@ constrained variant); `src/omi/inverse.py::gradient_control_search`;
 
 ---
 
+## ADR-041 — Falsification threshold-setting procedure (Core §6.1/Spec §9.4), and which of the six criteria get worked values now
+
+**Status.** Accepted **Gap.** Core §6.1 states its own text is `[Pass D]`:
+"each criterion requires a stated threshold or a procedure for setting one
+per application" (Spec §9.4, same marker: "threshold-setting derived from
+decision sensitivity (§7.3)... to be written"). **Milestone.** M10.3
+(docs/ROADMAP.md)
+
+**Scope, decided before anything else.** `docs/V1.4-EDITS.md` E-16 audited
+all six criteria against what this repository can actually evaluate:
+criterion 1 fully evaluable now (no PASS-row dependency); criterion 3
+partially (the symptom — super-linear rollout error — is checkable;
+"after all stabilisation measures" is not, blocked on S-2.5/S-2.6/S-2.7);
+criteria 2, 4, 5, 6 blocked on PASS-B/C rows with no code path to evaluate
+them at all. Per instruction, this ADR supplies the threshold-setting
+**procedure in full**, applicable to all six, but **worked numeric values
+only for criteria 1 and 3's checkable half** — criteria 2, 4, 5, 6 get an
+explicit **moot** statement naming the blocking row, not a placeholder
+number. A threshold for a criterion with no measurement procedure behind
+it would be exactly the "confident nonsense" CLAUDE.md §4 warns against:
+a number with nothing computed to compare it to.
+
+**The procedure.** Spec §9.4 ties threshold-setting to §7.3's decision
+layer, which this repository already implements
+(`probability_of_conformance`, `cvar`, `asymmetric_cost`,
+`src/omi/inverse.py`, ADR-033). Applied to a falsification criterion whose
+observable residual is `R`:
+
+1. **Name the decision `R` gates** — what continues, or is refused/
+   augmented/redesigned, if the criterion's condition holds.
+2. **Declare the two wrong-decision costs** (`cost_miss`: wrongly
+   continuing to trust something that has actually failed the criterion;
+   `cost_false_alarm`: wrongly refusing/pausing when the criterion in fact
+   holds), in Spec §7.3's `asymmetric_cost` sense — declared,
+   application-specific inputs. Core and Spec do not supply these, exactly
+   as `𝒰_adm`'s numeric bound is a declared input rather than a framework
+   one (E-27, `docs/V1.4-EDITS.md`) — the same pattern, applied here to
+   falsification rather than inverse design, and not itself a new
+   V1.4-EDITS finding, since Spec §9.4's own text already anticipates "a
+   procedure for setting one **per application**," not a value Core/Spec
+   derive.
+3. **Declare the minimum effect worth catching**, `minimum_effect` — the
+   smallest true departure from "the criterion holds" an application cares
+   to detect. Also declared, not derived.
+4. **Estimate the residual estimator's own sampling variability**,
+   `standard_error`, empirically (repeated-campaign variation, bootstrap,
+   or an oracle's known-truth calibration) at the declared campaign size —
+   this is a measured fact about the estimator, not a declared input.
+5. **Set the threshold** via `src/omi/inverse.py::decision_sensitive_threshold`
+   (new this ADR): the Bayes-optimal boundary between `N(0,
+   standard_error²)` ("the residual is noise") and `N(minimum_effect,
+   standard_error²)` ("a real effect of at least `minimum_effect`"), under
+   the declared asymmetric costs — the standard likelihood-ratio-test
+   result for two equal-variance Gaussians, `τ = minimum_effect/2 +
+   (standard_error²/minimum_effect) · ln(cost_false_alarm/cost_miss)`, not
+   an invented formula (verified against a numerical expected-cost sweep,
+   `tests/test_inverse_decision_layer.py`).
+6. **Report the threshold's sensitivity** to the declared cost ratio and
+   `minimum_effect` — this, not a single number, is what makes the
+   procedure "per application" (Spec §9.4's own phrase): §10 below shows a
+   case where the ratio moves τ by 4× and one where it is essentially
+   inert, and the difference itself is the reportable finding.
+
+**Worked values (docs/M10.3-FALSIFICATION-THRESHOLDS.md).**
+
+- **Criterion 1** (sufficiency, bias-blocked): `standard_error` measured
+  from 20 independent replications of flagship's own real matched-pair
+  campaign (`tests/test_conformance_flagship.py::_matched_pair_sufficiency_campaign`,
+  `n_pairs=2000` each) and, separately, of the known-insufficiency oracle's
+  calibration campaign (`tests/oracles/known_insufficiency.py`,
+  `n_pairs=8000`, truth `4.5`, recovered `4.509 ± 0.054` across 20 reps —
+  the estimator itself is trustworthy at this precision). Two illustrative
+  `minimum_effect` declarations are shown side by side, computed with the
+  same formula and flagship's own measured `standard_error = 0.0161`: at
+  `minimum_effect=1.0` the threshold is essentially insensitive to the
+  declared cost ratio (`τ ≈ 0.499` either way, since `standard_error ≪
+  minimum_effect`); at `minimum_effect=0.05` (comparable to
+  `standard_error`) the threshold moves from `0.0095` to `0.0405` as the
+  declared cost ratio flips end to end — flagship's own measured deficit
+  (mean `0.0109` across the same 20 reps) sits below the first threshold,
+  straddles the second depending on which cost ratio is declared. Both
+  are genuine, computed consequences of the declared inputs, not tuned to
+  produce either outcome.
+- **Criterion 3's checkable symptom** (super-linear rollout error growth):
+  measured directly on both domains' current, wholly-analytic chains via
+  `omi.conformance.rollout_length_error_curve`, using an "excess over
+  linear extrapolation" statistic (`e_last − n_steps · e_first`) across 30
+  replications each. Both are **deterministic and strongly negative**
+  (flagship `−0.0337`, effectively zero sampling variance; contrast
+  `−35.0`, likewise) — sub-linear or flat, not merely "not super-linear."
+  Given `standard_error ≈ 0`, the threshold collapses to
+  `minimum_effect/2` regardless of the declared cost ratio, and the
+  measured excess sits far below it for any `minimum_effect` an
+  application would plausibly declare — the procedure is shown applied,
+  but the conclusion does not depend on the declared inputs the way
+  criterion 1's does, and that contrast (decision-sensitive vs.
+  decision-robust) is itself reported, not glossed over.
+- **Criteria 2, 4, 5, 6: stated moot**, not worked. No threshold is
+  computed for a residual this repository cannot yet measure — citing
+  E-16's own blocking rows (2→S-6/C-3.7; 4→S-9.3/S-7.1, status-updated
+  this session but not closed; 5→`augmentation_loop`'s schema-only design,
+  E-16; 6→C-3.9b, "test only; do not implement a scoping check" by this
+  repository's own design). A number here would be uninterpretable rhetoric
+  dressed as a measurement, exactly what CLAUDE.md §4 forbids.
+
+**Alternatives rejected.** *A single universal threshold per criterion,
+independent of application.* Rejected — Spec §9.4's own text asks for "a
+procedure for setting one **per application**," which a single fixed
+number is not; the sensitivity report (step 6) is the actual deliverable.
+*Deriving thresholds from Core/Spec directly, without declared inputs.*
+Rejected — neither document supplies cost or minimum-effect figures (the
+same reason `𝒰_adm` needed E-27); inventing them without declaring them as
+assumptions would misrepresent this repository's own choice as the
+framework's. *Filling in illustrative numbers for the four moot criteria
+so the table looks complete.* Rejected — this is precisely the
+"plausible-looking implementation of an underived procedure" CLAUDE.md §4
+calls worse than a refusal.
+
+**What would change this.** Criteria 2, 5, 6 unblock only when their named
+PASS-row closes (closure-defect measurement, `augmentation_loop`'s
+chain-derived learning term, and a deliberate design decision to implement
+the error-control-dichotomy scoping check respectively) — none is this
+ADR's to resolve. Criterion 4 unblocks further once a second chain is
+exercised under genuine search machinery (this ADR's own worked value for
+criterion 1 already demonstrates the pattern the third would need) and, in
+the limit, only partially — Spec's "prospective" requirement needs real
+execution no synthetic-simulator repository can supply.
+
+**Pinned by.** `src/omi/inverse.py::decision_sensitive_threshold`;
+`tests/test_inverse_decision_layer.py` (closed-form verified against a
+numerical expected-cost sweep); `docs/M10.3-FALSIFICATION-THRESHOLDS.md`.
+
+---
+
 ## Open questions
 
 Not decisions — hypotheses the code should settle. Full statements in
