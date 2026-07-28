@@ -2281,6 +2281,116 @@ revisiting; that is out of scope here.
 
 ---
 
+## ADR-040 — Re-running the contrast control-inverse comparison with a hard-constrained operator and a genuinely new gradient-based control search, since neither existed in `src/omi/inverse.py`
+
+**Status.** Accepted **Gap.** Core §4.1/Spec §2.2 (hard constraints beat
+soft penalties for exactly the inverse-design reason this comparison
+tests) and Core §5 (the control inverse as an optimal-control problem)
+both motivate this re-run; neither Spec nor this repository's own
+`src/omi/inverse.py` supplies a gradient-based control-search procedure
+to reuse. **Milestone.** M10.2 follow-up (docs/ROADMAP.md)
+
+**Correcting a premise before designing anything.** The instruction to
+"connect... `inverse.py`'s gradient-based control search" presupposes
+that function already exists. It does not: a direct search
+(`grep -n "gradient\|optimize\|scipy.optimize" src/omi/inverse.py`)
+returns zero matches. `inverse.py` (ADR-031/032/033) supplies
+reachability certificates (linear `Φ`, exact halfspace projection),
+apparatus parameterisation (a structural box `𝒰_adm` wrapper), and a
+decision layer (probability of conformance, CVaR, ordered infeasibility
+diagnosis) — all of which operate on an *already-produced* candidate or
+target, none of which searches `𝒰_adm` for one. This matches
+`docs/COVERAGE.md`'s own S-7.1 row ("the practical hierarchy for
+constructing or selecting `Φ`... remains unimplemented beyond the linear
+rung") and Core §5's own citation of Spec §7.1's hierarchy
+(forward-sampling → latent-space over-approximation → invariant
+certificates) — none of which is "gradient descent through a
+differentiable forward map." Building this is therefore new work, not a
+reconnection of dormant machinery, and is reported to the user as such
+rather than silently absorbed.
+
+**Decision, in four parts.**
+
+1. **The operator-graph contestant is rebuilt as a hard-constrained
+   monotone function**, using `src/omi/constraints.py`'s existing
+   `positive`/`monotone_increasing` reparameterisations directly (not a
+   new constraint category): a fixed grid of `K=60` points spans `𝒰_adm`;
+   a learnable vector of raw parameters passes through
+   `monotone_increasing` (itself `positive` + cumulative sum) to produce
+   a risk *profile* over the grid that is non-decreasing *by
+   construction*, for any parameter values — violating monotonicity is
+   not representable, matching Spec §2.2's own stated requirement for a
+   hard constraint. Prediction at an arbitrary `current` is linear
+   interpolation between the two nearest grid points (itself monotone,
+   preserving the guarantee). Training minimises squared error against
+   the same `𝒰_trust`-only records used for Ridge/GBT/the original
+   DeepONet, by plain gradient descent using `constraints.py`'s own
+   supplied exact gradients (`positive_grad`, chained through the
+   cumulative sum) — no torch, matching CLAUDE.md §8/ADR-029's existing
+   policy. Chosen over retrofitting `DeepONetOperator` itself: the
+   branch/trunk architecture has no natural place to insert a
+   monotonicity constraint on a scalar output without a larger redesign
+   touching code every other M8 test depends on; a small, dedicated
+   monotone regressor for this comparison keeps the change local and
+   auditable.
+2. **A genuinely new function, `gradient_control_search`, is added to
+   `src/omi/inverse.py`** (not a test-only helper): given a differentiable
+   scalar forward map and its exact gradient, a target, an
+   `ApparatusParameterization` (supplying `𝒰_adm` as a box, ADR-032's
+   existing shape), and an initial guess, it performs projected gradient
+   descent on the squared residual, clipping the iterate back into
+   `𝒰_adm`'s bounds at every step. This is squarely within Core §5's own
+   framing ("the control inverse... is the optimal-control problem
+   above") and is domain-neutral (CLAUDE.md §5 invariant 3): it takes a
+   plain callable and a box, not a domain-specific model.
+3. **The trust region is reported as an active diagnostic, not merely a
+   sampling boundary for training data.** Core §5 states the trust
+   region's purpose plainly: "restrict to where the surrogate is
+   calibrated... the optimiser is an adversary that seeks the region
+   where the surrogate is most confidently wrong." A search result whose
+   solution lies outside `𝒰_trust` is flagged as such alongside the raw
+   hit/miss score, rather than silently reported as an equal-status
+   answer — this mirrors Spec §7.3/ADR-033's own ordered
+   `diagnose_infeasibility` (trust region checked first, before
+   control/`𝒰_adm`), applied here to a single-target search rather than a
+   full specification window.
+4. **Ridge and GBT are untouched** (ADR-039's own baselines, unchanged) —
+   this re-run only replaces the operator-graph contestant and its search
+   procedure; the comparison's baselines are not to be improved
+   alongside it, per instruction.
+
+**Alternatives rejected.**
+*Retrofit `DeepONetOperator` itself with a monotone output layer.*
+Rejected — touches shared M8 code every other learning.py test depends
+on, for a change whose applicability (monotone scalar output) is specific
+to this one comparison.
+*Use `scipy.optimize` for the control search.* Rejected — would add a new
+dependency path CLAUDE.md §8's numpy/scipy-only-plus-optional-torch
+policy does not currently need; the search problem here (a smooth,
+monotone, low-dimensional scalar function) does not require it, and a
+plain projected-gradient loop is short, auditable, and consistent with
+`learning.py`'s own from-scratch optimiser precedent (ADR-029).
+*Skip the trust-region diagnostic and just report raw hit/miss.*
+Rejected — Core §5's own text makes the trust region a first-class part
+of the claim being tested (not merely a training-data sampling choice),
+and Spec §7.3 already establishes the "report which boundary binds"
+discipline (ADR-033) this re-run's diagnostic directly extends.
+
+**What would change this.** A future decision to give `DeepONetOperator`
+itself a general hard-constraint output layer (not specific to
+monotonicity or to this comparison) would likely subsume the dedicated
+monotone regressor built here; `gradient_control_search`'s box-only
+`𝒰_adm` (via `ApparatusParameterization`, ADR-032) would need extending
+if a future comparison needs the fully coupled constraint manifold Spec
+§7.2 itself still leaves `[Pass C]`.
+
+**Pinned by.** `tests/test_baseline_characterisation.py`
+(`ConstrainedMonotoneOperator`, `run_contrast_control_inverse_config`'s
+constrained variant); `src/omi/inverse.py::gradient_control_search`;
+`docs/M10.2-BASELINE-CHARACTERISATION.md` §6 (revised).
+
+---
+
 ## Open questions
 
 Not decisions — hypotheses the code should settle. Full statements in

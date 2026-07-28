@@ -120,6 +120,48 @@ class ApparatusParameterization:
         return result
 
 
+def gradient_control_search(
+    forward: Callable[[FloatArray], float],
+    forward_grad: Callable[[FloatArray], FloatArray],
+    target: float,
+    apparatus: ApparatusParameterization,
+    initial_guess: FloatArray,
+    n_steps: int = 200,
+    learning_rate: float = 0.05,
+) -> FloatArray:
+    """Projected gradient descent on `(forward(u) - target)**2` over
+    `𝒰_adm`'s box (`apparatus.bounds`, Spec §7.2/ADR-032) -- Core §5's
+    control inverse ("target response → driving programme") treated as the
+    optimal-control problem it names, searched directly rather than by
+    forward-sampling (`sample_admissible`, above) or a certificate
+    (`ReachabilityCertificate`, above).
+
+    New in this repository (ADR-040): no gradient-based control search
+    existed anywhere in this module before this function -- confirmed by
+    grep before writing it. This is therefore new machinery connected to
+    `constraints.py`'s exact-gradient reparameterisations at the call site
+    (via *forward_grad*), not a rewiring of something that was already
+    here.
+
+    Clips the iterate back into `𝒰_adm`'s box after every step (making this
+    projected, not unconstrained, gradient descent). Does *not* itself
+    check the trust region `𝒰_trust` (Core §5) -- callers compare the
+    returned point against their own declared trust region and report
+    accordingly, mirroring Spec §7.3's own ordered-diagnostic discipline
+    (`diagnose_infeasibility`, ADR-033): trust region is a separate,
+    first-class check, not something a search function silently folds in.
+    """
+    low = np.array([b[0] for b in apparatus.bounds])
+    high = np.array([b[1] for b in apparatus.bounds])
+    u = np.clip(np.asarray(initial_guess, dtype=float), low, high)
+    for _ in range(n_steps):
+        residual = forward(u) - target
+        grad = 2.0 * residual * forward_grad(u)
+        u = u - learning_rate * grad
+        u = np.clip(u, low, high)
+    return u
+
+
 def probability_of_conformance(predictive_samples: FloatArray, lower: float, upper: float) -> float:
     """Spec §7.3: "optimise probability of conformance against
     specification windows, not expected value" — the empirical fraction of
