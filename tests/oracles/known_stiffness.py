@@ -57,7 +57,7 @@ import numpy as np
 from scipy.linalg import expm, solve
 
 from omi.operators import Control, EvolutionOperator
-from omi.state import FloatArray, Slot, State, StateSchema
+from omi.state import FloatArray, Metric, Slot, State, StateSchema
 
 DECAYING_SCHEMA = StateSchema(
     (
@@ -119,6 +119,30 @@ def oscillatory_generator(separation_ratio: float) -> FloatArray:
     )
 
 
+DECOUPLED_SCHEMA = StateSchema(
+    (
+        (Slot.Z, "x_fast", 1),
+        (Slot.M, "x_slow", 1),
+    )
+)
+"""The sharpened design's state, `(x_fast, x_slow)`: two explicit decay modes,
+the fast one in `z` (sub-resolution) and the slow one in `m`. **Both modes are
+in the state, so the description is Markovian by construction and sufficiency
+is exact, not assumed** — that is this oracle's load-bearing truth claim, and it
+is what makes any residual measured against it attributable to the operator
+rather than to a hidden variable."""
+
+
+def decoupled_generator(separation_ratio: float) -> FloatArray:
+    """`A = diag(λ_fast, λ_slow)` in `ds/dt = -A s`, with
+    `λ_fast = separation_ratio · λ_slow` — the stiffness ratio is the swept
+    parameter and is exact, not fitted. Decoupled deliberately: no off-diagonal
+    term, so nothing but the timescale separation differs across the sweep."""
+    if separation_ratio < 1.0:
+        raise ValueError("separation_ratio must be >= 1 (the fast mode is the faster one)")
+    return np.diag([SLOW_RATE * separation_ratio, SLOW_RATE])
+
+
 @dataclass(frozen=True)
 class ExactFlowOperator(EvolutionOperator):
     """`s(t+dt) = exp(-A dt) s(t)` — a semigroup by construction at every
@@ -174,6 +198,70 @@ class FixedResolutionOperator(EvolutionOperator):
         approx = self.step(state, control)
         exact = ExactFlowOperator(self.generator).step(state, control)
         return float(abs(np.linalg.norm(approx.values) / np.linalg.norm(exact.values) - 1.0))
+
+
+@dataclass(frozen=True)
+class FixedStepOperator(EvolutionOperator):
+    """Variant (b): an explicit fixed-step integrator over the same dynamics,
+    the state fully sufficient throughout. Two readings of "fixed step", because
+    they measure different things and only one is non-degenerate:
+
+    - ``internal_step=None`` — **fixed step count**: `n_substeps` steps per call
+      regardless of interval length, so a whole-interval call takes larger
+      substeps than the two half-interval calls. This is the literal
+      "unresolved at the coarse step and resolved at the fine one" mechanism.
+    - ``internal_step=h`` — **fixed step size**: the operator always advances in
+      steps of (as near as an integer count allows) `h`. When the split point is
+      commensurable with `h`, the whole-interval and split-interval evaluations
+      traverse *the same grid*, so the residual is identically zero whatever the
+      stiffness — a structurally vacuous pass, reported rather than hidden.
+
+    `scheme` is ``"euler"`` or ``"rk4"``; both are explicit, so both have a
+    stability limit in `λ·h` (2 and ≈2.78 for a real negative eigenvalue). The
+    limit is not a nuisance to be worked around but the single largest trap in
+    this measurement: past it the "residual" is the integrator diverging, not a
+    consistency error, so :meth:`max_step_product` is reported at every point.
+    """
+
+    generator: FloatArray
+    n_substeps: int = 1024
+    internal_step: float | None = None
+    scheme: str = "euler"
+
+    @property
+    def is_erasure(self) -> bool:
+        return False
+
+    def _n_and_h(self, duration: float) -> tuple[int, float]:
+        if self.internal_step is None:
+            n = self.n_substeps
+        else:
+            n = max(1, int(round(duration / self.internal_step)))
+        return n, duration / n
+
+    def step(self, state: State, control: Control) -> State:
+        n, h = self._n_and_h(control.duration)
+        a = self.generator
+        values = state.values
+        for _ in range(n):
+            if self.scheme == "euler":
+                values = values - h * (a @ values)
+            elif self.scheme == "rk4":
+                k1 = -(a @ values)
+                k2 = -(a @ (values + h * k1 / 2.0))
+                k3 = -(a @ (values + h * k2 / 2.0))
+                k4 = -(a @ (values + h * k3))
+                values = values + h * (k1 + 2.0 * k2 + 2.0 * k3 + k4) / 6.0
+            else:
+                raise ValueError(f"unknown scheme {self.scheme!r}")
+        return State(state.schema, values)
+
+    def max_step_product(self, duration: float) -> float:
+        """`max|λ|·h` for a single call over *duration* — the explicit-stability
+        quantity. Above ~2 (Euler) or ~2.78 (RK4) the scheme diverges and any
+        residual it reports is that divergence."""
+        _n, h = self._n_and_h(duration)
+        return float(np.max(np.abs(np.linalg.eigvals(self.generator))) * h)
 
 
 @dataclass(frozen=True)
@@ -247,3 +335,24 @@ class KnownStiffnessOracle:
 
     def reduced_initial_state(self) -> State:
         return State(REDUCED_SCHEMA, np.array([1.0]))
+
+
+def metric_semigroup_residual(
+    operator: EvolutionOperator, state: State, control: Control, t_mid: float, metric: Metric
+) -> float:
+    """Core §3.3's semigroup residual under a **declared** metric, rather than
+    the bare Euclidean norm `omi.operators.semigroup_residual` returns.
+
+    That function documents its own choice — "a diagnostic residual, not a
+    metric-declared quantity" — and this helper exists to test whether the
+    choice is safe: CLAUDE.md §5 invariant 1 holds that every *state distance*
+    is metric-dependent, and a semigroup residual is a state distance. E-07/OQ-5
+    established the dependence is real, so the sweep must check whether its
+    answer survives a change of metric.
+    """
+    whole = Control(control.t0, control.t1, control.fn)
+    first = Control(control.t0, t_mid, control.fn)
+    second = Control(t_mid, control.t1, control.fn)
+    direct = operator.step(state, whole)
+    composed = operator.step(operator.step(state, first), second)
+    return metric.distance(direct, composed)

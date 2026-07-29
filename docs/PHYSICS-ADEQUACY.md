@@ -508,6 +508,77 @@ insufficient state with an exact propagator gives `1.238e-02` — within
 state) and Core §3.3, naming only the second, cannot tell them apart. A small
 residual certifies neither.
 
+**Re-run at the sharpened design (M10.4, second pass) — the confound above does
+NOT survive, and the refutation is now the primary result.** The first pass used
+a *coupled* generator and, for the arm that moved, a *persistently excited*
+(oscillatory) fast mode. The sharpened design specifies the canonical stiff-decay
+case instead: state `(x_fast, x_slow)`, **decoupled** pure decay, stiffness ratio
+`r = λ_fast/λ_slow` swept, both modes explicit so sufficiency is exact rather
+than assumed. That is also the more representative case for the metallurgical
+motivation quoted at the top of this section — recovery, recrystallisation and
+grain growth are decay processes, not oscillations. Reproducible via
+`scripts/run_m10_4_stiffness_sweep.py`. Results across three decades of `r`:
+
+| arm | `r=1` → `r=1000` | verdict |
+|---|---|---|
+| (a) exact analytic — the null | worst `6.94e-18` | passes; stiffness alone generates no residual |
+| (b1) fixed step **count**, explicit Euler, stable throughout (`max λ·h = 0.977 < 2`) | `1.271e-04` → `8.987e-05` | **flat**: spread `1.58×`, last/first `0.71×` |
+| (b2) fixed step **size**, commensurable split | `0.00e+00` at every `r` | vacuous pass |
+| (c) learned at one `Δt` | `0.14`–`0.30`, no trend | dominated by unseen duration, not stiffness |
+
+**The per-component decomposition gives the mechanism, and it is physical rather
+than numerical.** The slow component's contribution is `8.987e-05` at *every*
+ratio — stiffness-independent to every digit, as it must be, since the slow
+mode's own dynamics do not depend on `r`. The fast component's rises briefly
+(peaking at `r=3`) and then collapses super-exponentially: `1.08e-06` at `r=10`,
+`1.52e-14` at `r=30`, `4.94e-324` at `r=1000`. Once the fast mode is stiff it is
+annihilated *identically* in the coarse and the fine evaluation, so their
+difference vanishes and it leaves the residual altogether. **So a stiff mode
+cannot confound this diagnostic by being under-resolved — being under-resolved is
+exactly what removes it from the measurement.**
+
+**The metric caveat was the decisive arm, and it resolves in the framework's
+favour.** As anticipated, the fast mode's variance collapses as `r` grows.
+Normalising the residual by the **outgoing** population's per-component σ
+therefore divides by a vanishing number and manufactures a spurious excursion of
+`5.7e+16×` — `1.72e-03` at `r=1`, rising to `9.79e+13` at `r=300`, then
+collapsing back to `1.23e-03` at `r=1000` only because σ underflows to exactly
+zero and the zero-variance guard fires. Anyone who had normalised that way would
+have reported "residual grows with stiffness by fourteen orders of magnitude",
+and it would have been pure artifact. ADR-002's convention takes σ from the
+**incoming** population, which does not depend on `r` at all, so it is
+stiffness-independent by construction and reproduces the flat result
+(`6.34e-04` → `4.51e-04`, spread `1.56×`). **The refutation therefore survives
+every stiffness-independent metric, and the growth a careless normalisation
+would have shown is the artifact this section's own caveat warned about.**
+
+**Consequences for the first pass, stated rather than quietly dropped.** The
+oscillatory measurement was correct for the system it was run on, but that system
+is not the one this section describes, and the confound it exhibited is specific
+to a fast mode that stays excited. For the canonical stiff-decay case the
+attribution is **not** confounded by stiffness. `docs/V1.4-EDITS.md` E-33 has
+been corrected in place accordingly: its absence finding (no treatment of
+stiffness or temporal resolution anywhere in Core or Spec) stands unchanged and
+is textual; its confound claim is narrowed to the persistently-excited case and
+no longer carries the entry; and the entry's centre of gravity moves to the
+metric under-specification, which is the robust framework finding this sweep
+produced.
+
+**One candidate finding refuted, recorded because a refutation earns its place
+here.** The (b2) vacuous pass looked like a framework defect — a conformance
+check that can score exactly zero however wrong the operator is. It is not:
+Spec §9.2 specifies the check "on **random** sub-interval splits", and a random
+split is almost surely incommensurable with any fixed internal step. The
+Specification already guards against it. It remains a live hazard for
+implementations that pick *fixed* split points, which this repository does
+(`t_mid` values of 0.2/0.5/0.8 and 0.2/0.4/0.6/0.8, none randomised) — a
+repository defect, not a framework one, and recorded as such. How live: on a
+commensurable split the pass survives even at ratios where the fixed step has
+left explicit Euler's stability region entirely (`λ·h = 3` and `10`), because
+both the direct and the composed path diverge to the *same* wrong answer. An
+implementation with a fixed split point can therefore score `0.00e+00` on an
+operator that has blown up by twenty-seven orders of magnitude.
+
 ### 3.6 Metastability strains Axiom S in a characteristic way
 
 **Steel.** Retained austenite, bainite/martensite selection, tempering
