@@ -9,7 +9,7 @@ whether it is steel-specific or general to PSR systems.
 verified against the source at M10.4 (2026-07-29). Each carries a
 **Verification** block stating the outcome — confirmed, partly confirmed, or
 refuted — with the code or framework citation that settles it. Confirmed
-findings are filed in `docs/V1.4-EDITS.md` as E-29 to E-34, marked
+findings are filed in `docs/V1.4-EDITS.md` as E-29 to E-33, marked
 `[domain-assessment]` to keep their provenance distinct from the twenty-eight
 entries found by implementation attempt. Refuted claims are recorded here,
 under the finding, and are *not* filed. This document is corrected in place as
@@ -185,7 +185,12 @@ transfer with a handful of samples; if chemistry is buried in `m` it will not
 transfer at all. That is a direct, cheap test of Core §6.2's open problem.
 
 **Verification (M10.4). CONFIRMED at framework level; one specific claim
-corrected; one strengthening.** Filed as `docs/V1.4-EDITS.md` **E-29**.
+corrected; one strengthening.** Filed as `docs/V1.4-EDITS.md` **E-29**, which
+also absorbs §3.7 — the two are one finding at two levels, and E-29 states the
+framework claim as **detectability**: nothing distinguishes "static by design"
+from "should evolve but does not", so a readout depending only on parameters
+cannot be flagged structurally. §3.7's flagship defect is the worked example of
+what that costs, recorded inside E-29 as a marked repository fault.
 
 - Core §3.1 does place composition in a state slot: `m` is "resolved
   structural fields. Order parameters, indicator fields, orientation fields,
@@ -574,8 +579,15 @@ sensitivity declaration E-26 proposes is the closest thing available, and it
 detects rather than prevents.
 
 **Verification (M10.4). CONFIRMED, and the disjunction resolves; the
-framework-level half is filed, the domain repair is not performed.** Filed as
-`docs/V1.4-EDITS.md` **E-34**.
+framework-level half is filed, the domain repair is not performed.** Filed
+**inside `docs/V1.4-EDITS.md` E-29**, not as a separate entry: this section and
+§3.1 turned out to be one finding at two levels, and the flagship defect itself
+is a *repository* construction fault, which CLAUDE.md §10 keeps out of a ledger
+reserved for the framework. It is recorded inside E-29, clearly marked, on the
+precedent of E-17's own marked repo-fix note — because it is the evidence for
+what §3.1's missing category costs and is unintelligible separated from it. (An
+entry E-34 was briefly assigned to this section alone and withdrawn; the number
+is retired, not reused.)
 
 The disjunction offered here — "either the operators do not change those state
 components, or the constitutive readout ignores them" — resolves to **the
@@ -599,10 +611,18 @@ mechanism — soak should change grain size, and flagship's grain size has rate
 readout reads *are* flagship's three de-facto-static components. This is not an
 unrelated coding slip: it is a readout depending only on static parameters,
 which nothing in the framework can flag because the framework has no notion of
-a static parameter. E-34 files the framework-level half — that a domain can
-satisfy all seven items while being physically inert, and that inertness is
-*mechanically computable* from the declaration and the operators, needing no
-honesty from the declarer, unlike E-26's declaration requirement.
+a static parameter. E-29 files the framework-level half, and states it as a
+**detectability** claim rather than as a missing check: because nothing
+distinguishes "static by design" from "should evolve but does not", a readout
+depending only on parameters cannot be flagged structurally. Core §2.6 supplies
+the legitimate case that makes the confusion genuine — a *property* is "a
+functional of the constitutive operator alone" and is *supposed* to be invariant
+under the test configuration, which is a different claim from being invariant
+under the processing controls that produced the state. Flagship implements the
+first correctly and fails the second, and the framework has no vocabulary
+separating them. With a parameter category the two become distinguishable and
+the check is mechanically computable from the declaration and the operators,
+needing no honesty from the declarer — unlike E-26's declaration requirement.
 
 **The repair is not performed.** Per this task's scope, flagship's physics is
 recorded as broken and left broken. Repairing it would make the control inverse
@@ -709,6 +729,21 @@ illustration is wrong and should not be cited — the framework-level finding
 stands. §3.2's claim that ADR-027 "declined" the directional `ℓ_D` is refuted:
 it was explicitly deferred, with a stated reason. §3.5's prediction has been
 tested and refuted as stated. Everything else in §3 is confirmed.
+
+Two of the filed entries were also **strengthened beyond what this document
+argued**, and the strengthening is noted here because it changes what should be
+cited. §3.2's metric point is not contingent on a domain needing texture: Core
+§3.1 names "orientation fields" among `m`'s occupants, so the framework names an
+occupant its own metric requirement mishandles, and the 90°/`1.414`
+demonstration is the proof rather than an illustration — cite it that way.
+And §3.4's proposed interface addition cannot be a sub-item of item 6 as this
+document suggests: item 6 serves *two* roles (hard constraints per Spec §2.2 and
+reachability certificates per Spec §7.1), a constitutive form can serve only the
+first, and adding one to item 6 would silently widen the pool Spec §7.1 draws
+certificates from. E-32 proposes a role-scoped split instead, which also repairs
+item 6's existing omission of Spec §7.1's third candidate kind
+("equilibrium-limited fractions at attainable driving levels", which item 6 never
+names and this build's faithful classifier therefore refuses).
 
 Generalisation verdicts for semiconductors, MOFs, catalysis and batteries are
 argued from domain knowledge, not from instantiations — they are the same
