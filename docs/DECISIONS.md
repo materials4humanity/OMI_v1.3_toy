@@ -2525,6 +2525,372 @@ numerical expected-cost sweep); `docs/M10.3-FALSIFICATION-THRESHOLDS.md`.
 
 ---
 
+## ADR-042 — The v1.3/v1.4 boundary: versioned claims and composition, not a directory
+
+**Status.** Accepted — **design only; this ADR authorises no code.**
+**Finding.** `docs/V1.4-EDITS.md` E-35, filed before this ADR per CLAUDE.md §10.
+**Milestone.** M11.1 (docs/ROADMAP.md)
+
+**The problem.** Adding a constitutive declaration changes Core §4's interface,
+which makes anything built on it a **v1.4** implementation. This repository's
+OMI-0/1 conformance results, its fourteen oracles, and all thirty-four
+`V1.4-EDITS.md` findings are **v1.3** results, and they are the asset — the paper
+says "here is v1.3 implemented and audited, here is the proposed extension, here
+is the evidence it works." An extension that silently invalidates the audit
+destroys more than it adds.
+
+**Rejected framing, recorded because it was the first answer.** The obvious
+mechanism is a directory boundary: put the extension in `src/omi_v14/`, or in
+`src/omi/proposed/`, and keep the import graph one-directional. Every version of
+this answers the question *where does the code live*, which is the wrong
+question. Code placement is reversible by anyone who moves a file, it is enforced
+by convention rather than by the artefact, and — decisively — it does not handle
+the case the extrapolation experiment actually needs: **the same domain evaluated
+under both interfaces** (ADR-045's contestants 1 versus 2/3). A directory
+boundary forces two copies of a domain to express that.
+
+**Decision, in three parts.**
+
+**1. The repository stays v1.3-conformant.** No existing conformance claim,
+oracle, or finding is restated as a v1.4 result. The extension is built
+*alongside*, marked proposed-v1.4, and carries its own evidence.
+
+**2. Versioned claims — the boundary is a declared field of every result, not a
+location.** `ConformanceReport` gains a required `specification_version`, and
+comparison or carry-forward across differing versions is **refused** rather than
+silently permitted, following `omi.interface.classify_invariant`'s established
+precedent of raising rather than guessing when a declaration does not settle the
+question.
+
+This is the repository's own pattern for exactly this class of problem, not new
+machinery: CLAUDE.md invariant 1 and Core §3.9 require every metric-dependent
+quantity to travel with its metric, which is why `ConformanceReport` already
+carries `metric` and why `LipschitzReport` exists at all rather than a bare
+spectrum array. A conformance level is *specification-dependent* in precisely the
+same way a Lipschitz constant is metric-dependent — the level name OMI-1 is
+stable while the table rows defining it are not (E-35). Declaring the version is
+the same move as declaring the metric, applied to a different dependency.
+
+Why this beats the directory: the guarantee is **positive** (each result states
+what it claims) rather than **negative** (no import crosses a line); it survives
+refactoring, because a field cannot be relocated out of existence; and it makes
+the v1.3↔v1.4 comparison the deliverable rather than a hazard to be managed —
+two reports on one domain, differing in one declared field, is exactly what
+ADR-045 needs to measure.
+
+**3. Composition, not modification.** `ProposedV14Declaration` **wraps** an
+`InstantiationDeclaration` and adds the new items, exposing a `.v13_core`
+projection back to the seven-item object. Consequences, all of which are the
+reason for the choice:
+
+- v1.3's `omi.interface.diff` and every test that calls it are untouched **by
+  construction**, not by care.
+- ADR-044's requirement that "the diff comes out near-identical except for item
+  6 and the constitutive declaration" becomes **structurally guaranteed** rather
+  than an outcome to hope for and then check.
+- The extension is additive by type, so no v1.3 field changes meaning — which is
+  the property that keeps the audit citable.
+
+**Code placement.** `src/omi/proposed/`, for readability. This is explicitly
+**not** the mechanism, and the ADR records that so a later reader does not
+mistake the directory for the guarantee.
+
+**An import-direction lint test was considered and declined.** The
+domain-vocabulary lint (`tests/lint/`) exists because "no domain noun in
+`omi/`" has no per-result carrier — there is nothing an individual value can
+state about itself to discharge it, so a static check is the only available
+mechanism. Version provenance is not like that: part 2 gives every result a
+carrier, and a second, weaker guarantee for the same property is maintenance
+cost without additional assurance. If part 2 is ever weakened to an optional
+field, this decision should be revisited.
+
+**Cost, stated plainly.** Part 2 touches v1.3 code. It changes **no v1.3
+result** — it annotates them — but `ConformanceReport` gains a required field
+mid-audit, and four conformance test modules need mechanical constructor
+updates (`tests/test_conformance*.py`). That cost is accepted: an unversioned
+report is E-35's defect, and leaving it in place to avoid touching tests would
+be preserving the letter of the audit at the expense of its meaning.
+
+**What would change this decision.** If the constitutive extension turned out to
+need to *modify* rather than *extend* a v1.3 object — if a declared constitutive
+form changed what an existing item means, rather than adding an item — then
+composition would not be available and a genuine fork would be required. Nothing
+in E-32's proposed role-scoped split does this: 6a–6c keep their existing content
+and 6d is new. The moment a proposed edit changes an existing item's semantics,
+reopen this ADR.
+
+**What tests would pin it** (design; not written here). Comparing two reports
+whose `specification_version` differs raises. `ProposedV14Declaration(...)
+.v13_core` diffs against `FLAGSHIP_DECLARATION` with exactly the same result
+flagship's own declaration produces. Every pre-existing conformance test passes
+with `specification_version` set to v1.3, and its recorded observations are
+unchanged — the audit-preservation check, and the one that must be run first.
+
+---
+
+## ADR-043 — Constitutive form declaration: the extension point's design
+
+**Status.** Accepted — **design only; no code.**
+**Finding.** `docs/V1.4-EDITS.md` E-32 (role-scoped split of item 6; the
+validity-range mechanism is already specified in E-32's proposed wording).
+**Milestone.** M11.2 (docs/ROADMAP.md)
+
+**What is being extended, and why item 6 cannot simply be widened.** Spec §2.2
+names five hard-constraint categories, none of which is a domain constitutive
+form, and Core §4 item 6 does not merely lack a place for one — it **refuses one
+by name**, which this build's faithful classifier demonstrates: `classify_
+invariant` raises on `koistinen_marburger_martensite_kinetics` and its siblings,
+correctly, because a transformation-kinetics law is neither a conservation
+balance nor a monotone functional. Item 6 also serves two roles with different
+mathematical requirements — hard constraints (Spec §2.2) *and* reachability
+certificates (Spec §7.1) — so adding a constitutive form to it would silently
+widen the pool §7.1 draws certificates from, which is unsound: a functional form
+for an operator is not a scalar functional of state with a provable per-step
+accumulation bound.
+
+**Decision. Build against E-32's role-scoped split**, not a sub-item:
+
+| Sub-item | Content | Roles |
+|---|---|---|
+| 6a | Conservation laws | hard constraint **and** certificate |
+| 6b | Monotone functionals | hard constraint **and** certificate |
+| 6c | Equilibrium-limited fractions at attainable driving | certificate; hard constraint where the bound is structural |
+| **6d** | **Declared constitutive forms** | **hard constraint ONLY — MUST NOT be read as a certificate** |
+
+**The declaration's fields.** Minimum five, and the design choice in each:
+
+- **`form`** — the functional form's identity as a **typed** value (enum member or
+  registered named form), *not* free text. This is the one place the design
+  deliberately departs from item 6's existing convention: item 6's free-text
+  names are exactly why `classify_invariant` had to become a keyword heuristic
+  that refuses rather than guesses, and repeating that mistake in a category whose
+  whole purpose is to carry structure would be a self-inflicted wound.
+- **`parameters`** — fitted values, each with its provenance.
+- **`validity_range`** — **the load-bearing field.** See below.
+- **`provenance`** — the source establishing the form (a citation, not a claim).
+- **`governs`** — which state components, and which operator, the form constrains.
+
+**Why the validity range is what connects this to the framework's purpose rather
+than being a modelling convenience.** An operator constrained to a declared form
+MUST report **where the current evaluation sits relative to that form's validated
+range** — a per-input extrapolation factor plus the binding input. That produces
+a direct practitioner-facing signal of a kind the framework currently cannot
+emit anywhere: *this evaluation is 2.3× outside the validated envelope of this
+relationship.* In `docs/V1.4-EDITS.md` §10's terms, this is the **buy physics**
+row acquiring a mechanism for the first time — one of the two rows that
+currently has none, and the one the whole v1.4 extension is arguing for.
+
+**Design decisions recorded.**
+
+1. **A result dataclass, never a bare float** (CLAUDE.md §8): per-input factors,
+   the binding input, the declared range, and the form's identity travel together.
+2. **Reported, never enforced.** A query outside the range is *surfaced*, not
+   refused. Refusing would make the operator unusable exactly where inverse
+   design must probe, and E-28 is the standing evidence that off-manifold search
+   is where the interesting failures live — a constraint that blocks the
+   optimiser rather than informing it repeats that composition failure in a new
+   place.
+3. **Chain composition: elementwise worst, and name which segment binds.** A
+   chain-level extrapolation report is the worst factor over segments *plus the
+   segment responsible*, mirroring E-06's "report which term blocks, in order"
+   discipline rather than returning an unattributed maximum.
+4. **`classify_invariant`'s refusal is preserved, not relaxed.** Under 6a–6d it
+   must still refuse to classify a 6d member as a certificate kind. That refusal
+   is now *correct by specification* rather than incidentally correct, and it
+   acquires a test asserting it.
+5. **`n_eff`-style regime reporting for the range itself**: where a form has
+   multiple validity regimes (Hall–Petch's coarse-grain regime versus its
+   fine-grain breakdown), the report names the regime, not only the distance.
+
+**`[authorial-choice]` flagged, mirroring the ledger's own convention.** Whether
+the validity range is expressed in **control space**, **state space**, or both is
+not settled by the finding. Recommendation: **both**, with the report naming
+which space bound — a form fitted over a temperature window is control-space
+bounded, while Hall–Petch's fine-grain breakdown is state-space bounded, and a
+design admitting only one would misrepresent one of them. Recorded as a
+recommendation, not a derivation.
+
+**What tests would pin it** (design). An oracle whose validated envelope is known
+by construction, asserting the reported extrapolation factor equals the
+constructed one — the same discipline as every `tests/oracles/` member. An
+off-manifold test asserting the report *surfaces* rather than raises. A test
+asserting `classify_invariant` still refuses a 6d member.
+
+---
+
+## ADR-044 — The constitutive variant domain: a sibling, never a replacement
+
+**Status.** Accepted — **design only; no domain code.**
+**Milestone.** M11.3 (docs/ROADMAP.md)
+
+**Decision.** `src/omi_domains/flagship_constitutive/` as a **sibling** of
+`flagship`. The analytic flagship is **untouched**, which preserves every M0–M9
+oracle result that used it — the erasure measurement, the triage, the Class B
+bend campaign, the OMI-1 claim. Both domains declare the same seven items so
+they are machine-diffable, and the diff is expected to come out near-identical
+except for item 6 and the constitutive declaration. **That expectation is the
+experiment**: it makes the comparison a controlled test of exactly what the
+extension adds, and ADR-042's `.v13_core` projection is what makes it
+structurally guaranteed rather than checked after the fact.
+
+**The five canonical forms, with their real validity boundaries** — the
+boundaries matter more than the forms, because they are what ADR-043's mechanism
+reports against:
+
+| Form | Expression | Where it breaks |
+|---|---|---|
+| Kocks–Mecking dislocation evolution | `dρ/dγ = k₁√ρ − k₂ρ` | outside the fitted strain-rate and temperature regime; at high rate (dislocation drag); where dynamic recrystallisation intervenes |
+| Grain growth | `dⁿ − d₀ⁿ = k₀ exp(−Q/RT)·t`, `n ≈ 2–3` | abnormal growth; strong solute drag |
+| JMAK recrystallisation | `X = 1 − exp(−ktⁿ)` | assumes a fixed nucleation and growth mode — breaks when the mechanism changes |
+| Koistinen–Marburger | `f_m = 1 − exp(−α(Ms − T))`, `α ≈ 0.011 K⁻¹` | athermal by construction; breaks where isothermal bainite intervenes |
+| Hall–Petch + forest hardening | hardness readout | Hall–Petch breaks at very fine grain size |
+
+**A recorded physics upgrade, and an honest note on what it replaces.** The
+current flagship hardness readout uses `20/(1 + |grain_size|)` — a hyperbolic
+surrogate that is *structurally right* (monotone decreasing in grain size) and
+*wrong in exponent* (Hall–Petch is `σ₀ + k/√d`). The variant uses the real form.
+The surrogate is not a defect in the v1.3 build, which never claimed calibrated
+metallurgy, but the difference should be stated rather than quietly corrected,
+because it is one of the things the extension buys.
+
+**A side effect worth naming as a deliverable.** Phase 1 measured that three
+flagship components — `prior_grain_size`, `inclusion_content` and
+`accumulated_hardening` — carry `rate == 0.0` under **both** flagship operators,
+so no declared operator transports them (the measurement behind E-29). In the
+variant they acquire real kinetics. Two consequences:
+
+1. The control inverse becomes **non-vacuous**, so E-26's finding gets a domain
+   where it can be **exercised** rather than only detected — which E-26's own
+   entry names as what it is waiting for.
+2. **Flagship itself stays broken, deliberately.** It is the audit baseline and
+   E-29's recorded evidence, and repairing it would delete the only instance in
+   this repository of a domain satisfying all seven interface items while being
+   physically inert. The variant repairs the physics *in a sibling*; the defect
+   remains documented and reproducible in the original.
+
+**Scope fence.** No new erasure operators; no Tier II; no mesh, solver, or
+equilibrium iteration; same chain topology with kinetics substituted. Every
+CLAUDE.md §9 anti-goal continues to apply, and Tier I½'s ADR-035 fence is
+unchanged. The variant's conformance reports carry
+`specification_version = proposed-v1.4` (ADR-042), so its level claims can never
+be mixed with flagship's.
+
+**What would change this decision.** If the five forms could not be fitted to
+produce a chain whose v1.3-core declaration diffs near-identically against
+flagship's — if declaring real kinetics forced a different state schema, for
+instance — then the controlled comparison is lost and the variant would need to
+be justified on its own terms instead. Check the diff early, before fitting
+anything.
+
+---
+
+## ADR-045 — The extrapolation experiment: does declared physics buy reach?
+
+**Status.** Accepted — **design only. Do not run.**
+**Milestone.** M11.4 (docs/ROADMAP.md)
+
+**What the experiment is for.** To test whether constraining an operator to a
+declared constitutive form buys **extrapolation reach** outside the training
+envelope — the claim the whole v1.4 extension rests on. Its design decides
+whether the answer means anything, so the design is recorded before any code.
+
+**Ground truth: a multi-mechanism composite generator.** The generator composes
+several mechanisms with coupling **no single declared form expresses** — Kocks–
+Mecking dislocation evolution coupled to concurrent JMAK recrystallisation that
+*consumes* stored dislocation density, with grain growth feeding back into the
+Hall–Petch term. The generator supplies the physics; **every contestant fits its
+own parameters from the same in-envelope data**, and no contestant is given the
+generator's form.
+
+**This is the design decision that avoids E-12's circularity, and it is worth
+being explicit about why.** E-12 found that Spec §4.6 rung 4 could be "validated"
+by fitting a formula against data generated by that same formula, recovering it to
+machine precision by construction rather than by measurement. An extrapolation
+experiment whose ground truth *is* contestant 2's form would reproduce that exact
+failure at a larger scale, and contestant 2's win would be an identity rather
+than a result.
+
+**The cost of this generator choice, recorded rather than discovered later.**
+Because the missing physics is a missing *coupling* rather than a missing *term*,
+the misspecification is **diffuse**: contestant 2 is wrong everywhere by a little
+rather than wrong in one identifiable way. The gap between contestants 2 and 3
+therefore measures less cleanly than it would against a canonical-form-plus-one-
+unmodelled-term generator. What the experiment measures is robustness to a
+**missing mechanism**, which is the realistic failure mode; what it cannot do is
+attribute how much of contestant 2's degradation comes from which absent
+coupling. **If the composite result is ambiguous, the canonical-plus-one-term
+generator is the designed follow-up**, run and reported separately, never pooled.
+
+**Contestants, on identical ground truth, held out over a region of control
+space:**
+
+1. **Free-form operator, generic constraints only** — the v1.3 incumbent
+   (`omi.learning` + `omi.constraints`).
+2. **Constitutively-constrained, correct form, parameters fitted** — an upper
+   bound that will win trivially, since a correct form is a strong prior.
+   Included as a calibration arm, not as the claim.
+3. **Constitutively-constrained, deliberately misspecified** — **the realistic
+   case and the one that matters**, because real declared physics is canonically
+   right and locally wrong.
+4. **Tabular baselines from `baseline.py`, unchanged** — the honest external
+   comparator, exactly as M10.2 used them.
+
+**Contestant 3 gets two arms, designed rather than chosen between, reported
+separately and never pooled:**
+
+- **3a — a missing mechanism**: Kocks–Mecking with the recovery term `−k₂ρ`
+  dropped.
+- **3b — a missing dependence**: a temperature-dependent parameter treated as
+  constant.
+
+They fail differently — 3a degrades monotonically with accumulated strain, 3b
+with thermal excursion — so a pooled figure would hide which kind of
+misspecification the extension does and does not survive. That distinction is
+the practically useful one for a reader deciding whether to declare a form they
+are only partly sure of.
+
+**Hold-out design.**
+
+- **Grouped by control-space region, never randomly** (CLAUDE.md invariant 6, and
+  structurally impossible to violate at the loader level). A declared region of
+  `𝒰_adm` is withheld entirely.
+- **The held-out region must lie partly outside the declared validity ranges**, so
+  ADR-043's extrapolation report is *exercised* rather than merely present. An
+  experiment held out only inside the envelope would test interpolation and call
+  it reach.
+- **Rollout-length error curves for every contestant** (invariant 7), never
+  one-step error alone.
+- **Class B readouts return distributions** (invariant 4), with extrapolation
+  ratio and join threshold stated.
+- **The extrapolation factor is reported alongside every error figure**, so error
+  can be plotted against declared-envelope distance. That plot is the claim.
+- **Seeded generators throughout; every measured quantity recorded via the
+  `observe` fixture** (CLAUDE.md §7), not only the verdict.
+
+**The claim structure, stated before running so it cannot be read post hoc.**
+
+| Comparison | What it measures |
+|---|---|
+| gap(2, 3a) and gap(2, 3b) | robustness to form misspecification, by kind |
+| **gap(3, 1) and gap(3, 4)** | **the claim the paper would actually make** |
+| gap(2, 1) | the ceiling, for context only |
+
+**Pre-registration.** Thresholds are set via ADR-041's
+`decision_sensitive_threshold` **before** the sweep runs, with the declared
+minimum effect and cost ratio recorded in the design document. A threshold chosen
+after seeing the residuals is not a threshold.
+
+**The negative result is a deliverable.** If `gap(3, 1) ≤ 0` — misspecified
+declared physics does no better than a free-form operator with generic
+constraints outside the envelope — then the extension's value proposition fails,
+and that is a publishable finding that belongs in `docs/V1.4-EDITS.md` as a
+correction to E-32's own argument. The experiment is designed to be able to say
+so: contestant 1 is not a straw man, and contestant 4 is unchanged from the
+baseline characterisation that already beat parts of this repository's own
+machinery.
+
+---
+
 ## Open questions
 
 Not decisions — hypotheses the code should settle. Full statements in

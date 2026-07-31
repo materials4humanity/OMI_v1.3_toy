@@ -301,11 +301,89 @@ worked values. `docs/V1.4-EDITS.md` complete and self-contained.
 
 ---
 
+## M11 — The proposed-v1.4 constitutive track
+
+**Planned at M10.4; designed in ADR-042 – ADR-045 (docs/DECISIONS.md); not
+implemented.** This is the first milestone whose subject is an *extension to the
+framework* rather than an implementation of it, and the ordering constraint that
+governs it is unlike every earlier milestone's: **the v1.3 results must survive
+it.** The repository's OMI-0/1 claims, fourteen oracles, and thirty-four ledger
+findings are v1.3 results and are the evidence the paper rests on.
+
+The question the track exists to answer: **does constraining an operator to a
+declared constitutive form buy extrapolation reach outside the training
+envelope?** That is the claim behind `docs/V1.4-EDITS.md` E-32, and it is the one
+thing in the ledger whose resolution would give §10's *buy physics* row a
+mechanism for the first time.
+
+### M11.1 — The v1.3/v1.4 boundary (ADR-042)
+
+`specification_version` as a required field on `ConformanceReport`, with
+cross-version comparison refused; `ProposedV14Declaration` wrapping the
+seven-item declaration with a `.v13_core` projection. The boundary is a declared
+field of every result, not a directory.
+
+**Exit gate.** Every pre-existing conformance test passes with
+`specification_version` set to v1.3 and its recorded observations **unchanged** —
+the audit-preservation check, which must pass before anything else in M11 is
+written. Cross-version comparison raises. `.v13_core` diffs against
+`FLAGSHIP_DECLARATION` identically to flagship's own declaration.
+
+### M11.2 — The constitutive declaration (ADR-043)
+
+Item 6 split by role (6a–6c certificate-eligible, 6d constitutive and
+hard-constraint-only), and the declaration's five fields with `validity_range`
+load-bearing. The operator reports where the current evaluation sits relative to
+the validated envelope, as a result dataclass, surfaced and never enforced.
+
+**Exit gate.** An oracle whose validated envelope is known by construction
+recovers the reported extrapolation factor. Off-manifold queries surface rather
+than raise. `classify_invariant` still refuses a 6d member — now correct by
+specification rather than incidentally.
+
+### M11.3 — The constitutive variant domain (ADR-044)
+
+`flagship_constitutive` as a sibling: Kocks–Mecking, grain growth, JMAK,
+Koistinen–Marburger, Hall–Petch, each with its real validity boundary. Analytic
+flagship untouched.
+
+**Exit gate.** The v1.3-core diff against flagship comes out near-identical
+except item 6 and the constitutive declaration — **checked before any parameter
+is fitted**, since a failure there means the controlled comparison is lost. The
+three components Phase 1 measured at `rate == 0.0` have real kinetics, so the
+control inverse is non-vacuous and E-26 becomes exercisable rather than only
+detectable. Flagship's own defect remains documented and reproducible.
+
+### M11.4 — The extrapolation experiment (ADR-045)
+
+Four contestants (free-form incumbent; correct form; misspecified form in two
+arms; unchanged tabular baselines) against a multi-mechanism composite generator
+no contestant's form expresses, held out over a control-space region lying partly
+outside the declared validity ranges.
+
+**Exit gate.** Thresholds pre-registered via ADR-041 before the sweep runs.
+Rollout-length curves for every contestant. Error plotted against
+declared-envelope distance. `gap(3, 1)` and `gap(3, 4)` reported as the claim,
+`gap(2, 3a)`/`gap(2, 3b)` as robustness by misspecification kind, never pooled.
+**A negative result — misspecified declared physics beating neither the free-form
+operator nor the tabular baselines — is a deliverable**, filed as a correction to
+E-32's own argument.
+
+### Explicitly out of scope for M11
+
+Directional `ℓ_D` (E-30 stands as a finding; the build-coverage gap is recorded
+at `docs/COVERAGE.md` S-4.4), chemistry transfer, the characterisation-suite
+declaration (E-31), and every CLAUDE.md §9 anti-goal. Each is real; none is
+load-bearing for the constitutive question, and bundling them would make the
+design unreviewable.
+
+---
+
 ## Milestone dependency graph
 
 ```
 M0 ──► M1 ──┬──► M2 ──► M3 ──► M4 ──► M5 ──┐
-            │                              ├──► M7 ──► M8 ──► M9 ──► M10
+            │                              ├──► M7 ──► M8 ──► M9 ──► M10 ──► M11
             └──► M6 ─────────────────────  ┘
 ```
 
@@ -314,3 +392,10 @@ requires M7 and benefits from M8 but does not require it — analytic operators
 are differentiable and sufficient for the control problem. M10 requires M9
 and the post-M9 remediation phases (docs/DECISIONS.md, docs/V1.4-EDITS.md)
 to have run first.
+
+M11 requires M10, and its sub-milestones are strictly ordered: M11.1's
+audit-preservation gate protects everything M0–M10 produced, so it runs first and
+a failure there stops the track. M11.2 needs M11.1's declaration wrapper to have
+somewhere to put the new category; M11.3 needs M11.2's declaration to declare
+against; M11.4 needs M11.3's domain to run on. Unlike M6's independence from
+M2–M5, nothing in M11 may run in parallel.
