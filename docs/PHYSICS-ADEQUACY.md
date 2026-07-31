@@ -133,6 +133,41 @@ be worth confirming that OMI's volume scaling recovers it (Spec §11.4 already
 proposes this sketch). Dielectric breakdown, MOF crystal fracture during
 pelletisation, and fibre-composite failure are all Class B.
 
+**Open prediction (M10.4): the defect-density recovery has NOT been
+computed, anywhere.** A second external assessment states that the Class B
+treatment "recovers classical defect-density yield models as a special
+case." Checked: it does not, yet. Spec §11.4 *proposes* the recovery
+("device yield (where Class B volume scaling recovers the classical
+defect-density model, an independent confirmation of §4's mathematics)"),
+`docs/ROADMAP.md` M10.1 repeats it as an expectation, and
+`docs/SKETCHES.md`'s Device Yield section argues the structural
+correspondence term by term — `Y = exp(-D₀A_c)` in the Poisson/Seeds form,
+negative-binomial under clustering, against Spec §4.1's
+`P(ρ_V > x) = [P(ρ₀ > x)]^N` — while stating in as many words that "this
+sketch does not perform that recovery." `src/omi_domains/sketches/
+device_yield.py` is interface-only by ADR-038, and
+`tests/test_sketches.py` checks only that the declaration is well-formed
+and diffs against the two implemented domains. No Poisson or
+negative-binomial yield expression is computed in `src/` or `tests/`
+(`grep -i "poisson\|negative.binomial"` over both finds nothing but this
+sketch's own prose). **So the recovery is an open prediction, not a
+result, and MUST NOT be cited as demonstrated.**
+
+It is worth doing and it is cheap. `omi.classb.n_eff` in the bulk regime
+already gives `V/ℓ_D³`, and the yield model's critical-area form is the
+same construction at `ℓ_D → 0` with `N = A_c/a₀`; a recovery test would
+assert that `omi.classb`'s own machinery reproduces `exp(-D₀A_c)` in the
+uncorrelated limit and the negative-binomial form under a declared
+clustering correlation length, with no yield-specific code added. That
+would be independent confirmation of Core §3.6 / Spec §4 from a field that
+derived the same mathematics on its own, sixty years ago, with no contact
+with this framework — the strongest kind of evidence the generality claim
+can get, and stronger than any sketch, because the target answer was fixed
+by someone else before this framework existed. It is recorded here rather
+than in `docs/V1.4-EDITS.md` because a confirmation-in-waiting is not a
+framework defect; if the recovery were attempted and **failed**, that
+would be a ledger entry, and a serious one.
+
 ---
 
 ## 3. Where the framework is inadequate to the physics
@@ -815,6 +850,25 @@ certificates from. E-32 proposes a role-scoped split instead, which also repairs
 item 6's existing omission of Spec §7.1's third candidate kind
 ("equilibrium-limited fractions at attainable driving levels", which item 6 never
 names and this build's faithful classifier therefore refuses).
+
+**An external verification table exists and is superseded by in-repository
+measurement. Do not reconcile the two — the measurements win.** A later
+external assessment arrived carrying its own status table for §3.1–§3.7. It was
+written without access to the Phase 1 and Phase 3 results below and is stale in
+four specific places, each of which would *overwrite better data* if imported:
+
+| It reports | Actually established here |
+|---|---|
+| §3.5 "partially addressed, prediction can now be tested" | The prediction **was** tested, twice, and **refuted**: residual is flat in the stiffness ratio at exact sufficiency (`1.271e-04` → `8.987e-05` over three decades, spread `1.58×`), with a passing null arm and a per-component mechanism. See §3.5's second-pass block. |
+| §3.7 "still needs verification" | Verified **by measurement** at Phase 1, and its open disjunction resolved — first branch confirmed, second branch refuted. See §3.7's Verification block. |
+| ADR-027 "declined" the directional `ℓ_D` | **Deferred, not rejected**, with a stated reason and a named trigger. Corrected at Phase 1 and recorded in `docs/V1.4-EDITS.md` E-30, which also finds the directional half is a build-coverage gap against a *correct* Specification and belongs in `docs/COVERAGE.md` (row S-4.4, where it is), not in the ledger. |
+| §3.1's row omits the three de-facto-static components | Phase 1 measured them: `prior_grain_size`, `inclusion_content` and `accumulated_hardening` carry `rate == 0.0` under **both** flagship operators, so no declared operator transports them. That measurement is what links §3.1's missing category to §3.7's physics error, and is why the two are filed as one ledger entry (E-29) plus a recorded repository defect. Omitting it loses the link. |
+
+The reason for the asymmetry is not that the external reader was careless: a
+status table written from the documents cannot see a measurement that was not
+in them yet. **The Phase 1 and Phase 3 reports, and the Verification blocks in
+§3 below, are this document's record of what is established.** An external
+table is evidence about the *documents*, never about the build.
 
 Generalisation verdicts for semiconductors, MOFs, catalysis and batteries are
 argued from domain knowledge, not from instantiations — they are the same
