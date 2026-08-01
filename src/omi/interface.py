@@ -54,6 +54,33 @@ class InstantiationDeclaration:
     (once measured, at M2+) the closure defect ``‖𝒟_λ‖``."""
 
 
+class SpecificationVersion(Enum):
+    """Which version of Core and of the Specification a claim is made against
+    (Spec §9.1; ADR-042, docs/DECISIONS.md).
+
+    Spec §9.1 requires that "an implementation MUST state its level" and does
+    not require it to state the version that level is claimed against. That is
+    a framework gap (`docs/V1.4-EDITS.md` E-35): OMI-0/1/2 are defined by the
+    rows of §9.1's table, and a framework revision changes those rows, so a
+    level name is **not self-describing** — a claim of OMI-1 against one version
+    is not a claim of OMI-1 against another. This enum is the carrier that lets
+    a report state it, by the same discipline Core §3.9 imposes on
+    metric-dependent quantities: a quantity whose meaning depends on a declared
+    choice travels with that choice (CLAUDE.md §5 invariant 1).
+    """
+
+    V1_3 = "v1.3"
+    """OMI v1.3 as specified in `docs/OMI-v1_3-Core.md` and
+    `docs/OMI-v1_3-Implementation-Spec.md`. Every conformance result, oracle and
+    audit finding this repository produced through M10 is a v1.3 result."""
+
+    PROPOSED_V1_4 = "proposed-v1.4"
+    """The proposed v1.4 interface extension (ADR-042 – ADR-045), built
+    *alongside* v1.3 rather than replacing it. Marked "proposed" because no
+    v1.4 document exists: this is a candidate extension carrying evidence, not
+    a released specification."""
+
+
 class InvariantKind(Enum):
     """Item 6's invariants are declared as free-text names (ADR-016); this is
     the minimum structural type ADR-034 (docs/DECISIONS.md, superseding

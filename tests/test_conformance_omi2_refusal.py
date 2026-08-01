@@ -28,6 +28,7 @@ from omi_domains.contrast.readouts import DendriteRisk
 from omi_domains.flagship.build import build_chain as flagship_chain
 from omi_domains.flagship.build import build_incoming_ensemble as flagship_incoming
 from omi_domains.flagship.interface import FLAGSHIP_DECLARATION
+from omi.interface import SpecificationVersion
 
 from tests.test_conformance_contrast import _contrast_inputs_without_sufficiency
 from tests.test_conformance_flagship import _flagship_calibration
@@ -64,6 +65,7 @@ def test_flagship_omi_2_fails_with_exactly_the_m9_items_plus_no_class_b_readout(
     metric = Metric.from_ensemble(incoming)
     chain = flagship_chain()
     inputs = ConformanceInputs(
+        specification_version=SpecificationVersion.V1_3,
         declaration=FLAGSHIP_DECLARATION,
         metric=metric,
         rollout_error_curve=_flagship_rollout_curve(np.random.default_rng(1), metric, chain),
@@ -92,6 +94,7 @@ def test_contrast_omi_2_fails_with_only_the_m9_items_once_class_b_is_supplied() 
     itself to be reached.)"""
     base_inputs = _contrast_inputs_without_sufficiency()
     inputs = ConformanceInputs(
+        specification_version=SpecificationVersion.V1_3,
         declaration=base_inputs.declaration,
         metric=base_inputs.metric,
         rollout_error_curve=base_inputs.rollout_error_curve,
@@ -117,6 +120,12 @@ def test_neither_domain_can_claim_omi_2_today() -> None:
         (CONTRAST_DECLARATION, contrast_incoming),
     ):
         metric = Metric.from_ensemble(incoming_fn(20, rng))
-        report = generate_report(ConformanceInputs(declaration=declaration, metric=metric))
+        report = generate_report(
+            ConformanceInputs(
+                specification_version=SpecificationVersion.V1_3,
+                declaration=declaration,
+                metric=metric,
+            )
+        )
         with pytest.raises(ConformanceNotMet):
             report.claim(ConformanceLevel.OMI_2)

@@ -357,17 +357,24 @@ detectable. Flagship's own defect remains documented and reproducible.
 ### M11.4 — The extrapolation experiment (ADR-045)
 
 Four contestants (free-form incumbent; correct form; misspecified form in two
-arms; unchanged tabular baselines) against a multi-mechanism composite generator
-no contestant's form expresses, held out over a control-space region lying partly
-outside the declared validity ranges.
+arms; unchanged tabular baselines) against **two generators in a fixed order** —
+**A, primary:** a canonical form plus one named withheld term, chosen because a
+localised absence makes every gap attributable; **B, follow-up:** a
+multi-mechanism composite whose coupling no declared form expresses, which tests
+whether A's benefit survives realistic coupling-blindness. Held out over a
+control-space region lying partly outside the declared validity ranges. Never
+pooled, and no cross-generator comparison is computed.
 
-**Exit gate.** Thresholds pre-registered via ADR-041 before the sweep runs.
-Rollout-length curves for every contestant. Error plotted against
-declared-envelope distance. `gap(3, 1)` and `gap(3, 4)` reported as the claim,
-`gap(2, 3a)`/`gap(2, 3b)` as robustness by misspecification kind, never pooled.
-**A negative result — misspecified declared physics beating neither the free-form
-operator nor the tabular baselines — is a deliverable**, filed as a correction to
-E-32's own argument.
+**Exit gate.** Thresholds pre-registered via ADR-041 before either sweep runs, and
+the same thresholds applied to both. Rollout-length curves for every contestant.
+Error plotted against declared-envelope distance. On Generator A, `gap(3, 1)` and
+`gap(3, 4)` reported as the claim and `gap(2, 3a)`/`gap(2, 3b)` as robustness by
+misspecification kind. **A negative result on Generator A — misspecified declared
+physics beating neither the free-form operator nor the tabular baselines — is a
+deliverable and terminates the milestone**: it is filed as a correction to E-32's
+own argument, and Generator B is *not* run, since a form that fails under the most
+favourable non-circular conditions will not do better with a whole coupling
+missing.
 
 ### Explicitly out of scope for M11
 

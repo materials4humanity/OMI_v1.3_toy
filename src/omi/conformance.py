@@ -22,7 +22,7 @@ from scipy import stats
 
 from omi.chain import Chain
 from omi.gaps import NotSpecified
-from omi.interface import InstantiationDeclaration
+from omi.interface import InstantiationDeclaration, SpecificationVersion
 from omi.inverse import ReachabilityCertificate
 from omi.observability import TriageResult
 from omi.state import FloatArray, Metric, State
@@ -195,6 +195,11 @@ class ConformanceInputs:
 
     declaration: InstantiationDeclaration
     metric: Metric
+    specification_version: SpecificationVersion
+    """Which version of Core and Spec the resulting claim is made against
+    (Spec §9.1; `docs/V1.4-EDITS.md` E-35; ADR-042). Required with no default,
+    deliberately: a default would let a proposed-v1.4 caller silently produce a
+    report labelled v1.3, which is precisely the ambiguity E-35 names."""
 
     rollout_error_curve: FloatArray | None = None
     semigroup_residuals: FloatArray | None = None
@@ -401,6 +406,13 @@ class ConformanceReport:
 
     declaration: InstantiationDeclaration
     metric: Metric
+    specification_version: SpecificationVersion
+    """The version of Core and Spec this claim is made against (Spec §9.1,
+    which requires the *level* and not the version — `docs/V1.4-EDITS.md` E-35;
+    ADR-042). Carried for the same reason :attr:`metric` is: a report is a
+    record intended to outlive the run that produced it, so every field a reader
+    needs in order to evaluate the claim belongs in the report rather than in
+    the repository state that surrounded it."""
     requirements: tuple[RequirementStatus, ...]
 
     def unmet(self, level: ConformanceLevel) -> tuple[RequirementStatus, ...]:
@@ -442,12 +454,81 @@ class ConformanceNotMet(Exception):
         super().__init__(message)
 
 
+class ConformanceVersionMismatch(Exception):
+    """Raised by :func:`compare_reports` when two reports were produced against
+    different :class:`~omi.interface.SpecificationVersion` values (Spec §9.1;
+    `docs/V1.4-EDITS.md` E-35; ADR-042).
+
+    Distinct from both `omi.gaps.NotSpecified` (a Specification derivation gap)
+    and :class:`ConformanceNotMet` (an evidentiary gap in one report): this is a
+    *category* error in the comparison itself. The levels being compared do not
+    denote the same requirements, so no answer — not even "they differ" — would
+    be meaningful.
+    """
+
+    def __init__(self, left: SpecificationVersion, right: SpecificationVersion) -> None:
+        self.left = left
+        self.right = right
+        super().__init__(
+            f"refusing to compare conformance reports across specification versions: "
+            f"{left.value} vs {right.value}. Spec §9.1's level names are defined by its "
+            f"level table, and that table changes between versions, so the same level "
+            f"name does not denote the same requirements in both (docs/V1.4-EDITS.md "
+            f"E-35). State explicitly which rows changed and compare requirement by "
+            f"requirement instead."
+        )
+
+
+def compare_reports(
+    left: ConformanceReport, right: ConformanceReport
+) -> dict[str, tuple[bool, bool]]:
+    """Compare two conformance reports requirement by requirement (Spec §9.1),
+    **refusing outright** when their specification versions differ (ADR-042).
+
+    The refusal is the point of this function; the returned diff is its payload.
+    Within one version the level table is fixed, so both reports carry the same
+    requirement names and the result maps each name whose satisfaction *differs*
+    to its ``(left, right)`` flags — an empty dict meaning the two reports agree
+    on every requirement.
+
+    Raises :class:`ConformanceVersionMismatch` when
+    ``left.specification_version is not right.specification_version``. A caller
+    that genuinely wants a cross-version comparison must do what Spec §9.1's
+    proposed wording requires (`docs/V1.4-EDITS.md` E-35): state which rows of
+    the level table changed, and compare the affected requirements explicitly.
+    There is deliberately no flag to suppress this.
+    """
+    if left.specification_version is not right.specification_version:
+        raise ConformanceVersionMismatch(left.specification_version, right.specification_version)
+
+    left_status = {r.name: r.satisfied for r in left.requirements}
+    right_status = {r.name: r.satisfied for r in right.requirements}
+    if set(left_status) != set(right_status):
+        raise ValueError(
+            "reports share a specification version but not a requirement set — "
+            "the level table is fixed within a version, so this indicates one "
+            "report was not produced by generate_report"
+        )
+    return {
+        name: (left_status[name], right_status[name])
+        for name in left_status
+        if left_status[name] != right_status[name]
+    }
+
+
 def generate_report(inputs: ConformanceInputs) -> ConformanceReport:
     """Build a full :class:`ConformanceReport` from already-collected
     diagnostics (Spec §9.1; ADR-028) — a completeness check against Spec
-    §9.1's own table, not a re-derivation of any diagnostic."""
+    §9.1's own table, not a re-derivation of any diagnostic. The declared
+    :class:`~omi.interface.SpecificationVersion` is carried through from
+    *inputs* onto the report, never inferred (ADR-042)."""
     requirements = tuple(
         RequirementStatus(name, citation, level, *_check_satisfied(name, inputs))
         for name, citation, level in _LEVEL_REQUIREMENTS
     )
-    return ConformanceReport(inputs.declaration, inputs.metric, requirements)
+    return ConformanceReport(
+        declaration=inputs.declaration,
+        metric=inputs.metric,
+        specification_version=inputs.specification_version,
+        requirements=requirements,
+    )

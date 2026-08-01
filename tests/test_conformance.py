@@ -22,6 +22,7 @@ from omi.state import Metric
 
 from omi_domains.flagship.build import build_chain, build_incoming_ensemble
 from omi_domains.flagship.interface import FLAGSHIP_DECLARATION
+from omi.interface import SpecificationVersion
 
 from tests.conftest import ObservationRecorder
 
@@ -30,7 +31,11 @@ def _minimal_inputs() -> ConformanceInputs:
     rng = np.random.default_rng(0)
     incoming = build_incoming_ensemble(50, rng)
     metric = Metric.from_ensemble(incoming)
-    return ConformanceInputs(declaration=FLAGSHIP_DECLARATION, metric=metric)
+    return ConformanceInputs(
+        specification_version=SpecificationVersion.V1_3,
+        declaration=FLAGSHIP_DECLARATION,
+        metric=metric,
+    )
 
 
 def test_omi_0_is_claimable_with_only_a_rollout_error_curve_supplied() -> None:
@@ -43,7 +48,12 @@ def test_omi_0_is_claimable_with_only_a_rollout_error_curve_supplied() -> None:
     perturbed = baseline.with_component(slot, name, baseline.get(slot, name) + 5 * metric.scale[0])
     curve = rollout_length_error_curve(chain, baseline, perturbed, metric)
 
-    inputs = ConformanceInputs(declaration=FLAGSHIP_DECLARATION, metric=metric, rollout_error_curve=curve)
+    inputs = ConformanceInputs(
+        specification_version=SpecificationVersion.V1_3,
+        declaration=FLAGSHIP_DECLARATION,
+        metric=metric,
+        rollout_error_curve=curve,
+    )
     report = generate_report(inputs)
 
     assert report.claim(ConformanceLevel.OMI_0) is ConformanceLevel.OMI_0
@@ -98,6 +108,7 @@ def test_closure_defect_is_vacuously_satisfied_when_no_scale_bridging_occurs() -
 def test_closure_defect_blocks_the_claim_when_scale_bridging_occurs_but_is_unmeasured() -> None:
     minimal = _minimal_inputs()
     inputs = ConformanceInputs(
+        specification_version=SpecificationVersion.V1_3,
         declaration=minimal.declaration, metric=minimal.metric, scale_bridging_occurs=True
     )
     report = generate_report(inputs)
@@ -117,7 +128,12 @@ def test_highest_claimable_level_reflects_exactly_what_was_supplied() -> None:
     perturbed = baseline.with_component(slot, name, baseline.get(slot, name) + 5 * minimal.metric.scale[0])
     curve = rollout_length_error_curve(chain, baseline, perturbed, minimal.metric)
 
-    only_omi0 = ConformanceInputs(declaration=minimal.declaration, metric=minimal.metric, rollout_error_curve=curve)
+    only_omi0 = ConformanceInputs(
+        specification_version=SpecificationVersion.V1_3,
+        declaration=minimal.declaration,
+        metric=minimal.metric,
+        rollout_error_curve=curve,
+    )
     assert generate_report(only_omi0).highest_claimable_level() == ConformanceLevel.OMI_0
 
 

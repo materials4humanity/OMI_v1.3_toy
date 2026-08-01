@@ -2670,15 +2670,42 @@ accumulation bound.
 - **`provenance`** — the source establishing the form (a citation, not a claim).
 - **`governs`** — which state components, and which operator, the form constrains.
 
-**Why the validity range is what connects this to the framework's purpose rather
-than being a modelling convenience.** An operator constrained to a declared form
-MUST report **where the current evaluation sits relative to that form's validated
-range** — a per-input extrapolation factor plus the binding input. That produces
-a direct practitioner-facing signal of a kind the framework currently cannot
-emit anywhere: *this evaluation is 2.3× outside the validated envelope of this
-relationship.* In `docs/V1.4-EDITS.md` §10's terms, this is the **buy physics**
-row acquiring a mechanism for the first time — one of the two rows that
-currently has none, and the one the whole v1.4 extension is arguing for.
+**The validity report IS the mechanism for `V1.4-EDITS.md` §10's "buy physics"
+row, which currently has none. This is the design's connection to the framework's
+stated purpose, and it is stated first because without it the field reads as a
+modelling convenience.**
+
+The framework's purpose includes telling a practitioner which purchase to make
+next. `docs/V1.4-EDITS.md` §10 audits that claim against the ledger and finds six
+interventions diagnosed and **four** supplied with machinery: buy sensing has the
+danger score and value of information (Spec §3.3, §3.4), buy data has the
+learning-error term (§1.4), run experiments has sufficiency campaigns (§8), and
+declare out of scope has the error-control dichotomy and the refusal apparatus.
+**Buy characterisation and buy physics have nothing at all** — and five ledger
+entries each block those two rows.
+
+An operator constrained to a declared form MUST report **where the current
+evaluation sits relative to that form's validated range**: a per-input
+extrapolation factor, the binding input, and which space it binds in. That is a
+practitioner feedback channel of a kind nothing in Core or Spec can currently
+emit — *this evaluation is 2.3× outside the validated envelope of this
+relationship, on the state-space bound* — and it converts an unanswerable question
+into a computed number: **should I buy physics here, and for which relationship?**
+
+Two consequences follow from taking that framing seriously rather than treating it
+as a nice property:
+
+- The report is **not** an internal diagnostic that happens to be exposed. It is
+  the output the category exists to produce, which is why it is a required
+  reporting obligation in E-32's proposed Spec §2.2 wording and not an optional
+  extra.
+- It is the **only** one of §10's two empty rows this extension fills. Buy
+  characterisation stays empty: E-31's suite declaration is a precondition for
+  costing a characterisation purchase, but no pricing mechanism follows from it,
+  and this ADR does not invent one. M11 should not be described as closing the
+  gap §10 documents — it closes half of it, and the half it leaves open is
+  recorded as an open framework question rather than an implementation backlog
+  item.
 
 **Design decisions recorded.**
 
@@ -2702,13 +2729,37 @@ currently has none, and the one the whole v1.4 extension is arguing for.
    multiple validity regimes (Hall–Petch's coarse-grain regime versus its
    fine-grain breakdown), the report names the regime, not only the distance.
 
-**`[authorial-choice]` flagged, mirroring the ledger's own convention.** Whether
-the validity range is expressed in **control space**, **state space**, or both is
-not settled by the finding. Recommendation: **both**, with the report naming
-which space bound — a form fitted over a temperature window is control-space
-bounded, while Hall–Petch's fine-grain breakdown is state-space bounded, and a
-design admitting only one would misrepresent one of them. Recorded as a
-recommendation, not a derivation.
+**Validity is declared in BOTH control space and state space, and the report
+names which bound binds. Decided, not authorial** (amended before M11.1; the
+earlier `[authorial-choice]` marking is withdrawn). This is settled by the
+metallurgy of ADR-044's own five forms, not by preference, and the reasoning is
+recorded here so it does not read as one:
+
+| Form | Control-space bound | State-space bound |
+|---|---|---|
+| Hall–Petch | **none exists** | breakdown at fine grain size — the bound is on `d` itself |
+| Kocks–Mecking | strain-rate and temperature window of the fit | dislocation-density saturation, where `k₁√ρ ≈ k₂ρ` |
+| JMAK | isothermal-hold window of the fit | impingement breakdown as `X → 1`, where the fixed-nucleation assumption fails |
+| Grain growth | temperature window of the Arrhenius fit | abnormal-growth onset, a state condition on the size distribution |
+| Koistinen–Marburger | quench-path window | competing-transformation onset — a state condition on what has already formed |
+
+**Hall–Petch is the decisive case.** Its breakdown at very fine grain size is
+purely a condition on the state — grain size is a state component, not a control
+— and it has *no* control-space expression at all: no furnace setting or transfer
+speed names the boundary, because the same setting produces a validated or an
+invalidated regime depending on what the material already is. A control-only
+design therefore **cannot represent one of ADR-044's five forms**, which settles
+the question by elimination rather than by taste.
+
+The converse also holds and matters for the report's shape: Kocks–Mecking's
+rate and temperature bounds are genuinely control-space (you leave the fitted
+regime by driving harder or hotter, whatever the current state), while its
+saturation bound is genuinely state-space. A single form spanning both is the
+common case, not the exception, which is why the report must name **which bound
+binds** rather than returning one number: "outside the fitted temperature window"
+and "past dislocation saturation" are different findings that call for different
+actions — the first is a process-control problem, the second means the form has
+run out of physics.
 
 **What tests would pin it** (design). An oracle whose validated envelope is known
 by construction, asserting the reported extrapolation factor equals the
@@ -2794,41 +2845,72 @@ declared constitutive form buys **extrapolation reach** outside the training
 envelope — the claim the whole v1.4 extension rests on. Its design decides
 whether the answer means anything, so the design is recorded before any code.
 
-**Ground truth: a multi-mechanism composite generator.** The generator composes
-several mechanisms with coupling **no single declared form expresses** — Kocks–
-Mecking dislocation evolution coupled to concurrent JMAK recrystallisation that
-*consumes* stored dislocation density, with grain growth feeding back into the
-Hall–Petch term. The generator supplies the physics; **every contestant fits its
-own parameters from the same in-envelope data**, and no contestant is given the
-generator's form.
+**Two generators, in a fixed order. Amended before M11.1: the order is the
+inverse of this ADR's first version, and the reason is attributability.**
 
-**This is the design decision that avoids E-12's circularity, and it is worth
-being explicit about why.** E-12 found that Spec §4.6 rung 4 could be "validated"
-by fitting a formula against data generated by that same formula, recovering it to
-machine precision by construction rather than by measurement. An extrapolation
-experiment whose ground truth *is* contestant 2's form would reproduce that exact
-failure at a larger scale, and contestant 2's win would be an identity rather
-than a result.
+**Generator A — PRIMARY: a canonical form plus one named unmodelled term.**
+Kocks–Mecking as the backbone plus a single, named, deliberately-withheld term —
+a strain-rate-dependent drag contribution — active in part of the control range.
+Every contestant fits its own parameters from the same in-envelope data; no
+contestant is given the withheld term.
 
-**The cost of this generator choice, recorded rather than discovered later.**
-Because the missing physics is a missing *coupling* rather than a missing *term*,
-the misspecification is **diffuse**: contestant 2 is wrong everywhere by a little
-rather than wrong in one identifiable way. The gap between contestants 2 and 3
-therefore measures less cleanly than it would against a canonical-form-plus-one-
-unmodelled-term generator. What the experiment measures is robustness to a
-**missing mechanism**, which is the realistic failure mode; what it cannot do is
-attribute how much of contestant 2's degradation comes from which absent
-coupling. **If the composite result is ambiguous, the canonical-plus-one-term
-generator is the designed follow-up**, run and reported separately, never pooled.
+**Generator B — FOLLOW-UP: a multi-mechanism composite.** Several mechanisms with
+coupling **no single declared form expresses** — Kocks–Mecking coupled to
+concurrent JMAK recrystallisation that *consumes* stored dislocation density, with
+grain growth feeding back into the Hall–Petch term.
 
-**Contestants, on identical ground truth, held out over a region of control
-space:**
+**Why A first.** The two generators answer different questions, and only one of
+them can produce an interpretable *negative*. Against A, the missing physics is a
+**single named term**, so every gap is attributable: if contestant 3 beats
+contestant 1, the benefit is traceable to declaring a form that is right about
+everything except one identified contribution. Against B, the misspecification is
+**diffuse** — contestant 2 is wrong everywhere by a little rather than wrong in one
+identifiable way — and an ambiguous `1 ≈ 2 ≈ 3` outcome would be
+*unattributable*: it cannot distinguish "declared forms do not buy reach" from
+"declared forms buy reach but coupling-blindness consumed it" from "the fits were
+poor." Establishing the mechanism on a localised, named absence and *then* asking
+whether the benefit survives realistic coupling-blindness is the ordering that
+makes both outcomes readable.
+
+**Consequences of the ordering, stated so the follow-up is not treated as a
+fallback:**
+
+- Generator B is a **robustness check on an established result**, not a rescue
+  attempt for an ambiguous one. It runs whether or not A is clean.
+- **If A shows no benefit, B is unnecessary and that is itself the finding.** A
+  declared form that cannot beat a free-form operator when the only missing physics
+  is one named term will not do better when the missing physics is an entire
+  coupling. Report A's negative and stop; do not run B in the hope of a different
+  answer, which would be exactly the post-hoc search ADR-041's pre-registration
+  discipline exists to prevent.
+- **Report both, never pooled.** A measures whether the mechanism works at all; B
+  measures whether it survives realistic conditions. A single combined figure
+  would answer neither.
+
+**Both generators avoid E-12's circularity, and it is worth being explicit about
+why that is the binding constraint on either.** E-12 found that Spec §4.6 rung 4
+could be "validated" by fitting a formula against data generated by that same
+formula, recovering it to machine precision by construction rather than by
+measurement. An extrapolation experiment whose ground truth *is* contestant 2's
+form would reproduce that failure at larger scale, and contestant 2's win would be
+an identity rather than a result. Generator A is therefore **not** bare Kocks–
+Mecking: the withheld drag term is what keeps contestant 2 an approximation rather
+than an exact recovery, and it is the minimum departure that achieves this. A
+generator that differed from contestant 2's form by *nothing* would be circular; A
+differs by exactly one named term, which is the smallest non-circular design and
+hence the most attributable.
+
+**Contestants — the same four against each generator, held out over a region of
+control space. Every contestant sees identical ground truth within a generator;
+results are never pooled across generators:**
 
 1. **Free-form operator, generic constraints only** — the v1.3 incumbent
    (`omi.learning` + `omi.constraints`).
-2. **Constitutively-constrained, correct form, parameters fitted** — an upper
-   bound that will win trivially, since a correct form is a strong prior.
-   Included as a calibration arm, not as the claim.
+2. **Constitutively-constrained, correct form, parameters fitted** — "correct"
+   meaning the canonical form, *not* the generator: against Generator A it lacks
+   the withheld drag term, against Generator B it lacks the coupling. A strong
+   prior and expected to win, but not an identity — see the circularity note
+   above. A calibration arm, not the claim.
 3. **Constitutively-constrained, deliberately misspecified** — **the realistic
    case and the one that matters**, because real declared physics is canonically
    right and locally wrong.
@@ -2868,26 +2950,36 @@ are only partly sure of.
   `observe` fixture** (CLAUDE.md §7), not only the verdict.
 
 **The claim structure, stated before running so it cannot be read post hoc.**
+Reported per generator, and the generator is part of every quoted figure:
 
-| Comparison | What it measures |
-|---|---|
-| gap(2, 3a) and gap(2, 3b) | robustness to form misspecification, by kind |
-| **gap(3, 1) and gap(3, 4)** | **the claim the paper would actually make** |
-| gap(2, 1) | the ceiling, for context only |
+| Comparison | Generator | What it measures |
+|---|---|---|
+| **gap(3, 1) and gap(3, 4)** | **A** | **the claim the paper would actually make**: does canonically-right-locally-wrong declared physics beat a free-form operator and a tabular baseline outside the envelope, when the missing physics is one named term |
+| gap(2, 3a) and gap(2, 3b) | A | robustness to form misspecification, by kind, attributable because the absence is localised |
+| gap(2, 1) | A | the ceiling, for context only |
+| gap(3, 1) and gap(3, 4) | B | whether A's benefit **survives** realistic coupling-blindness — a robustness check on an established result, not a second attempt at the claim |
+| any comparison | A vs B | **not computed.** The generators differ in what they withhold, so a cross-generator gap has no interpretation. |
 
 **Pre-registration.** Thresholds are set via ADR-041's
-`decision_sensitive_threshold` **before** the sweep runs, with the declared
-minimum effect and cost ratio recorded in the design document. A threshold chosen
-after seeing the residuals is not a threshold.
+`decision_sensitive_threshold` **before** either sweep runs, with the declared
+minimum effect and cost ratio recorded in the design document, and the *same*
+thresholds applied to both generators. A threshold chosen after seeing the
+residuals is not a threshold; a threshold re-chosen for Generator B after seeing
+Generator A is worse, because it would convert the robustness check into a search.
 
-**The negative result is a deliverable.** If `gap(3, 1) ≤ 0` — misspecified
-declared physics does no better than a free-form operator with generic
-constraints outside the envelope — then the extension's value proposition fails,
-and that is a publishable finding that belongs in `docs/V1.4-EDITS.md` as a
-correction to E-32's own argument. The experiment is designed to be able to say
-so: contestant 1 is not a straw man, and contestant 4 is unchanged from the
-baseline characterisation that already beat parts of this repository's own
-machinery.
+**The negative result is a deliverable, and it terminates the experiment.** If
+`gap(3, 1) ≤ 0` on **Generator A** — misspecified declared physics does no better
+than a free-form operator with generic constraints outside the envelope, when the
+only withheld physics is a single named term — then the extension's value
+proposition fails. Report it, file it in `docs/V1.4-EDITS.md` as a correction to
+E-32's own argument, and **do not run Generator B**: a form that cannot beat
+free-form under the most favourable non-circular conditions available will not do
+better when an entire coupling is missing, and running B at that point would be
+looking for a more agreeable answer rather than a more informative one.
+
+The experiment is designed to be able to return that negative honestly:
+contestant 1 is not a straw man, and contestant 4 is unchanged from the baseline
+characterisation that already beat parts of this repository's own machinery.
 
 ---
 

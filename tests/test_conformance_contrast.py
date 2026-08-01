@@ -46,6 +46,7 @@ from omi_domains.contrast.build import build_chain, build_incoming_ensemble
 from omi_domains.contrast.interface import CONTRAST_DECLARATION
 from omi_domains.contrast.operators import CYCLING
 from omi_domains.contrast.readouts import DendriteRisk, TerminalVoltage
+from omi.interface import SpecificationVersion
 
 
 def _semigroup_residuals(rng: np.random.Generator) -> FloatArray:
@@ -99,6 +100,7 @@ def _contrast_inputs_without_sufficiency() -> ConformanceInputs:
     metric = Metric.from_ensemble(incoming)
 
     return ConformanceInputs(
+        specification_version=SpecificationVersion.V1_3,
         declaration=CONTRAST_DECLARATION,
         metric=metric,
         rollout_error_curve=_contrast_rollout_curve(np.random.default_rng(1), metric),

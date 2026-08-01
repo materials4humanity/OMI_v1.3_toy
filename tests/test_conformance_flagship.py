@@ -40,6 +40,7 @@ from omi_domains.flagship.interface import FLAGSHIP_DECLARATION
 from omi_domains.flagship.operators import HEATING_AND_SOAK, TRANSFER
 from omi_domains.flagship.readouts import AggregateHardness, CoatingGauge, ForceTorqueSensor
 from omi_domains.flagship.state import FLAGSHIP_SCHEMA
+from omi.interface import SpecificationVersion
 
 from tests.conftest import ObservationRecorder
 
@@ -184,6 +185,7 @@ def test_flagship_reaches_omi_1() -> None:
     chain = build_chain()
 
     inputs = ConformanceInputs(
+        specification_version=SpecificationVersion.V1_3,
         declaration=FLAGSHIP_DECLARATION,
         metric=metric,
         rollout_error_curve=_flagship_rollout_curve(np.random.default_rng(1), metric, chain),
@@ -208,6 +210,7 @@ def test_flagship_does_not_reach_omi_2() -> None:
     chain = build_chain()
 
     inputs = ConformanceInputs(
+        specification_version=SpecificationVersion.V1_3,
         declaration=FLAGSHIP_DECLARATION,
         metric=metric,
         rollout_error_curve=_flagship_rollout_curve(np.random.default_rng(1), metric, chain),
