@@ -23,6 +23,40 @@ result's own declared version, not the import path that produced it.
 
 from __future__ import annotations
 
+from omi.proposed.constitutive import (
+    ChainExtrapolationReport,
+    ConstitutiveForm,
+    ExtrapolationReport,
+    ValidityAction,
+    ValidityBound,
+    ValidityRange,
+    ValiditySpace,
+    worst_extrapolation,
+)
 from omi.proposed.declaration import ProposedV14Declaration
+from omi.proposed.item6 import (
+    CertificateRoleRefused,
+    InvariantRole,
+    InvariantSubItem,
+    assert_certificate_eligible,
+    certificate_eligible,
+    roles_for,
+)
 
-__all__ = ["ProposedV14Declaration"]
+__all__ = [
+    "ChainExtrapolationReport",
+    "CertificateRoleRefused",
+    "ConstitutiveForm",
+    "ExtrapolationReport",
+    "InvariantRole",
+    "InvariantSubItem",
+    "ProposedV14Declaration",
+    "ValidityAction",
+    "ValidityBound",
+    "ValidityRange",
+    "ValiditySpace",
+    "assert_certificate_eligible",
+    "certificate_eligible",
+    "roles_for",
+    "worst_extrapolation",
+]

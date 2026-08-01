@@ -42,6 +42,7 @@ from omi_domains.flagship.interface import FLAGSHIP_DECLARATION
 from omi_domains.flagship.state import FLAGSHIP_SCHEMA
 
 from tests.conftest import ObservationRecorder
+from tests.oracles.known_envelope import known_envelope_form
 
 
 def _metric() -> Metric:
@@ -183,6 +184,40 @@ def test_v13_core_projection_diffs_exactly_as_the_v13_declaration_does(
     assert wrapped.v13_core is FLAGSHIP_DECLARATION
 
 
+def test_the_projection_still_holds_with_the_m11_2_extension_populated(
+    observe: ObservationRecorder,
+) -> None:
+    """The re-check M11.2 triggered, and the reason the wrapper was introduced
+    empty at M11.1 (ADR-042).
+
+    A declaration carrying declared constitutive forms (Core §4 item 6d, ADR-043)
+    must still project to a v1.3 core that diffs identically to the unwrapped
+    declaration. If this failed, the extension would be changing what Core §4's
+    comparative machinery says about a domain — which is the property ADR-044's
+    controlled comparison between flagship and its constitutive variant depends
+    on, since that comparison reads the diff as a measurement of the extension
+    itself.
+    """
+    populated = ProposedV14Declaration(
+        v13_core=FLAGSHIP_DECLARATION,
+        constitutive_forms=(known_envelope_form(),),
+    )
+    empty = ProposedV14Declaration(v13_core=FLAGSHIP_DECLARATION)
+
+    direct = diff(FLAGSHIP_DECLARATION, CONTRAST_DECLARATION)
+    with_forms = diff(populated.v13_core, CONTRAST_DECLARATION)
+    without_forms = diff(empty.v13_core, CONTRAST_DECLARATION)
+
+    observe(
+        "projection_diff_invariant_to_extension_content",
+        {"forms_declared": len(populated.constitutive_forms), "identical_to_direct": with_forms == direct},
+        "populating item 6d must not move any v1.3 item's diff verdict",
+    )
+    assert with_forms == direct == without_forms
+    assert populated.v13_core is FLAGSHIP_DECLARATION
+    assert empty.constitutive_forms == ()
+
+
 def test_wrapped_declaration_cannot_claim_to_be_v13() -> None:
     """A declaration carrying the extension is not a v1.3 declaration, and
     `specification_version` is a read-only property rather than a field so that
@@ -194,17 +229,21 @@ def test_wrapped_declaration_cannot_claim_to_be_v13() -> None:
         wrapped.specification_version = SpecificationVersion.V1_3  # type: ignore[misc]
 
 
-def test_the_extension_adds_no_fields_yet_and_that_is_deliberate() -> None:
-    """M11.1 introduces the wrapper *before* it has content, so the
-    diff-preservation property above is established on an empty extension
-    (ADR-042; Core §4). This test pins that state: when M11.2 (ADR-043) adds the
-    declared-constitutive-form category it must be updated, which is the
-    intended prompt to re-run the projection check at that point rather than
-    assume it still holds.
+def test_the_extension_declares_exactly_the_fields_the_adrs_authorise() -> None:
+    """Pins the extension's field list, so every future addition is a deliberate
+    edit here and re-triggers the projection check above (ADR-042; Core §4).
+
+    This test did its job once already. M11.1 introduced the wrapper with only
+    `v13_core`, deliberately empty, so that the diff-preservation property was
+    established *before* the extension had content; M11.2 (ADR-043) then added
+    `constitutive_forms` and this assertion failed, which is exactly the prompt
+    to re-run the projection check rather than assume it still held. It did still
+    hold — see the projection test above, which passes unchanged with the field
+    present and a wrapped declaration carrying forms.
     """
     from dataclasses import fields
 
-    assert [f.name for f in fields(ProposedV14Declaration)] == ["v13_core"]
+    assert [f.name for f in fields(ProposedV14Declaration)] == ["v13_core", "constitutive_forms"]
 
 
 def test_report_is_frozen_so_a_version_cannot_be_restamped_after_the_fact() -> None:

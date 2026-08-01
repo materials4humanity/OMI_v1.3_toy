@@ -2761,6 +2761,35 @@ and "past dislocation saturation" are different findings that call for different
 actions — the first is a process-control problem, the second means the form has
 run out of physics.
 
+**The split determines the practitioner ACTION, not merely the bound's
+provenance — and this is why it must be legible in the report's output rather
+than only in the declaration.** The two violations differ in whether *anything
+the framework already has* can respond to them:
+
+| Binding space | What it means | Actionable within existing machinery? |
+|---|---|---|
+| **Control** | The declared form is still valid for this material state; the driving programme has left the window the form was fitted over. | **Yes.** This is a control-inverse problem (Core §5): the setpoint can be moved back inside the window, and `omi.inverse`'s apparatus parameterisation and `𝒰_adm` box already express the search. The extrapolation warning is a *constraint to add to that search*. |
+| **State** | No admissible control recovers validity. The material is in a condition the form was never fitted to describe, and driving differently does not change that — the form has run out of physics. | **No.** Nothing in Core or Spec responds to it. This is a *buy physics* signal in the strict sense: the only remedies are a different declared form, a wider fit, or an honest refusal (`omi.gaps.NotSpecified`). |
+
+So the report must expose the binding space as a first-class field with its
+actionability, not merely record which bound was tightest. A caller receiving
+"2.3× outside the envelope" and nothing else cannot tell whether to re-run the
+control inverse with a tightened constraint or to stop and commission physics —
+and those are not variations of one response, they are the difference between a
+problem the framework can already solve and one it can only report. Collapsing
+them into a single scalar would reproduce, in a new place, exactly the failure
+E-06 documents for inverse design: an unordered infeasibility number that cannot
+say which of several terms is responsible, when the terms call for different
+purchases.
+
+A consequence worth stating for `docs/V1.4-EDITS.md` §10: only the *state-space*
+half of this report is genuinely new capability. The control-space half routes
+into machinery that already exists (Core §5's control inverse), which means M11's
+contribution to the **buy physics** row is narrower than "the row now has a
+mechanism" — it is specifically that a state-space validity violation becomes
+*visible and attributable*, where previously it was indistinguishable from a
+control-space one and both were invisible.
+
 **What tests would pin it** (design). An oracle whose validated envelope is known
 by construction, asserting the reported extrapolation factor equals the
 constructed one — the same discipline as every `tests/oracles/` member. An

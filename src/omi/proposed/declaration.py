@@ -12,6 +12,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from omi.interface import InstantiationDeclaration, SpecificationVersion
+from omi.proposed.constitutive import ConstitutiveForm
 
 
 @dataclass(frozen=True)
@@ -36,20 +37,33 @@ class ProposedV14Declaration:
       a controlled measurement of the extension itself rather than of two
       unrelated declarations (ADR-044's variant domain relies on this).
 
-    **At M11.1 the extension is deliberately empty.** This class adds no fields
-    to the seven items yet: M11.2 (ADR-043) adds the declared-constitutive-form
-    category, and M11.3 (ADR-044) supplies a domain that fills it. Introducing
-    the wrapper *before* it has content is the point rather than premature
-    abstraction — it establishes the diff-preservation property on an empty
-    extension, so that after each later addition the same check re-runs and any
-    disturbance to Core §4's comparability is attributable to that addition
+    **The extension was introduced empty at M11.1 and gained its first field at
+    M11.2.** That ordering was the point rather than premature abstraction: the
+    diff-preservation property above was established on an *empty* extension, so
+    when :attr:`constitutive_forms` arrived the same check re-ran and any
+    disturbance to Core §4's comparability was attributable to that addition
     alone. A wrapper introduced together with its content could not separate the
-    two.
+    two, and the property is re-checked on every later addition for the same
+    reason.
     """
 
     v13_core: InstantiationDeclaration
     """The unmodified Core §4 seven-item declaration. Frozen and shared, not
     copied: this is the same object a v1.3 domain declares."""
+
+    constitutive_forms: tuple[ConstitutiveForm, ...] = ()
+    """Core §4 item 6d: declared constitutive forms (ADR-043; Spec §2.2's
+    proposed sixth hard-constraint category; `docs/V1.4-EDITS.md` E-32).
+
+    Defaults to empty, and **an empty declaration is legal and meaningful**
+    rather than an omission: per E-32's proposed wording, "a domain with no
+    established constitutive form for a given operator MUST declare 6d empty for
+    it; an empty declaration is legal and required, and is itself the statement
+    that operators for that step carry generic structure only and should not be
+    expected to extrapolate in form." A default of ``()`` therefore encodes a
+    claim rather than an absence of one — which is the opposite of the reasoning
+    that made `specification_version` a *required* field, and the difference is
+    that here the empty case has a defensible meaning and there it does not."""
 
     @property
     def specification_version(self) -> SpecificationVersion:

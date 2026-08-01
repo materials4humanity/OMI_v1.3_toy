@@ -339,7 +339,12 @@ the validated envelope, as a result dataclass, surfaced and never enforced.
 **Exit gate.** An oracle whose validated envelope is known by construction
 recovers the reported extrapolation factor. Off-manifold queries surface rather
 than raise. `classify_invariant` still refuses a 6d member — now correct by
-specification rather than incidentally.
+specification rather than incidentally. **And the binding space is legible in the
+output**: a control-space violation reports `CONTROL_INVERSE` (actionable within
+Core §5's existing machinery), a state-space violation reports `BUY_PHYSICS`
+(actionable by nothing the framework has), demonstrated by sweeping the entire
+declared control window against an out-of-range state and showing every point
+still reports `BUY_PHYSICS`.
 
 ### M11.3 — The constitutive variant domain (ADR-044)
 
