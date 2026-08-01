@@ -51,9 +51,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Callable, Mapping
+from typing import Callable, Mapping, Protocol, runtime_checkable
 
-from omi.state import FloatArray, Slot
+from omi.operators import Control
+from omi.state import FloatArray, Slot, State
 
 
 class ValiditySpace(Enum):
@@ -575,6 +576,28 @@ class ConstitutiveForm:
         composes into a new failure.
         """
         return self.validity.report(self.name, values)
+
+
+@runtime_checkable
+class ConstitutivelyConstrained(Protocol):
+    """An operator constrained to declared forms, which therefore reports where it
+    sits relative to their validated ranges (Spec §2.2's proposed obligation;
+    ADR-043).
+
+    **A structural Protocol rather than a widening of
+    `omi.operators.EvolutionOperator`**, and that is ADR-042's
+    composition-over-modification principle applied to behaviour rather than to
+    data. Adding this method to the v1.3 ABC would give every v1.3 operator an
+    attribute it does not implement, and would make a v1.3 base class carry a
+    proposed-v1.4 obligation — the modification the boundary exists to avoid. As a
+    Protocol, an operator satisfies it by having the method, nothing in v1.3
+    changes, and a caller can still ask the question in a type-safe way.
+    """
+
+    def extrapolation_report(self, state: State, control: Control) -> "ChainExtrapolationReport":
+        """Where this operator's declared forms sit relative to their validated
+        ranges (Spec §2.2; ADR-043)."""
+        ...
 
 
 @dataclass(frozen=True)

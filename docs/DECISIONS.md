@@ -2961,6 +2961,50 @@ instance — then the controlled comparison is lost and the variant would need t
 be justified on its own terms instead. Check the diff early, before fitting
 anything.
 
+**Amended at M11.3: the prediction above was wrong, and the correction is the
+milestone's main finding.** The diff does not isolate item 6 — it is **empty**,
+because v1.3 has no way to express "this domain declares constitutive forms" at
+all. Both available roads are closed: naming the forms in item 6 makes
+`omi.interface.diff` *raise* (`classify_invariant` refuses the name, correctly),
+and declaring them outside the seven items makes the two cores identical. The
+variant therefore takes the second road, with its v1.3 core constructed field by
+field *from flagship's own declaration object*, so "the cores are identical" is true
+by construction and the emptiness is a property of v1.3's expressive range rather
+than of two hand-written declarations happening to agree. Recorded in
+`docs/V1.4-EDITS.md` E-32 as a measured consequence.
+
+**Two other things M11.3 found, both worth the record.** First, the validity
+machinery caught a real modelling error on its first application to real physics: a
+first version applied Koistinen–Marburger at the soak temperature, and the
+extrapolation report flagged the query at `5.71×` outside its declared window with a
+`CONTROL_INVERSE` action — correctly, since a soak above `Ms` is a temperature at
+which no athermal transformation occurs. The form moved to the transfer stage, where
+the piece cools through the window in which it holds. That is the category doing the
+job this ADR argued for, on its own author. Second, a first grain-growth
+parameterisation was physically shaped and **numerically inert** — the Arrhenius
+factor produced no measurable growth at the declared soak temperature — and a first
+Kocks–Mecking declaration bounded `stored_density` in physical m⁻² while the toy's
+state component carries a dimensionless index, so every in-range query read as
+sitting at the far edge of an enormous window. Both are calibration failures rather
+than physics ones, both are recorded in the affected forms' `provenance`, and the
+second is why `forms.py` now states explicitly that a bound must be declared in the
+units the state actually carries.
+
+**A typing consequence, resolved by composition like everything else in ADR-042.**
+`extrapolation_report` is *not* added to `omi.operators.EvolutionOperator`: doing so
+would give every v1.3 operator an attribute it does not implement and would put a
+proposed-v1.4 obligation on a v1.3 base class. It is a `runtime_checkable` Protocol
+(`omi.proposed.ConstitutivelyConstrained`) that an operator satisfies structurally,
+so nothing in v1.3 changes and callers can still ask the question type-safely.
+
+**What M11.3 did NOT do, stated so the gate is not over-read.** `inclusion_content`
+— the third of the three components Phase 1 measured at `rate == 0.0` — is still
+static, in both domains, deliberately. Inclusions are inert second-phase particles
+over this chain, so it is a genuine *parameter* in E-29's proposed sense rather than
+an un-transported state component. Declaring kinetics for it to make the audit look
+complete would be inventing physics, and the test asserts it stays static so the
+choice cannot drift silently.
+
 ---
 
 ## ADR-045 — The extrapolation experiment: does declared physics buy reach?
