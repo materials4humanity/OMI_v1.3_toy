@@ -2863,10 +2863,34 @@ because the check that would close it is empirical — validating the form again
 data in the regime it claims, which is Spec §4.6's ladder discipline applied to a
 declared form — and is not proposed as part of this ADR.
 
+**(iii) An approximate edge is declarable, and the report says when one binds.**
+Not every validity edge is a sharp physical limit. Some are boundaries where a
+*competing mechanism* takes over, and those depend on the route taken to reach
+them — cooling rate, hold time, path — so the edge is genuinely fuzzy rather than
+imprecisely known. `EdgeKind` (`SHARP` / `APPROXIMATE`) is declared **per edge**,
+not per bound, because one window commonly has one of each: a transformation-start
+temperature is sharp physics while the boundary where a competing transformation
+intervenes during the same quench is not.
+
+The default is `SHARP`, deliberately: declaring an edge approximate is a positive
+statement about what the source establishes, so a domain that has not considered it
+gets the stronger, checkable claim rather than a silent hedge.
+
+The report carries `binding_edge_kind`, so a factor of `1.05` against a
+competing-mechanism boundary cannot be read as a violation of a sharp limit — that
+figure is inside the edge's own uncertainty, and a consumer unable to see the
+difference would report the edge's fuzziness as a finding. **A fuzzy bound honestly
+declared is worth more than a precise one invented**, and this is what makes that
+principle structural rather than advisory: the alternative — forcing a
+competing-mechanism boundary to be declared as a clean number — fabricates
+precision the source never had.
+
 **What tests would pin it** (design). An oracle whose validated envelope is known
 by construction, asserting the reported extrapolation factor equals the
 constructed one — the same discipline as every `tests/oracles/` member — with a
-**second, one-sided** constructed window for the rule above. An off-manifold test
+**second, one-sided** constructed window for the rule above, and a **third with one
+sharp and one approximate edge** whose factors are symmetric so the declared kind
+is demonstrably doing the work rather than the magnitude. An off-manifold test
 asserting the report *surfaces* rather than raises. A test asserting `centre` and
 `half_width` raise for a one-sided window rather than returning a plausible
 number. A test asserting `classify_invariant` still refuses a 6d member.

@@ -139,6 +139,38 @@ BoundEdge = float | Unbounded
 :data:`UNBOUNDED` (Spec §2.2; ADR-043)."""
 
 
+class EdgeKind(Enum):
+    """Whether a declared window edge is a sharp physical limit or an
+    approximate, route-dependent boundary (ADR-043, amended before M11.3; Spec
+    §2.2's "stated validity range").
+
+    **Why an approximate edge must be declarable as such.** Some validity edges
+    are sharp: a form that does not apply above a transformation start temperature
+    has an edge fixed by the physics of that transformation. Others are boundaries
+    where a *competing mechanism* takes over, and those depend on the route taken
+    to reach them — cooling rate, hold time, path — so the edge is genuinely fuzzy
+    rather than merely imprecisely known. Forcing a fuzzy boundary to be declared
+    as a clean number fabricates precision the source never had, and **a fuzzy
+    bound honestly declared is worth more than a precise one invented.**
+
+    The consequence is a reporting obligation, not just a label: an extrapolation
+    factor slightly above ``1.0`` against an approximate edge is not evidence of a
+    violation, because the edge itself is not known to that resolution. A consumer
+    that cannot tell the two apart will read noise as a finding, which is the
+    failure mode `docs/V1.4-EDITS.md` §6 documents nine times over in other
+    diagnostics.
+    """
+
+    SHARP = "sharp"
+    """The edge is a physical limit, known to better resolution than the queries
+    being reported against it."""
+
+    APPROXIMATE = "approximate"
+    """The edge is a competing-mechanism or route-dependent boundary. A factor
+    near ``1.0`` against this edge is not resolvable from being inside the
+    window, and MUST NOT be reported as a violation without saying so."""
+
+
 class FormKind(Enum):
     """What a declared form's :attr:`ConstitutiveForm.evaluate` output *means*
     (ADR-043, amended before M11.3; Core §3.3's evolution operators and Core
@@ -203,6 +235,15 @@ class ValidityBound:
     than one (ADR-043 point 5, mirroring `omi.classb.n_eff`'s two-regime
     reporting: a bound that separates regimes should say which, not only how
     far)."""
+    low_kind: EdgeKind = EdgeKind.SHARP
+    """Whether the lower edge is sharp or an approximate, route-dependent
+    boundary (:class:`EdgeKind`; Spec §2.2). Per-edge rather than per-bound,
+    because a single window can have one sharp edge fixed by physics and one fuzzy
+    edge set by a competing mechanism — which is the common case for a
+    transformation window, not an exotic one."""
+    high_kind: EdgeKind = EdgeKind.SHARP
+    """Whether the upper edge is sharp or approximate (:class:`EdgeKind`; Spec
+    §2.2)."""
     fitted_scale: float | None = None
     """The declared extent of the fitted range, in the bound's own units —
     **required for a one-sided window and forbidden for a two-sided one**
@@ -280,6 +321,29 @@ class ValidityBound:
                 "unit is the declared fitted_scale"
             )
         return 0.5 * (float(self.high) - float(self.low))  # type: ignore[arg-type]
+
+    def violated_edge(self, value: float) -> str | None:
+        """Which edge *value* falls outside — ``"low"``, ``"high"``, or ``None``
+        when inside the declared window (Spec §2.2).
+
+        Needed because :meth:`extrapolation_factor` is a magnitude and does not
+        say which side, and the two edges of one window can differ in
+        :class:`EdgeKind` — so a consumer cannot tell whether a reported violation
+        is against a sharp limit or a fuzzy boundary without this.
+        """
+        if not isinstance(self.low, Unbounded) and value < float(self.low):
+            return "low"
+        if not isinstance(self.high, Unbounded) and value > float(self.high):
+            return "high"
+        return None
+
+    def edge_kind(self, value: float) -> EdgeKind | None:
+        """The :class:`EdgeKind` of the edge *value* violates, or ``None`` inside
+        the window (Spec §2.2; ADR-043)."""
+        edge = self.violated_edge(value)
+        if edge is None:
+            return None
+        return self.low_kind if edge == "low" else self.high_kind
 
     def extrapolation_factor(self, value: float) -> float:
         """How far *value* sits outside the declared window (Spec §2.2's "stated
@@ -359,6 +423,21 @@ class ExtrapolationReport:
             return None
         return self.binding_bound.space
 
+    binding_edge_kind: EdgeKind | None = None
+    """The :class:`EdgeKind` of the edge the binding bound violates, or ``None``
+    inside the envelope (Spec §2.2; ADR-043).
+
+    Carried so an :attr:`~EdgeKind.APPROXIMATE` edge cannot be read as a sharp
+    violation: a factor of ``1.05`` against a competing-mechanism boundary is
+    within the edge's own uncertainty, and a consumer that cannot see the
+    difference will report noise as a finding."""
+
+    @property
+    def edge_is_approximate(self) -> bool:
+        """Whether the binding violation is against an approximate edge (Spec
+        §2.2). ``False`` inside the envelope, where nothing binds."""
+        return self.binding_edge_kind is EdgeKind.APPROXIMATE
+
     @property
     def action(self) -> ValidityAction:
         """The practitioner action this report implies (Core §5;
@@ -423,7 +502,8 @@ class ValidityRange:
             )
         factors = {b.name: b.extrapolation_factor(values[b.name]) for b in self.bounds}
         binding = max(self.bounds, key=lambda b: factors[b.name]) if self.bounds else None
-        return ExtrapolationReport(form_name, factors, binding)
+        edge_kind = binding.edge_kind(values[binding.name]) if binding is not None else None
+        return ExtrapolationReport(form_name, factors, binding, edge_kind)
 
 
 @dataclass(frozen=True)

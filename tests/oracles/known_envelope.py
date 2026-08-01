@@ -43,6 +43,7 @@ import numpy as np
 from omi.proposed.constitutive import (
     UNBOUNDED,
     ConstitutiveForm,
+    EdgeKind,
     FormKind,
     ValidityBound,
     ValidityRange,
@@ -173,3 +174,35 @@ def one_sided_truth(extent: float) -> float:
     scale rather than from the estimator under test (CLAUDE.md §7; ADR-043):
     ``1 + max(0, edge - value) / fitted_scale``."""
     return 1.0 + max(0.0, ONE_SIDED_EDGE - extent) / ONE_SIDED_SCALE
+
+
+APPROX_LOW, APPROX_HIGH = 2.0, 8.0
+"""A two-sided window whose **lower** edge is a competing-mechanism boundary and
+whose upper edge is a sharp limit (`EdgeKind`; ADR-043) — the shape a
+transformation window takes, and the one M11.3 will declare for real."""
+
+
+def mixed_edge_form() -> ConstitutiveForm:
+    """A form with one sharp edge and one approximate edge, so the report's
+    ability to distinguish them has a constructed case (Spec §2.2; ADR-043)."""
+    return ConstitutiveForm(
+        name="mixed_edge_reference_form",
+        kind=FormKind.ALGEBRAIC,
+        evaluate=lambda values: np.array([values["level"]]),
+        parameters={},
+        validity=ValidityRange(
+            (
+                ValidityBound(
+                    name="level",
+                    space=ValiditySpace.STATE,
+                    low=APPROX_LOW,
+                    high=APPROX_HIGH,
+                    regime="between a competing-mechanism onset and a sharp upper limit",
+                    low_kind=EdgeKind.APPROXIMATE,
+                    high_kind=EdgeKind.SHARP,
+                ),
+            )
+        ),
+        provenance="constructed for tests/oracles/known_envelope.py; no external source claimed",
+        governs=((Slot.M, "level"),),
+    )

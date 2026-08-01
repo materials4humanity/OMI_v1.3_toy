@@ -14,6 +14,7 @@ from omi.state import Slot
 from omi.proposed import (
     UNBOUNDED,
     CertificateRoleRefused,
+    EdgeKind,
     ConstitutiveForm,
     FormKind,
     InvariantRole,
@@ -30,9 +31,12 @@ from omi.proposed import (
 
 from tests.conftest import ObservationRecorder
 from tests.oracles.known_envelope import (
+    APPROX_HIGH,
+    APPROX_LOW,
     ONE_SIDED_EDGE,
     ONE_SIDED_SCALE,
     known_envelope_form,
+    mixed_edge_form,
     one_sided_form,
     one_sided_truth,
     truth,
@@ -328,3 +332,63 @@ def test_form_kind_is_declared_because_the_shared_signature_cannot_express_it() 
     # a response array out. Only `kind` separates them.
     assert form.evaluate({"drive": 1.0, "extent": 1.0}).shape == (1,)
     assert {k.value for k in FormKind} == {"rate_law", "explicit_solution", "algebraic"}
+
+
+# --- approximate edges (amended before M11.3) -------------------------------
+
+
+def test_the_report_distinguishes_a_fuzzy_edge_from_a_sharp_one(
+    observe: ObservationRecorder,
+) -> None:
+    """A window can have one edge fixed by physics and one set by a competing
+    mechanism, and the report must say which was violated (Spec §2.2; ADR-043).
+
+    Without this, a factor of ``1.05`` against a route-dependent boundary reads
+    identically to the same factor against a sharp limit, and a consumer would
+    report the edge's own uncertainty as a finding — the failure shape
+    `docs/V1.4-EDITS.md` §6 documents nine times over elsewhere.
+    """
+    form = mixed_edge_form()
+    below = form.report({"level": APPROX_LOW - 2.0})
+    above = form.report({"level": APPROX_HIGH + 2.0})
+    inside = form.report({"level": 0.5 * (APPROX_LOW + APPROX_HIGH)})
+
+    observe(
+        "mixed_edge_report",
+        {
+            "below": {"factor": below.factors["level"], "approx": below.edge_is_approximate},
+            "above": {"factor": above.factors["level"], "approx": above.edge_is_approximate},
+            "inside": {"factor": inside.factors["level"], "approx": inside.edge_is_approximate},
+        },
+        "same magnitude either side; only the edge kind differs",
+    )
+
+    # Symmetric magnitudes, opposite edge kinds — so the factor alone cannot
+    # distinguish them and the declared kind is doing real work.
+    assert below.factors["level"] == pytest.approx(above.factors["level"])
+    assert below.binding_edge_kind is EdgeKind.APPROXIMATE
+    assert below.edge_is_approximate
+    assert above.binding_edge_kind is EdgeKind.SHARP
+    assert not above.edge_is_approximate
+
+    # Inside the window nothing binds, so there is no edge kind to report.
+    assert inside.binding_edge_kind is None
+    assert not inside.edge_is_approximate
+
+
+def test_edges_default_to_sharp_so_a_fuzzy_edge_is_an_explicit_claim() -> None:
+    """Declaring an edge approximate is a positive statement about the source, so
+    the default is SHARP (Spec §2.2): a domain that has not thought about it gets
+    the stronger, checkable claim rather than a silent hedge."""
+    bound = known_envelope_form().validity.bounds[0]
+    assert bound.low_kind is EdgeKind.SHARP
+    assert bound.high_kind is EdgeKind.SHARP
+
+
+def test_violated_edge_names_the_side_not_only_the_magnitude() -> None:
+    """`extrapolation_factor` is a magnitude; `violated_edge` says which side, and
+    a window's two edges can differ in kind (Spec §2.2)."""
+    bound = mixed_edge_form().validity.bounds[0]
+    assert bound.violated_edge(APPROX_LOW - 1.0) == "low"
+    assert bound.violated_edge(APPROX_HIGH + 1.0) == "high"
+    assert bound.violated_edge(0.5 * (APPROX_LOW + APPROX_HIGH)) is None
