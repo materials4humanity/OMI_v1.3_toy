@@ -26,6 +26,23 @@ to the validated range, which is the mechanism for `docs/V1.4-EDITS.md` §10's
 the two spaces call for different interventions, and only one is actionable
 inside the machinery this repository already has.
 
+**What "typed, not free text" does and does not guarantee — the good-faith
+residual, recorded rather than papered over.** A declared form carries an
+evaluable callable and a :class:`FormKind`, so the framework can check that the
+form *exists*, that it is evaluable, that its declared range is non-empty and
+non-fabricated, and whether its output is a rate or a level. It **cannot** check
+that the callable computes what the declared name says: nothing prevents a caller
+from declaring a form under a canonical name and supplying an arbitrary
+function. This is exactly the residual `docs/V1.4-EDITS.md` E-17 already names
+for reachability certificates — `omi.inverse.ReachabilityCertificate` is typed as
+the sound `Φ(s)=w·s` artefact, which stops a *forward-sampling result* being
+passed off as a certificate, and still cannot stop a caller constructing one for
+an invariant that does not hold. Typing raises the floor on what can be passed
+off; it does not close the gap to good faith, and no type in this module claims
+otherwise. The check that would close it is empirical, not structural — validating
+the form against data in the regime it claims — which is Spec §4.6's ladder
+discipline applied to a declared form, and is not proposed here.
+
 No domain vocabulary appears here (CLAUDE.md §5 invariant 3): this module
 supplies the category, and a domain supplies the forms that fill it.
 """
@@ -91,6 +108,74 @@ class ValidityAction(Enum):
     (§10's maturity reading: this signals, it does not value)."""
 
 
+class Unbounded(Enum):
+    """An explicitly declared *absence* of a bound on one side of a validity
+    window (ADR-043, amended before M11.3; Spec §2.2's "stated validity range").
+
+    **Distinct from a missing bound, deliberately.** A form whose established
+    range has no upper limit — the source establishes validity above some
+    threshold and says nothing above it — must be able to say so. Without this,
+    the only ways to declare such a form are to invent a fake upper limit, which
+    fabricates a claim the source never made, or to omit the bound, which
+    `ValidityRange.report` refuses because an omitted bound cannot be checked.
+    Neither is acceptable, so the absence is declared explicitly.
+
+    This follows the framework's own established pattern for the same problem:
+    Core §4 item 3 requires a domain with no erasure operators to declare the
+    empty inventory *and* how the error-control dichotomy's condition (b) is
+    satisfied instead, and `docs/V1.4-EDITS.md` E-26 argues the same for a
+    control inverse — "an explicitly empty response is a legal, required
+    declaration," never an omission.
+    """
+
+    UNBOUNDED = "unbounded"
+
+
+UNBOUNDED = Unbounded.UNBOUNDED
+"""Module-level alias, so a declaration reads ``high=UNBOUNDED`` (Spec §2.2)."""
+
+BoundEdge = float | Unbounded
+"""One edge of a declared validity window: a number, or explicitly
+:data:`UNBOUNDED` (Spec §2.2; ADR-043)."""
+
+
+class FormKind(Enum):
+    """What a declared form's :attr:`ConstitutiveForm.evaluate` output *means*
+    (ADR-043, amended before M11.3; Core §3.3's evolution operators and Core
+    §3.5's constitutive readouts).
+
+    **Why this exists: the shared signature collapses a distinction that
+    matters.** Canonical constitutive forms do not have one shape. Some are rate
+    laws, stated as a derivative with respect to an accumulated driving measure;
+    some are explicit closed-form solutions in elapsed time; some are algebraic
+    relations among state components with no time in them at all. All three can
+    be expressed with the *same* signature — a map from named quantities to a
+    response array — and that is the signature
+    :attr:`ConstitutiveForm.evaluate` uses, so the framework needs exactly one.
+
+    But a shared signature is silent about whether the returned number is a
+    **rate to be integrated** or a **level to be used directly**, and using one
+    where the other is expected is a silent, dimensionally-wrong composition
+    rather than an error. So the semantics are *declared* alongside the
+    signature. This is the same move Core §3.5 already makes for readouts: three
+    types sharing a codomain family, distinguished by a declared tag rather than
+    by the caller guessing.
+    """
+
+    RATE_LAW = "rate_law"
+    """The output is a derivative with respect to a declared accumulated driving
+    measure, and MUST be consumed by an integrator. Composing it as though it
+    were a level is dimensionally wrong."""
+
+    EXPLICIT_SOLUTION = "explicit_solution"
+    """The output is the integrated quantity itself, as a closed-form function of
+    elapsed driving. Already integrated; MUST NOT be integrated again."""
+
+    ALGEBRAIC = "algebraic"
+    """The output is a relation among state components with no accumulation in
+    it — a function of the current state alone, in Core §3.1's sense."""
+
+
 @dataclass(frozen=True)
 class ValidityBound:
     """One declared bound of a form's validated range (ADR-043; Spec §2.2's
@@ -100,47 +185,137 @@ class ValidityBound:
     *name* is domain-supplied, following the same convention as
     `omi.state.StateSchema`'s component names: the label is the domain's, the
     structure around it is the framework's.
+
+    **Two-sided and one-sided windows use different factor rules, and the
+    difference is declared rather than inferred** (see
+    :meth:`extrapolation_factor`). A one-sided window has no centre, so it must
+    declare a :attr:`fitted_scale` to say what "far past the bound" means in its
+    own units; a two-sided window must not, because its half-width already says
+    so and two competing scales would leave the reported factor ambiguous.
     """
 
     name: str
     space: ValiditySpace
-    low: float
-    high: float
+    low: BoundEdge
+    high: BoundEdge
     regime: str = ""
     """Optional label for the regime this bound delimits, where a form has more
     than one (ADR-043 point 5, mirroring `omi.classb.n_eff`'s two-regime
     reporting: a bound that separates regimes should say which, not only how
     far)."""
+    fitted_scale: float | None = None
+    """The declared extent of the fitted range, in the bound's own units —
+    **required for a one-sided window and forbidden for a two-sided one**
+    (Spec §2.2; ADR-043).
+
+    Required because a one-sided window has no half-width to measure
+    extrapolation in, and forbidden on a two-sided window because the half-width
+    already supplies that unit. Declared rather than derived from the bound's own
+    magnitude for the same reason Core §3.9 requires a metric to be declared: a
+    factor computed as ``(value - high) / |high|`` would change if the domain
+    reported the same physical bound in different units, which is precisely the
+    unit-dependence `docs/V1.4-EDITS.md` E-33 measured at sixteen orders of
+    magnitude for the semigroup residual. The domain states what "far" means."""
 
     def __post_init__(self) -> None:
         if not self.name:
             raise ValueError("a validity bound must be named")
-        if not self.high > self.low:
-            raise ValueError(f"bound {self.name!r} needs high > low, got [{self.low}, {self.high}]")
+        if self.low is UNBOUNDED and self.high is UNBOUNDED:
+            raise ValueError(
+                f"bound {self.name!r} declares both edges UNBOUNDED, which is not a bound at "
+                "all — a form with no limit in this quantity should omit the bound and declare "
+                "its range in whatever quantity the source does limit (Spec §2.2)"
+            )
+        if not self.is_one_sided:
+            low, high = float(self.low), float(self.high)  # type: ignore[arg-type]
+            if not high > low:
+                raise ValueError(f"bound {self.name!r} needs high > low, got [{low}, {high}]")
+            if self.fitted_scale is not None:
+                raise ValueError(
+                    f"bound {self.name!r} is two-sided and also declares a fitted_scale: the "
+                    "half-width already supplies the extrapolation unit, and two competing "
+                    "scales would make the reported factor ambiguous"
+                )
+        else:
+            if self.fitted_scale is None:
+                raise ValueError(
+                    f"bound {self.name!r} is one-sided and declares no fitted_scale: a one-sided "
+                    "window has no half-width, so nothing says what 'far past the bound' means "
+                    "in this quantity's units (ADR-043)"
+                )
+            if self.fitted_scale <= 0.0:
+                raise ValueError(f"bound {self.name!r} needs a positive fitted_scale")
+
+    @property
+    def is_one_sided(self) -> bool:
+        """Whether exactly one edge of this window is declared :data:`UNBOUNDED`
+        (Spec §2.2's "stated validity range"; ADR-043)."""
+        return (self.low is UNBOUNDED) != (self.high is UNBOUNDED)
 
     @property
     def centre(self) -> float:
         """Midpoint of the validated window (Spec §2.2's "stated validity
-        range")."""
-        return 0.5 * (self.low + self.high)
+        range").
+
+        Raises for a one-sided window: there is no centre, and returning a
+        plausible number would be inventing one — the same discipline
+        `omi.interface.classify_invariant` applies when a declaration does not
+        settle the question.
+        """
+        if self.is_one_sided:
+            raise ValueError(
+                f"bound {self.name!r} is one-sided and has no centre; use "
+                "extrapolation_factor, which applies the one-sided rule"
+            )
+        return 0.5 * (float(self.low) + float(self.high))  # type: ignore[arg-type]
 
     @property
     def half_width(self) -> float:
-        """Half-width of the validated window, the unit the extrapolation factor
-        is measured in (Spec §2.2)."""
-        return 0.5 * (self.high - self.low)
+        """Half-width of the validated window, the unit a two-sided
+        extrapolation factor is measured in (Spec §2.2). Raises for a one-sided
+        window, which has none — see :attr:`fitted_scale`."""
+        if self.is_one_sided:
+            raise ValueError(
+                f"bound {self.name!r} is one-sided and has no half-width; its extrapolation "
+                "unit is the declared fitted_scale"
+            )
+        return 0.5 * (float(self.high) - float(self.low))  # type: ignore[arg-type]
 
     def extrapolation_factor(self, value: float) -> float:
-        """How far *value* sits from the window centre, in half-widths (Spec
-        §2.2's "stated validity range"; ADR-043).
+        """How far *value* sits outside the declared window (Spec §2.2's "stated
+        validity range"; ADR-043). **Two rules, both giving exactly ``1.0`` at
+        the boundary and ``> 1`` outside it**, so `outside_envelope` has one
+        meaning regardless of which applied:
 
-        Exactly ``1.0`` at either edge of the declared range, below it inside,
-        above it outside — so ``2.3`` reads directly as "2.3× the validated
-        half-width from centre", and ``> 1`` is the extrapolation condition. This
-        is the same convention Class B already uses for its own extrapolation
-        ratio (CLAUDE.md §5 invariant 4), reused rather than re-invented.
+        - **Two-sided window:** ``|value - centre| / half_width``. Graded inside
+          as well as outside, so ``0.4`` reads as "40% of the way from centre to
+          the edge" and ``2.3`` as "2.3× the half-width from centre". This is the
+          convention Class B already uses for its own extrapolation ratio
+          (CLAUDE.md §5 invariant 4), reused rather than re-invented.
+        - **One-sided window:** ``1 + (distance past the declared edge) /
+          fitted_scale``, and exactly ``1.0`` anywhere inside. Chosen over the
+          alternatives because a one-sided window supplies no natural interior
+          scale: there is no centre to measure from, so *any* graded interior
+          reading would have to invent a reference point the source never
+          established. Reporting a flat ``1.0`` inside states honestly that the
+          declaration supports the query and says nothing further, while the
+          exterior reading remains quantitative in units the domain declared.
+
+        The consequence is worth stating plainly: for a one-sided bound this
+        report answers "am I outside, and by how much" and **not** "how close to
+        the edge am I". A caller wanting the latter needs a two-sided window,
+        which means a source that establishes both edges.
         """
-        return abs(value - self.centre) / self.half_width
+        if not self.is_one_sided:
+            return abs(value - self.centre) / self.half_width
+        assert self.fitted_scale is not None  # guaranteed by __post_init__
+        if self.high is UNBOUNDED:
+            # Window is [low, ∞): the violation is falling *below* low.
+            excess = float(self.low) - value  # type: ignore[arg-type]
+        else:
+            # Window is (-∞, high]: the violation is rising *above* high.
+            excess = value - float(self.high)
+        return 1.0 + max(0.0, excess) / self.fitted_scale
 
 
 @dataclass(frozen=True)
@@ -268,9 +443,19 @@ class ConstitutiveForm:
     name: str
     """Domain-supplied identity of the functional form (same convention as
     `omi.state.StateSchema`'s component names)."""
-    evaluate: Callable[..., FloatArray]
-    """The form itself. Holding it makes the declaration checkable rather than
-    assertable (Spec §2.2)."""
+    kind: FormKind
+    """What :attr:`evaluate`'s output means (Core §3.3, Core §3.5) — required,
+    because the shared signature below cannot express it and a rate used as a
+    level is a silent dimensional error rather than a raised one."""
+    evaluate: Callable[[Mapping[str, float]], FloatArray]
+    """The form itself: a map from named quantities to a response array. One
+    signature covers rate laws, explicit solutions and algebraic relations alike
+    (see :class:`FormKind`), and the keys are the same names
+    :attr:`validity`'s bounds use, so the quantities a form consumes and the
+    quantities its range is declared over cannot drift apart.
+
+    Holding the callable is what makes the declaration checkable rather than
+    assertable (Spec §2.2): a form that cannot be evaluated is an assertion."""
     parameters: Mapping[str, float]
     """Fitted parameter values (Spec §2.2's "its fitted parameter values")."""
     validity: ValidityRange

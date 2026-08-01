@@ -24,9 +24,13 @@ result's own declared version, not the import path that produced it.
 from __future__ import annotations
 
 from omi.proposed.constitutive import (
+    UNBOUNDED,
+    BoundEdge,
     ChainExtrapolationReport,
     ConstitutiveForm,
     ExtrapolationReport,
+    FormKind,
+    Unbounded,
     ValidityAction,
     ValidityBound,
     ValidityRange,
@@ -44,13 +48,17 @@ from omi.proposed.item6 import (
 )
 
 __all__ = [
+    "UNBOUNDED",
+    "BoundEdge",
     "ChainExtrapolationReport",
     "CertificateRoleRefused",
     "ConstitutiveForm",
     "ExtrapolationReport",
+    "FormKind",
     "InvariantRole",
     "InvariantSubItem",
     "ProposedV14Declaration",
+    "Unbounded",
     "ValidityAction",
     "ValidityBound",
     "ValidityRange",

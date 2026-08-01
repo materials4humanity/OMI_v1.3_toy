@@ -6,13 +6,16 @@ spaces by the action they imply, and item 6d still refuses the certificate role
 
 from __future__ import annotations
 
+import numpy as np
 import pytest
 
 from omi.interface import classify_invariant
 from omi.state import Slot
 from omi.proposed import (
+    UNBOUNDED,
     CertificateRoleRefused,
     ConstitutiveForm,
+    FormKind,
     InvariantRole,
     InvariantSubItem,
     ValidityAction,
@@ -26,7 +29,14 @@ from omi.proposed import (
 )
 
 from tests.conftest import ObservationRecorder
-from tests.oracles.known_envelope import known_envelope_form, truth
+from tests.oracles.known_envelope import (
+    ONE_SIDED_EDGE,
+    ONE_SIDED_SCALE,
+    known_envelope_form,
+    one_sided_form,
+    one_sided_truth,
+    truth,
+)
 
 # (drive, extent) queries: inside, control-only outside, state-only outside, both.
 QUERIES = ((5.0, 1.0), (26.5, 1.4), (6.0, 3.6), (30.0, 5.0))
@@ -130,7 +140,7 @@ def test_off_manifold_queries_surface_rather_than_raise() -> None:
     assert report.outside_envelope
     assert report.worst_factor > 1000.0
     # And the form is still evaluable out there — surfaced, not refused.
-    value = form.evaluate(1.0e6, -1.0e6)
+    value = form.evaluate({"drive": 1.0e6, "extent": -1.0e6})
     assert value.shape == (1,)
 
 
@@ -149,8 +159,9 @@ def test_a_form_without_a_declared_validity_range_is_rejected() -> None:
     an unbounded claim, which is the failure the category exists to prevent."""
     with pytest.raises(ValueError, match="declares no validity bounds"):
         ConstitutiveForm(
-            name="unbounded",
-            evaluate=lambda: None,  # type: ignore[arg-type,return-value]
+            name="no_declared_range",
+            kind=FormKind.ALGEBRAIC,
+            evaluate=lambda values: np.array([0.0]),
             parameters={},
             validity=ValidityRange(()),
             provenance="none",
@@ -238,3 +249,82 @@ def test_v13_classifier_is_unchanged_and_still_refuses_both_new_kinds() -> None:
     for name in ("some_transformation_kinetics_form", "equilibrium_limited_phase_fraction"):
         with pytest.raises(ValueError, match="refuses to guess"):
             classify_invariant(name)
+
+
+# --- one-sided windows (amended before M11.3) -------------------------------
+
+
+def test_one_sided_factor_recovers_the_constructed_rule(observe: ObservationRecorder) -> None:
+    """A window declared ``[edge, UNBOUNDED)`` reports ``1 + (edge - value) /
+    fitted_scale`` below the edge and exactly ``1.0`` anywhere inside (ADR-043;
+    Spec §2.2).
+
+    At least three of the five forms M11.3 declares are one-sided, so this rule
+    is load-bearing rather than a corner case: without it, declaring Hall-Petch's
+    fine-grain breakdown would require inventing an upper limit its source never
+    established.
+    """
+    form = one_sided_form()
+    factors = {}
+    for extent in (ONE_SIDED_EDGE + 100.0, ONE_SIDED_EDGE, ONE_SIDED_EDGE - ONE_SIDED_SCALE,
+                   ONE_SIDED_EDGE - 3 * ONE_SIDED_SCALE):
+        report = form.report({"extent": extent})
+        factors[f"{extent:g}"] = report.factors["extent"]
+        assert report.factors["extent"] == pytest.approx(one_sided_truth(extent))
+
+    observe("one_sided_factors", factors, "1 + (edge - value)/fitted_scale, flat 1.0 inside")
+    # Exactly 1.0 at the edge and inside; the boundary means the same thing as it
+    # does for a two-sided window, which is why outside_envelope needs no special case.
+    assert form.report({"extent": ONE_SIDED_EDGE}).factors["extent"] == pytest.approx(1.0)
+    assert not form.report({"extent": ONE_SIDED_EDGE + 100.0}).outside_envelope
+    assert form.report({"extent": ONE_SIDED_EDGE - 0.5}).outside_envelope
+
+
+def test_a_one_sided_bound_has_no_centre_and_says_so() -> None:
+    """`centre` and `half_width` raise rather than returning a plausible number
+    for a one-sided window (Spec §2.2): there is no centre, and inventing one is
+    the failure the explicit UNBOUNDED declaration exists to avoid."""
+    bound = one_sided_form().validity.bounds[0]
+    assert bound.is_one_sided
+    for attribute in ("centre", "half_width"):
+        with pytest.raises(ValueError, match="one-sided"):
+            getattr(bound, attribute)
+
+
+def test_unbounded_is_distinct_from_a_missing_bound() -> None:
+    """An explicitly UNBOUNDED edge is a declaration; an omitted *value* at report
+    time is still refused (Core §4 item 3's "if none, state how condition (b) is
+    satisfied instead"; E-26's "an explicitly empty response is a legal, required
+    declaration").
+    """
+    form = one_sided_form()
+    # Declared UNBOUNDED above — legal, and reports fine.
+    assert form.report({"extent": 9.0}).factors["extent"] == pytest.approx(1.0)
+    # Omitting the value is still an error: an unchecked bound hides violations.
+    with pytest.raises(ValueError, match="no value supplied"):
+        form.report({})
+
+
+def test_a_one_sided_bound_requires_a_declared_scale_and_a_two_sided_one_forbids_it() -> None:
+    """The scale is required exactly where the half-width cannot serve, and
+    refused where it can — so which rule produced a reported factor is never
+    ambiguous (ADR-043)."""
+    with pytest.raises(ValueError, match="declares no fitted_scale"):
+        ValidityBound(name="x", space=ValiditySpace.STATE, low=1.0, high=UNBOUNDED)
+    with pytest.raises(ValueError, match="two-sided and also declares a fitted_scale"):
+        ValidityBound(name="x", space=ValiditySpace.STATE, low=0.0, high=1.0, fitted_scale=2.0)
+    with pytest.raises(ValueError, match="both edges UNBOUNDED"):
+        ValidityBound(name="x", space=ValiditySpace.STATE, low=UNBOUNDED, high=UNBOUNDED,
+                      fitted_scale=1.0)
+
+
+def test_form_kind_is_declared_because_the_shared_signature_cannot_express_it() -> None:
+    """One signature covers rate laws, explicit solutions and algebraic relations
+    (Core §3.3, Core §3.5), so the distinction between "a rate to integrate" and
+    "a level to use" must be declared — it is not recoverable from the type."""
+    form = known_envelope_form()
+    assert form.kind is FormKind.ALGEBRAIC
+    # The signature is identical across kinds: a mapping of named quantities in,
+    # a response array out. Only `kind` separates them.
+    assert form.evaluate({"drive": 1.0, "extent": 1.0}).shape == (1,)
+    assert {k.value for k in FormKind} == {"rate_law", "explicit_solution", "algebraic"}

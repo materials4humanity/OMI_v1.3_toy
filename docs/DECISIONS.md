@@ -2790,11 +2790,86 @@ mechanism" — it is specifically that a state-space validity violation becomes
 *visible and attributable*, where previously it was indistinguishable from a
 control-space one and both were invisible.
 
+**Amended before M11.3: one-sided windows, and the form signature.** Two
+questions that would have become defects the extrapolation experiment was built
+on, settled here rather than discovered later.
+
+**(i) One-sided validity is the common case, not a corner case, and needs an
+explicit declaration.** At least three of ADR-044's five forms are one-sided:
+Hall–Petch breaks at fine grain size with no upper limit, JMAK's impingement
+breakdown is approached only from below, and Koistinen–Marburger applies on one
+side of its transformation start only. The half-widths-from-centre convention has
+no centre for these, and the "a missing bound raises" rule would force declaring a
+fabricated opposite limit — a claim no source made.
+
+So `UNBOUNDED` is an explicit declaration, distinct from a missing bound. This
+follows the framework's own precedent for the identical problem: Core §4 item 3
+requires a domain with no erasure operators to declare the empty inventory *and*
+state how the dichotomy's condition (b) is met instead, and E-26 argues the same
+for a control inverse — an explicitly empty response is a legal, required
+declaration, never an omission. An omitted *value at report time* is still
+refused, since an unchecked bound hides violations; only the *edge* may be
+declared absent.
+
+**The factor rule for a one-sided window: `1 + (distance past the declared edge)
+/ fitted_scale`, and exactly `1.0` anywhere inside.** Both rules give `1.0` at the
+boundary and `> 1` outside, so `outside_envelope` means one thing regardless of
+which applied. Justification for the two choices inside it:
+
+- *Why a declared `fitted_scale` rather than the bound's own magnitude.* A factor
+  of `(value − high)/|high|` would change if a domain reported the same physical
+  bound in different units — exactly the unit-dependence E-33 measured at sixteen
+  orders of magnitude for the semigroup residual, and exactly what CLAUDE.md
+  invariant 1 exists to prevent. The domain declares what "far" means, as it
+  declares a metric. The scale is *required* for a one-sided window and *forbidden*
+  for a two-sided one, so which rule produced a reported number is never ambiguous.
+- *Why flat `1.0` inside rather than a graded interior reading.* A one-sided window
+  supplies no interior reference point: with no opposite edge there is no centre to
+  measure from, so any graded interior value would be measured from a point the
+  source never established. A flat `1.0` says honestly that the declaration
+  supports the query and nothing more. The cost is real and is stated in the
+  docstring: for a one-sided bound the report answers "am I outside, and by how
+  much" and *not* "how close to the edge am I". A caller needing the latter needs a
+  source that establishes both edges.
+
+**(ii) There IS one shared form signature, and it collapses a distinction that
+matters — so the distinction is declared alongside it.** Kocks–Mecking is a rate
+law in accumulated strain, JMAK an explicit closed-form solution in time,
+Hall–Petch algebraic in a state component with no time in it at all. All three are
+expressible as `Callable[[Mapping[str, float]], FloatArray]` — named quantities in,
+response array out — and that is the signature `evaluate` now takes, keyed by the
+same names the validity bounds use so the quantities a form consumes and the
+quantities its range is declared over cannot drift apart.
+
+But that signature is silent about whether the returned number is **a rate to be
+integrated** or **a level to be used directly**, and using one where the other is
+expected is a silent dimensional error rather than a raised one. So `FormKind`
+(`RATE_LAW` / `EXPLICIT_SOLUTION` / `ALGEBRAIC`) is a required field. This is the
+move Core §3.5 already makes for readouts — three types sharing a codomain family,
+separated by a declared tag rather than by the caller guessing. **`form` is
+therefore not a union; it is one signature plus a declared interpretation.**
+
+**What "typed, not free text" then guarantees, and the residual it does not
+close.** It guarantees the form exists, is evaluable, declares a non-empty and
+non-fabricated range, and states whether its output is a rate or a level. It does
+**not** guarantee the callable computes what the declared name says: a caller can
+declare a form under a canonical name and supply an arbitrary function. That is
+E-17's good-faith residual recurring — `ReachabilityCertificate` is typed as the
+sound `Φ(s)=w·s` artefact, which stops a forward-sampling result being passed off
+as a certificate, and still cannot stop a caller constructing one for an invariant
+that does not hold. Typing raises the floor on what can be passed off; it does not
+reach good faith. Recorded here and in the module docstring rather than repaired,
+because the check that would close it is empirical — validating the form against
+data in the regime it claims, which is Spec §4.6's ladder discipline applied to a
+declared form — and is not proposed as part of this ADR.
+
 **What tests would pin it** (design). An oracle whose validated envelope is known
 by construction, asserting the reported extrapolation factor equals the
-constructed one — the same discipline as every `tests/oracles/` member. An
-off-manifold test asserting the report *surfaces* rather than raises. A test
-asserting `classify_invariant` still refuses a 6d member.
+constructed one — the same discipline as every `tests/oracles/` member — with a
+**second, one-sided** constructed window for the rule above. An off-manifold test
+asserting the report *surfaces* rather than raises. A test asserting `centre` and
+`half_width` raise for a one-sided window rather than returning a plausible
+number. A test asserting `classify_invariant` still refuses a 6d member.
 
 ---
 
