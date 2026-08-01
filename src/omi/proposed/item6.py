@@ -7,6 +7,13 @@ Spec §7.1 (the candidate kinds a reachability certificate is drawn from).
 different mathematical requirements while naming one undifferentiated list, and
 it omits one of the three candidate kinds Spec §7.1 itself draws from.
 
+**Amended at M11.3 (ADR-046): constitutive forms are a NEW item, not sub-item 6d.**
+Item 6 is role-scoped to 6a-6c here, which still repairs Spec §7.1's omitted third
+candidate kind. The constitutive category moved out of item 6 entirely because
+placing it there was measured to make a declaration un-comparable — see
+:attr:`InvariantSubItem.CONSTITUTIVE_FORM`. Its *role* scoping is unchanged, which
+is why it remains in this module's enum.
+
 **Why the split rather than a sub-item.** A reachability certificate must be a
 scalar functional of state with a provable per-step accumulation bound (Spec
 §7.1's `Φ(s_{k+1}) ≤ Φ(s_k) + c(u_k)`). A declared functional form for an
@@ -55,9 +62,18 @@ class InvariantSubItem(Enum):
     v1.3's `omi.interface.classify_invariant` refuses it for exactly that
     reason, correctly."""
 
-    CONSTITUTIVE_FORM = "6d"
+    CONSTITUTIVE_FORM = "new-item"
     """A declared constitutive form. **Hard-constraint role only** (Spec §2.2's
-    proposed sixth category); never a certificate."""
+    proposed sixth category); never a certificate.
+
+    **Value changed from `"6d"` at M11.3 (ADR-046).** Placing constitutive forms
+    inside item 6 was measured to break Core §4's comparability outright: a
+    declaration naming one there cannot be compared to another declaration, or even
+    to itself, because the comparison classifies every declared invariant and
+    correctly refuses a name that is neither of item 6's two kinds. So the forms get
+    their own interface item and item 6 keeps its categories unchanged. The role
+    scoping below is unaffected — hard constraint only, never a certificate — which
+    is why this member stays in this enum rather than moving."""
 
 
 _ROLES: dict[InvariantSubItem, frozenset[InvariantRole]] = {

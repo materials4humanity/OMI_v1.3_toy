@@ -3155,6 +3155,104 @@ characterisation that already beat parts of this repository's own machinery.
 
 ---
 
+## ADR-046 — Where a declared constitutive form lives, so Core §4's comparability survives
+
+**Status.** Accepted. Decides the question M11.3 raised; supersedes ADR-043's
+"6d" placement (ADR-043's *content* stands, only the sub-item's location changes).
+**Finding.** `docs/V1.4-EDITS.md` E-32, with the M11.3 measurement.
+**Milestone.** M11.3 exit, before M11.4.
+
+**The problem, measured rather than argued.** Core §4 makes cross-declaration
+comparability the mechanism that "converts a collection of examples into evidence
+of generality." M11.3 established that no way of declaring a constitutive form
+preserves it: naming the forms in item 6 makes `omi.interface.diff` raise, and
+declaring them outside the seven items makes two substantially different domains
+diff as identical. A decision is needed, not only a record.
+
+**The deciding measurement, taken before choosing.** A declaration naming a
+constitutive form in item 6 **cannot be diffed against itself**:
+
+```
+diff(d, d)  ->  ValueError: ... classify_invariant refuses to guess
+```
+
+That is not a comparison failure between two domains; it is the declaration
+failing to be a well-formed input to Core §4's own comparative machinery at all.
+It settles option (a) below on its own.
+
+**Options weighed.**
+
+**(a) Role-aware `diff`** — item 6 stays the home; `diff` gains classification so
+constitutive entries are compared as constitutive rather than passed to
+`classify_invariant`. *Rejected.* Two independent reasons. First, the measurement
+above: under (a) the v1.3 core stops being a valid v1.3 declaration — it is
+un-diffable by v1.3 tooling even against itself — which breaks the property
+ADR-042's composition guarantee rests on and makes this repository's v1.3 audit
+uncitable for the variant. Second, `diff` is v1.3 code, so a role-aware version
+would have to live in `omi.proposed` anyway; (a) therefore incurs (b)'s cost of a
+new declaration surface *without* (b)'s benefit of leaving v1.3 intact.
+
+**(b) A new interface item for constitutive forms.** *Chosen.* Item 6 keeps its two
+roles and its two categories exactly as v1.3 has them, so a v1.3 core remains a
+valid, diffable v1.3 declaration; the new item is diffable on its own terms; and the
+extension is purely additive, which is ADR-042's composition principle applied at
+the interface level rather than only in code.
+
+**(c) `diff` reports incomparability instead of raising.** *Adopted as a separate,
+smaller proposal, not as the answer.* It does not restore comparability — a diff
+saying "incomparable on dimension X" reports that two declarations differ without
+reporting how, which is barely more than the current blindness, and Core §4 needs
+the comparison to be informative rather than merely non-fatal. But it fixes a real
+brittleness that (b) leaves untouched and that generalises past this entry: Core §4
+asserts declarations are comparative and never states what the comparison does with
+a dimension it cannot classify, so the mechanism is fragile to **any** future
+extension, not just this one. Proposed as part (3) of E-32's revised wording.
+
+**On the arity objection, which is the strongest argument against (b).** Adding an
+eighth item is a larger claim than E-32 made on its own. It is not a larger claim
+than the ledger already makes: E-29 proposes an eighth item (Parameters) for an
+independent reason, and §1's finding 5 already asks whether the seven items are a
+closed list, noting that "five independent gaps of the same shape suggest the number
+seven is doing more work than the content supports." Choosing (b) does not introduce
+that question — it forces it to be answered, which is the more useful outcome for
+v1.4 and is what a decision is for.
+
+**And (b) is what this repository already built**, which is worth stating plainly
+rather than presenting the choice as free: `ProposedV14Declaration(v13_core,
+constitutive_forms)` is structurally an eighth item already. So M11.3's "the cores
+are identical" finding is an artefact of the eighth item living *outside* the seven
+where v1.3's diff cannot see it — not of the content being inexpressible. The
+decision is to say so in the framework rather than leave the repository's structure
+implying it.
+
+**What changes in the ledger.** E-32's proposed wording is revised: item 6 is
+role-scoped to **6a–6c** (the split still fixes §7.1's omitted third candidate
+kind), constitutive forms become a **new item**, and part (3) proposes the
+comparability failure mode Core §4 never states. The M11.3 measurement is recorded
+as what forced the revision — a proposed wording changed by a measurement is the
+ledger working as intended, not a defect in the earlier proposal.
+
+**What this repository implements.** Nothing new: the extension already carries the
+forms outside the seven items, which is (b). `omi.interface.diff` is **not**
+changed — that is v1.3 code, and (c) is a proposed framework edit rather than a
+repository change (ADR-042). The one repository consequence is that
+`omi.proposed.item6`'s `CONSTITUTIVE_FORM` member now documents itself as a *new
+item* rather than as sub-item 6d.
+
+**What would change this decision.** If v1.4's authors settle finding 5's
+closed-list question in favour of seven fixed items, (b) is unavailable and (c)
+becomes the fallback — with the cost, stated above, that the comparison then reports
+difference without reporting its content. If that happens, E-32's revised wording
+should be re-read as proposing 6d after all, and this ADR superseded rather than
+edited.
+
+**Pinned by.** `tests/test_flagship_constitutive.py::test_the_two_v13_cores_are_indistinguishable`
+and `::test_the_other_road_is_closed_too_diff_refuses_an_honest_item_6` — the two
+halves of the measurement this decision rests on.
+
+
+---
+
 ## Open questions
 
 Not decisions — hypotheses the code should settle. Full statements in

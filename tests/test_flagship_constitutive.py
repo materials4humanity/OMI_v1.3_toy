@@ -314,3 +314,77 @@ def test_declared_forms_are_never_certificate_eligible() -> None:
     five forms cannot be drawn on for a reachability certificate."""
     with pytest.raises(CertificateRoleRefused):
         assert_certificate_eligible(InvariantSubItem.CONSTITUTIVE_FORM)
+
+
+# --- the catch: the validity report finding a real modelling error ------------
+
+
+def test_the_report_catches_koistinen_marburger_applied_at_the_soak_temperature(
+    observe: ObservationRecorder,
+) -> None:
+    """**A first-class result, reproduced rather than recounted** (ADR-043, ADR-044).
+
+    This test reconstructs the modelling error M11.3 actually made and shows the
+    validity report catching it. The first version of
+    `ConstitutiveHeatingAndSoak` applied `KOISTINEN_MARBURGER` at the soak
+    temperature. That is wrong physics: the soak is above `Ms`, where no athermal
+    transformation occurs and the form does not apply at all — and because the form
+    clamps to zero above `Ms`, the *output* was a perfectly plausible `0.0` that no
+    output check would have questioned. Nothing in the state, the response, or any
+    oracle would have flagged it.
+
+    The extrapolation report flagged it, on the machinery's first application to
+    real physics, with the correct action attached: a control-space violation, so
+    `CONTROL_INVERSE` — the recipe can be moved back inside the window, which is
+    exactly what the repair did (the form moved to the transfer stage, where the
+    piece cools through the window in which it holds).
+
+    Why this is the strongest evidence for the proposed category rather than a
+    process anecdote: **no oracle is involved.** The other tests in this repository
+    check an estimator against an answer chosen in advance. Here the declared range
+    caught a mistake nobody had identified, in code its own author had just written,
+    and the recorded factor is the distance between where the query sat and where
+    the source establishes the form — a number with physical meaning, not a
+    constructed one.
+    """
+    from omi_domains.flagship_constitutive.forms import KOISTINEN_MARBURGER, MS_TEMPERATURE
+    from omi_domains.flagship_constitutive.operators import ConstitutiveHeatingAndSoak
+
+    soak = ConstitutiveHeatingAndSoak()
+    assert soak.temperature > MS_TEMPERATURE, "the soak must be above Ms for this to be the error"
+
+    report = KOISTINEN_MARBURGER.report({"temperature": soak.temperature})
+    silent_output = float(KOISTINEN_MARBURGER.evaluate({"temperature": soak.temperature})[0])
+
+    observe(
+        "km_at_soak_temperature_caught_by_validity_report",
+        {
+            "soak_temperature": soak.temperature,
+            "ms_temperature": MS_TEMPERATURE,
+            "extrapolation_factor": report.worst_factor,
+            "action": report.action.value,
+            "binding_space": report.binding_space.value if report.binding_space else None,
+            "output_that_would_have_passed_unnoticed": silent_output,
+        },
+        "outside the declared window, with a plausible output and the correct action",
+    )
+
+    # The error is caught.
+    assert report.outside_envelope
+    assert report.worst_factor > 5.0
+    # With the right action: a control-space violation is addressable by Core §5.
+    assert report.action is ValidityAction.CONTROL_INVERSE
+    assert report.binding_space is ValiditySpace.CONTROL
+    # And the reason it needed catching: the output alone looks fine.
+    assert silent_output == pytest.approx(0.0)
+    # The sharp edge is the one violated — Ms is physics, not a fitted guess.
+    assert not report.edge_is_approximate
+
+    # The repair holds: the form now lives where it is valid.
+    from omi_domains.flagship_constitutive.operators import ConstitutiveTransfer
+
+    transfer_report = KOISTINEN_MARBURGER.report(
+        {"temperature": ConstitutiveTransfer().end_temperature}
+    )
+    assert not transfer_report.outside_envelope
+    assert transfer_report.action is ValidityAction.WITHIN_ENVELOPE
