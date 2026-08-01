@@ -381,6 +381,30 @@ own argument, and Generator B is *not* run, since a form that fails under the mo
 favourable non-circular conditions will not do better with a whole coupling
 missing.
 
+**Outcome — gate met, result negative, and the null is uninformative.**
+`docs/M11.4-EXTRAPOLATION.md`. Thresholds were fixed in their own commit
+(`bd44bb6`, `docs/M11.4-PREREGISTRATION.md`) before the sweep script existed, so
+the ordering is auditable in `git log`. On Generator A neither misspecification
+arm cleared its threshold against the free-form incumbent or either tabular
+baseline; contestant 2 (correct form) is reported as a ceiling with ADR-045's
+caveat and did not clear either. **Generator B was therefore not run**, per the
+rule above. Rollout curves were produced for every contestant as required.
+
+The milestone's substantive finding is *why* the null is uninformative rather
+than negative: the held-out axis is strain rate, and Kocks–Mecking has no
+strain-rate dependence, so the declared form makes no prediction along that axis
+that differs from the free-form baseline's. Every contestant's held-out error is
+the withheld term's own magnitude to within their spread. The design satisfies
+Spec §9.3's prescription in full and is nonetheless incapable of discriminating —
+filed as `docs/V1.4-EDITS.md` **E-39**. The γ=4 rollout gap (declared-form arms
+retaining recovery at ≈18–20 versus ≈41 for free-form and both tabular
+baselines) is recorded in that document as a **pre-specified observation
+generating an untested hypothesis**, explicitly not as a result: the thresholds
+were registered for held-out RMSE at unit strain, and applying them to a rollout
+gap after seeing it would be the goalpost-moving the pre-registration exists to
+prevent. Testing it needs a fresh pre-registration and a hold-out chosen so the
+declared form and the baseline differ along the held-out axis.
+
 ### Explicitly out of scope for M11
 
 Directional `ℓ_D` (E-30 stands as a finding; the build-coverage gap is recorded
