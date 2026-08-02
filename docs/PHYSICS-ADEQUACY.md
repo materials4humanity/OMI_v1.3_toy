@@ -15,6 +15,15 @@ entries found by implementation attempt. Refuted claims are recorded here,
 under the finding, and are *not* filed. This document is corrected in place as
 findings are settled; it carries no commit stamp and is not a snapshot.
 
+**§3.4 was re-settled at M11.5 and its central claim is now refuted as stated.**
+It was this document's own "most important finding", it named the experiment that
+would test it, that experiment was built and run across M11.4 and M11.5, and the
+answer went against it — see the two correction blocks and the second verification
+inside §3.4, and `docs/M11-RECORD.md` for the full account. The section is
+corrected in place rather than withdrawn: what it says about the *absence* of the
+category stands and was strengthened; what it says about the category *delivering
+reach* does not.
+
 ---
 
 ## 0. What this document is, and how it differs from `V1.4-EDITS.md`
@@ -400,6 +409,45 @@ So E-28's finding, read physically, is: **hard constraints as the framework
 defines them buy safety outside the envelope, not reach.** Reach requires
 constitutive structure, and the framework has no category for it.
 
+> **CORRECTION (M11.5, HEAD `eb809ff`). The claim in the two paragraphs above
+> is refuted as stated, and this document is corrected in place because it is
+> live (CLAUDE.md §10).** The experiment this section proposed was run
+> (`docs/M11-RECORD.md`; `docs/M11.5-EXTRAPOLATION.md`). "An operator
+> constrained to KM form with three fitted parameters will extrapolate because
+> the shape is right" is **not what was measured**, and the claim must be
+> narrowed to what the evidence supports:
+>
+> **Constitutive structure buys reach only when the declared mechanism set is
+> complete for the held-out regime. An incomplete mechanism set is worse than
+> no declaration at all.**
+>
+> The measurement, on an accumulated-strain hold-out gated in advance for its
+> ability to discriminate: a declared form missing a *dependence* scored 7.56
+> and one missing a *mechanism* scored 69.55 — a gap of **+61.98** against a
+> declared minimum effect of 0.63 — while the free-form operator scored 5.06
+> and an unchanged tabular baseline 3.27. Every declared-form arm lost. The
+> asymmetry, not the presence of a declaration, is what governs the outcome,
+> and the framework offers no way to declare, assess, or signal completeness of
+> a mechanism set.
+>
+> **The failure is the criterion's as much as the form's, and that half is not
+> a retreat.** The correct declared form was **exact** — RMSE 0.0000, first of
+> six — against a ground truth with the withheld term removed, and finished
+> *fourth* on the criterion Spec §9.3 prescribes. The contestant that won was
+> fourth on withheld-free fidelity and first on the criterion, its −7.49 signed
+> bias nearly annihilating the withheld term's −6.56. Forward accuracy against
+> the full truth rewards a model whose extrapolation error happens to cancel
+> the withheld physics, and cannot distinguish that from a model that knows the
+> physics. Filed as `V1.4-EDITS.md` **E-42**.
+>
+> So this section was right that the framework lacks the category, right that
+> declared forms are checkable and catch misapplication (`E-38`), and **wrong
+> that adding the category delivers reach** — with the qualification that the
+> instrument used to look for reach is itself now in question. What the section
+> cannot claim, and no longer does, is that shape-correctness alone extrapolates:
+> shape-correctness *within an incomplete mechanism set* extrapolated worse than
+> having no declared shape at all.
+
 Interface item 6 asks for "invariants — conservation laws and monotone
 functionals." Generic again. There is no place to declare *"transformation
 kinetics follow Koistinen–Marburger, validated 300–500 K"*.
@@ -424,6 +472,21 @@ KM-constrained one, hold out a cooling-rate region entirely, and compare
 against the unconstrained operator and a tabular baseline. This is the
 experiment M10.2 should have run and could not, because flagship had no
 constitutive structure to constrain to.
+
+> **CORRECTION (M11.4, HEAD `5ca3f0f`). The test as specified here is the wrong
+> one, and running it exactly as written wasted a milestone.** Kocks–Mecking has
+> no dependence on the rate at which you drive it, so holding out "a
+> cooling-rate region" withholds an axis along which the declared form makes no
+> prediction that differs from the baseline's. The comparison is then vacuous by
+> construction: M11.4 ran it, every contestant's held-out error came out equal to
+> the withheld term's own magnitude to within their spread, and the resulting
+> null said nothing (`docs/M11.4-EXTRAPOLATION.md`; `V1.4-EDITS.md` E-39, E-41).
+> The corrected specification is: **hold out an axis along which the declared
+> form itself makes a differing prediction** — for Kocks–Mecking that is
+> *accumulated strain*, where the storage/recovery balance produces saturation —
+> and demonstrate before registering the hold-out that the candidate and the
+> baseline diverge along it. This document proposed the right *experiment* and
+> the wrong *axis*, and the distinction is not a detail.
 
 **Verification (M10.4). CONFIRMED, and more strongly than argued.** Filed as
 `docs/V1.4-EDITS.md` **E-32**.
@@ -455,6 +518,26 @@ constitutive structure to constrain to.
 - **Not established**: that adding the category would *deliver* the reach it is
   argued to deliver. That needs the held-out constitutive-form experiment this
   document proposes, which was not run.
+
+**Second verification (M11.5, HEAD `eb809ff`). The last bullet is now settled,
+and it is settled against this section.** The experiment was built and run
+(`docs/M11-RECORD.md`). Adding the category does **not** deliver the reach
+argued for: every declared-form arm lost to a free-form operator, and an
+unchanged tabular baseline beat all of them. What survives, and what does not:
+
+- **Survives.** Spec §2.2 has no constitutive category; item 6 refuses canonical
+  form names; the category is declarable, checkable and composable once added;
+  and a declared validity range caught a genuine modelling error on its first
+  application to real physics with no oracle involved (`V1.4-EDITS.md` E-38).
+  The *diagnostic* value of declaring a form is confirmed.
+- **Refuted as stated.** That shape-correctness buys extrapolation accuracy. It
+  does so only under a condition this section never states — a **complete
+  mechanism set for the held-out regime** — and violating that condition is
+  worse than declaring nothing (+61.98 between the two misspecification arms).
+- **Newly in question.** Whether the measurement could have shown reach even had
+  it been there. The correct declared form was exact against a withheld-free
+  truth and fourth on Spec §9.3's criterion, beaten by a model whose error
+  happened to cancel the withheld physics (`V1.4-EDITS.md` E-42).
 
 ### 3.5 Timescale separation and stiffness are unaddressed
 

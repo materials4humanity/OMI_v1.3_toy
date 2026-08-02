@@ -448,6 +448,28 @@ Building the gate also corrected E-39's own proposed wording (**E-41**), and add
 one bound to a form declared at M11.3 exposed that declarations cannot be refined
 without breaking every caller (**E-40**).
 
+### M11 — closed
+
+**Track record: `docs/M11-RECORD.md`**, a standalone account written at the close
+of the milestone. It states the claim as pre-registered, M11.4's vacuous-axis
+failure and its diagnosis, M11.5's result and the refutation, and the three
+findings that outrank the headline — the misspecification asymmetry, error
+cancellation (E-42), and the axis precondition (E-41) — together with the
+pre-registration peek disclosed in the narrative rather than an appendix.
+
+**Downstream corrections made on closing.** `docs/PHYSICS-ADEQUACY.md` §3.4 — the
+section that argued for this extension and named this experiment — is corrected
+in place under the live-document rule: its claim that constitutive structure buys
+reach is refuted as stated, and narrowed to *"only when the declared mechanism set
+is complete for the held-out regime; an incomplete set is worse than no
+declaration"*. `docs/V1.4-EDITS.md` §11's buy-physics row records a second,
+distinct gap alongside the pricing one: the validity report signals that you are
+outside an envelope and says nothing about whether your mechanism set is complete,
+and completeness is what the asymmetry shows actually governs the outcome.
+
+No further M11 work. Generator B was not run and must not be run as a follow-up
+to a refuted claim.
+
 ### Explicitly out of scope for M11
 
 Directional `ℓ_D` (E-30 stands as a finding; the build-coverage gap is recorded
