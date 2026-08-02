@@ -10,7 +10,7 @@ verified against the source at M10.4 (2026-07-29). Each carries a
 **Verification** block stating the outcome — confirmed, partly confirmed, or
 refuted — with the code or framework citation that settles it. Confirmed
 findings are filed in `docs/V1.4-EDITS.md` as E-29 to E-33, marked
-`[domain-assessment]` to keep their provenance distinct from the twenty-eight
+`[domain-assessment]` to keep their provenance distinct from the thirty-six
 entries found by implementation attempt. Refuted claims are recorded here,
 under the finding, and are *not* filed. This document is corrected in place as
 findings are settled; it carries no commit stamp and is not a snapshot.
@@ -30,7 +30,7 @@ reach* does not.
 
 `V1.4-EDITS.md` asks whether the framework is *internally coherent*: does a
 section contradict another, is a marker stale, can a declaration be satisfied
-without the property it exists to establish. Twenty-eight entries, and they
+without the property it exists to establish. Forty-one entries, and they
 hold regardless of what physics instantiates the framework.
 
 This document asks a different question: **is the framework adequate to the
@@ -728,10 +728,11 @@ memory is the same structure.
 This section explicitly offers itself as "a **prediction** rather than a
 confirmed gap", and states that confirming it "needs a metastable oracle, which
 does not exist." That remains true: no metastable oracle was built, and none of
-the six entries filed from this document covers §3.6. It is therefore neither
+the five entries filed from this document covers §3.6. It is therefore neither
 confirmed nor refuted here, and is **not** in `docs/V1.4-EDITS.md` — filing an
 untested prediction as a framework finding is exactly what this repository's own
-gap discipline forbids. Noted for whoever builds the oracle: the prediction is
+gap discipline forbids. (The five entries filed from this document are E-29–E-33;
+none covers §3.6.) Noted for whoever builds the oracle: the prediction is
 specific and falsifiable — divergence appearing only under driving that crosses
 a barrier, and not otherwise — which is the shape a probe-set fingerprint row
 (Spec §1.6) would need to encode, and E-03's paired-probe finding is the

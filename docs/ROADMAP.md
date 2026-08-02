@@ -428,11 +428,13 @@ in advance as the registered criterion.
 14.57 against a bar of 2.0 and refused M11.4's on all three criteria (axis signal
 exactly 0.000), so the comparison could have detected an effect. It found none:
 every declared-form arm is **worse** than the free-form operator — `gap(1, 3a)`
-−64.49, `gap(1, 3b)` −2.50, ceiling `gap(1, 2)` −3.04, all against τ ≈ 0.32 — and
+−64.49, `gap(1, 3b)` −2.50, ceiling `gap(1, 2)` −3.04, each against its own
+per-comparison threshold (τ = 0.331, 0.322, 0.315 respectively) — and
 an unchanged tabular baseline is best of the six at 3.27.
 
 Three findings came out of it. **Which kind of misspecification matters, and the
-answer is +61.98**: a missing *dependence* costs almost nothing (7.56 against the
+answer is +61.98 against a declared minimum effect of 0.63**: a missing
+*dependence* costs almost nothing (7.56 against the
 correct form's 8.10) while a missing *mechanism* is catastrophic (69.55, growing to
 123.0 at γ=6 because it cannot saturate) — declaring a form with a mechanism
 missing is far worse than declaring no form at all. **The declared forms lose by

@@ -1,5 +1,18 @@
 # Review pack — OMI v1.3 reference implementation, M0–M9
 
+> **Addendum (2026-08-02). This is a snapshot at commit `e43d858`, and the roadmap
+> has since grown past what it describes.** The body below is left unaltered per
+> CLAUDE.md §10 (a commit-stamped document is a point-in-time record). When this
+> pack was written, nine milestones (M0–M9) were the entire planned scope, and the
+> line "No M10 exists — this is the full roadmap" was true at `e43d858`. It is no
+> longer: **M10 (post-M9 remediation and baseline characterisation) and M11 (the
+> constitutive-form extrapolation track) were added afterwards.** A reader should
+> not infer the roadmap was always nine milestones. For the current state see
+> `docs/ROADMAP.md`; for the M11 result — a pre-registered claim about the
+> framework's central proposed extension, refuted — see `docs/M11-RECORD.md`. The
+> ledger counts quoted below ("33 ADRs", "ten invariants") are likewise as of
+> `e43d858`; the live documents carry current figures.
+
 **Branch:** `claude/omi-m0-scaffolding-96j5cj`
 **Commit range:** `c32b768` (docs seed) through `e43d858` (M9) — 11 commits, one per milestone plus the initial doc seed.
 **Status:** All nine milestones in `docs/ROADMAP.md` complete. No M10 exists — this is the full roadmap.
