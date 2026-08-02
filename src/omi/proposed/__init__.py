@@ -40,6 +40,11 @@ from omi.proposed.constitutive import (
     worst_extrapolation,
 )
 from omi.proposed.declaration import ProposedV14Declaration
+from omi.proposed.holdout import (
+    HoldOutDiscriminationReport,
+    HoldOutVerdict,
+    check_hold_out_discriminates,
+)
 from omi.proposed.item6 import (
     CertificateRoleRefused,
     InvariantRole,
@@ -59,6 +64,8 @@ __all__ = [
     "EdgeKind",
     "ExtrapolationReport",
     "FormKind",
+    "HoldOutDiscriminationReport",
+    "HoldOutVerdict",
     "InvariantRole",
     "InvariantSubItem",
     "ProposedV14Declaration",
@@ -68,6 +75,7 @@ __all__ = [
     "ValidityRange",
     "ValiditySpace",
     "assert_certificate_eligible",
+    "check_hold_out_discriminates",
     "certificate_eligible",
     "roles_for",
     "worst_extrapolation",

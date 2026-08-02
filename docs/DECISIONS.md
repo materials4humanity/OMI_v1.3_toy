@@ -3139,6 +3139,95 @@ thresholds applied to both generators. A threshold chosen after seeing the
 residuals is not a threshold; a threshold re-chosen for Generator B after seeing
 Generator A is worse, because it would convert the robustness check into a search.
 
+### Amendment (after M11.4, before M11.5) — a hold-out must be shown to discriminate before it is registered
+
+**This amendment generalises past the experiment that occasioned it, so it is
+written as a standing requirement rather than as an M11.5 detail.**
+
+M11.4 ran this design exactly as specified and produced a null that turned out to
+be **uninformative rather than negative** (`docs/M11.4-EXTRAPOLATION.md`;
+`docs/V1.4-EDITS.md` E-39). The cause was in the hold-out, not the hypothesis: the
+axis withheld was strain rate, and Kocks–Mecking has no strain-rate dependence, so
+the declared form predicted a constant along exactly the axis the experiment varied.
+Candidate and baseline agreed **by construction rather than by measurement**, and no
+effect size could have been detected however large.
+
+Nothing above forbade that. The hold-out design section required the region to be
+grouped, to lie partly outside the declared validity ranges, and to be withheld
+entirely — every one of which M11.4 satisfied. The missing precondition is added
+here:
+
+> **REQUIREMENT (hold-out discrimination).** Before a hold-out is registered, it
+> MUST be shown that the declared-form contestant and the free-form contestant
+> **diverge along the held-out axis** — that their disagreement *grows* as the axis
+> is pushed, rather than sitting at an offset already visible in-envelope. The
+> check is M11.4's own post-hoc diagnostic, promoted to a precondition: fit both
+> contestants on in-envelope data and score them, at two probe points along the
+> axis, against a ground truth **with the withheld term removed**. If the axis
+> carries no signal, or the two track it together, the comparison is vacuous
+> *regardless of effect size* and the axis MUST be rechosen. A registered hold-out
+> that has not passed this check is not pre-registered, it is merely early.
+
+Four points about how the requirement is discharged, each of which is a decision
+in its own right:
+
+1. **The check is executable, not a note.** `omi.proposed.holdout` implements it as
+   `check_hold_out_discriminates`, returning a result dataclass with every
+   criterion and the numbers behind it. E-39 proposes wording for Spec §9.3; this
+   repository's contribution is a runnable version of that wording, which is
+   stronger evidence for the proposal than the proposal is for itself.
+2. **Building it corrected E-39's own proposed wording, and that correction is the
+   more valuable half.** E-39 proposed requiring the candidate and baseline to make
+   "materially different predictions" across the held-out region. Implemented
+   literally — disagreement measured against a declared minimum effect — **the
+   criterion cannot separate the two axes this repository has run.** Under the same
+   dry-run discipline, M11.4's vacuous strain-rate axis shows disagreement
+   0.339 → 0.354; M11.5's usable accumulated-strain axis shows 0.032 → 0.472. Those
+   far-point magnitudes are the same order, so no bar admits one without admitting
+   the other. E-39's wording is not merely imprecise; it is inoperable.
+
+   Two quantities do separate them. The withheld-free truth's own variation along
+   the axis is **exactly 0.000** on the vacuous axis against 3.806 on the usable
+   one — Kocks–Mecking has no strain-rate dependence and neither did the physics it
+   was scored against, so nothing there could distinguish any model from any other.
+   And the disagreement's *growth* separates them by a factor of fourteen: 1.05
+   against 14.57. On a vacuous axis the two models are parallel, differing by an
+   offset the training data already exhibits, and going further reveals nothing.
+   An extrapolation test is a question about what happens as you go further, so its
+   precondition has to be about growth rather than difference. Filed as
+   `docs/V1.4-EDITS.md` **E-41**; the corrected wording supersedes E-39's for the
+   paper. M11.4's axis fails **all three** of the implemented criteria, which is
+   the retro-validation that the check is discriminating rather than decorative.
+3. **The check runs strictly in-envelope, on a dry-run split along the candidate
+   axis.** It may not touch the region that will actually be held out. The
+   temptation is real — scoring on the true hold-out against a withheld-free truth
+   is a *more* direct measurement — but in a synthetic study the withheld term's
+   contribution is known, so that quantity and the pre-registered one differ by a
+   subtraction the experimenter can perform. An in-envelope dry run leaks nothing
+   and separates the two axes by a factor of fifteen, which is margin enough that
+   the loss of fidelity costs nothing. A check that cannot be run before the sweep
+   is not a precondition.
+4. **Three failure modes, kept distinct, because they call for different
+   responses.** *Inert axis*: the withheld-free truth barely moves along the axis,
+   so there is no physics here for either model to get right — M11.4's failure at
+   its root, and its clean truth was **exactly** constant along the rate axis.
+   *Parallel models*: the truth moves but both models track it together. *Adverse*:
+   they diverge, but the candidate is worse than the baseline even against the
+   withheld-free truth, so its structure is doing harm rather than work along this
+   axis. The third is a real finding and a different experiment from the one this
+   ADR describes; it must not be run as though it were. Collapsing the three into a
+   bool would repeat in miniature the confusion CLAUDE.md invariant 8 exists to
+   prevent.
+
+**A consequence for the free-form contestant that is easy to miss.** Contestant 1's
+fairness is defined *relative to the held-out axis*, not in the abstract. M11.4 gave
+it `ln γ̇` as a feature precisely so it had the chance to learn the withheld
+rate-dependent physics. Changing the held-out axis therefore **obliges** a
+re-specification of contestant 1 for the new axis; carrying the old one over
+unchanged would satisfy the letter of "the same four contestants" while converting
+the incumbent into a straw man. Whenever the axis changes, state explicitly what
+contestant 1 was given so that it is not one.
+
 **The negative result is a deliverable, and it terminates the experiment.** If
 `gap(3, 1) ≤ 0` on **Generator A** — misspecified declared physics does no better
 than a free-form operator with generic constraints outside the envelope, when the
@@ -3250,6 +3339,146 @@ edited.
 and `::test_the_other_road_is_closed_too_diff_refuses_an_honest_item_6` — the two
 halves of the measurement this decision rests on.
 
+---
+
+## ADR-047 — The fair-axis experiment: hold out accumulated strain, where the declared form has content
+
+**Status.** Accepted.
+**Milestone.** M11.5 (docs/ROADMAP.md)
+**Depends on.** ADR-045 as amended (the hold-out-discrimination requirement),
+ADR-043 (the declaration), ADR-046 (where the form lives).
+
+**What changed and what did not.** M11.4's design error was the *axis*, not the
+experiment. ADR-045's four contestants, two misspecification arms, cost ratio,
+threshold procedure, ceiling caveat and negative-result-is-a-deliverable rule all
+carry over unchanged. This ADR records the three things that must change with the
+axis, and one that must change *because* the axis changed.
+
+### 1. The held-out axis is accumulated strain
+
+Kocks–Mecking's content is a **balance between storage and recovery** that produces
+saturation, and saturation is a statement about accumulated strain. That is the
+axis along which the declared form makes a prediction a generic surface does not
+have: `ρ → (k₁/k₂)²` as `γ` grows, rather than continued growth. Holding out long
+deformation programmes therefore tests the form where it says something, which is
+exactly what M11.4 failed to do.
+
+Training draws `γ ∈ [0.1, 1.0]`; evaluation draws `γ ∈ [2.0, 6.0]`. Grouped by
+region, never randomly (CLAUDE.md invariant 6). The other control axes — strain
+rate and temperature — are sampled from the **same** ranges in training and
+evaluation, so accumulated strain is the *only* thing withheld and every gap
+remains attributable in ADR-045's sense.
+
+**This is a control-space region in Core §3.2's sense**, not a time index: `𝒰`'s
+elements are functions of time and the total imposed strain is a property of the
+programme, so "programmes that deform further than the apparatus has been run
+before" is a region of `𝒰_adm`, withheld entirely.
+
+### 2. The withheld term is one the declared form can see
+
+**Generator C.** Kocks–Mecking with a temperature-dependent recovery coefficient,
+plus one named withheld term — **dynamic recrystallisation above a critical
+accumulated strain**:
+
+```
+dρ/dγ = k₁√ρ − k₂(T)·ρ − k_drx·ρ·max(0, γ − γ_c)
+```
+
+Three properties, each load-bearing:
+
+- **Identically zero below `γ_c`, and `γ_c` is set at the upper edge of the
+  training range.** So over the whole training set contestant 2's form is *exactly*
+  the generator's and its in-envelope error is parameter estimation only — the
+  property that made Generator A attributable, preserved verbatim.
+- **It is a departure the declared form is dimensionally capable of representing
+  wrongly.** DRX consumes stored dislocation density, so the withheld term is
+  proportional to `ρ` — the same shape as Kocks–Mecking's own recovery term. A
+  fitted declared form can therefore *partly absorb* it by inflating `k₂`. This is
+  what the user's requirement asks for and it is what makes 3a and 3b
+  interpretable: 3a has no removal term at all and cannot absorb any of it, 3b has
+  one but cannot make it temperature-dependent. Against a withheld term the form
+  could not represent in any parameterisation, both arms would fail identically and
+  the comparison would collapse back toward M11.4's.
+- **It is not bare Kocks–Mecking** (ADR-045's circularity constraint, E-12):
+  contestant 2 remains an approximation, not an identity.
+
+`γ_c` is a constant rather than temperature-dependent. Physically it does fall with
+temperature, and making it do so would sharpen 3b's disadvantage — which is the
+reason not to. One named withheld term with one parameter keeps attribution clean;
+adding a second dependence would buy a bigger effect at the cost of the property
+M11.4's post-mortem showed matters most.
+
+### 3. Contestant 1 must be re-specified for the new axis, and it is the crux
+
+ADR-045's amendment makes this an obligation; here is what was done. M11.4's
+contestant 1 was a response surface fitted at unit strain and extrapolated as
+`surface(q) × γ` — **linear in accumulated strain by construction**. On a strain
+hold-out that is not a baseline, it is a straw man: it cannot saturate, so the
+declared form would beat it for a reason that has nothing to do with declared
+physics and everything to do with an extrapolation rule nobody would choose.
+
+M11.4's γ=4 rollout observation — the "untested hypothesis" that document recorded
+— is therefore **suspect on exactly this ground**, and M11.5 is the test of it. It
+is entirely possible that the 2× separation at γ=4 was an artefact of `surface × γ`
+rather than evidence for declared physics. If so, that is a finding and it is
+recorded as one.
+
+**Contestant 1 for M11.5 is a free-form rate law, integrated.** A generic
+polynomial surface in `(ρ, ln γ̇, T/T_ref)` giving `dρ/dγ`, with positivity of the
+state enforced architecturally (`omi.constraints`, never a penalty — CLAUDE.md
+invariant 5), advanced by the **same integrator at the same step count** as every
+declared-form contestant. This is the honest v1.3 incumbent: OMI's free-form
+operator is a *learned evolution operator that is stepped and composed*
+(`omi.learning` + `omi.chain`), not a direct input-to-output regression. It gets no
+declared form, but it does get the structural fact that evolution accumulates —
+and an integrated rate law that learns `f(ρ) < 0` for large `ρ` **can** saturate.
+
+That makes M11.5 a much harder test than M11.4 and the result correspondingly worth
+more. It is also the honest one: if the declared form's advantage disappears once
+the baseline is allowed to be an operator rather than a surface, then the advantage
+was never about declared physics.
+
+**The tabular baselines (contestant 4) keep their character deliberately.** They
+gain `γ` as a feature and are fitted across the in-envelope strain range, which is
+the natural tabular use, but they remain direct regressors — because that is what a
+tabular baseline *is*, and M10.2 already characterised how such models extrapolate.
+Turning them into integrators would make them a second copy of contestant 1 and
+delete the external comparator.
+
+### 4. The declared form is published as a second object, not an amended one
+
+Registering a hold-out outside the declared window requires `KOCKS_MECKING` to
+declare a bound in accumulated strain — which it should, since the strain window is
+where DRX intervenes and the form's temperature bound already names that mechanism.
+It cannot simply be added: ADR-043 requires every declared bound to receive a value
+at `report()` time, so extending a form's validity range **breaks every existing
+caller**. M11.5 therefore declares `KOCKS_MECKING_STRAIN_WINDOWED` alongside the
+original rather than amending it, leaving M11.3's and M11.4's artefacts byte-stable.
+
+The consequence is worth stating rather than absorbing: **declared validity ranges
+as designed here are append-hostile.** A domain that learns its form has a limit it
+had not previously declared must either break its consumers or publish a second
+form, and then Core §4's item-6 comparison sees two forms where the physics is one.
+This is a consequence of ADR-043's strictness (a missing value raises rather than
+being skipped), which remains the right default — silently ignoring an undeclared
+bound is how a validity range stops meaning anything. But the refinement path is
+missing, and that is a gap in the *extension's* design rather than in the Spec.
+Filed as `docs/V1.4-EDITS.md` E-40.
+
+### The claim structure, unchanged from ADR-045 and restated so it is not re-read post hoc
+
+`gap(3, 1)` and `gap(3, 4)` on Generator C are **the claim**. `gap(2, 3a)` and
+`gap(2, 3b)` are robustness by misspecification kind. `gap(2, 1)` is the **ceiling,
+reported with ADR-045's caveat and never as the headline**. Rollout-length curves
+for every contestant; extrapolation factor reported alongside every error figure.
+Thresholds via ADR-041, registered in their own commit before any sweep code exists.
+
+**A negative result here means something, and that is the whole point of M11.5.**
+M11.4's null was uninformative because the axis was vacuous. Once the
+discrimination check passes, a null says what it appears to say: that declaring a
+constitutive form buys no extrapolation reach over a free-form *operator* on an axis
+where the form demonstrably has content. That is a real result about the v1.4
+extension's central claim and it goes in the paper as one.
 
 ---
 

@@ -34,6 +34,12 @@ precise one invented (ADR-043).
 calibrated metallurgy**, and every `provenance` string says so. What is claimed is
 the *structure* — the functional form, which quantity bounds it, and which
 mechanism ends it — because that is what the extrapolation experiment tests.
+
+**A sixth object, but still five forms.** `KOCKS_MECKING_STRAIN_WINDOWED` (added
+at M11.5, ADR-047) is the same physics and the same parameters as `KOCKS_MECKING`
+with one further bound declared. It exists as a sibling because a declared
+validity range cannot be extended in place without breaking every existing caller
+— see that constant's own docstring, and `docs/V1.4-EDITS.md` E-40.
 """
 
 from __future__ import annotations
@@ -119,6 +125,71 @@ KOCKS_MECKING = ConstitutiveForm(
     ),
     governs=((Slot.Z, "substructure_density"),),
 )
+
+
+KM_STRAIN_WINDOW_HIGH = 1.0
+"""Accumulated strain above which dynamic recrystallisation nucleates and begins
+consuming stored dislocation density — a mechanism the Kocks–Mecking pair
+`(k₁, k₂)` does not express, so the form's validity ends there.
+
+The value is the toy's own, chosen to coincide with the upper edge of M11.5's
+training range (ADR-047, docs/DECISIONS.md) so that "outside the declared window"
+and "the withheld physics is active" name the same region by construction rather
+than by coincidence — the property ADR-045 required of Generator A's rate window
+and which is preserved here verbatim."""
+
+KOCKS_MECKING_STRAIN_WINDOWED = ConstitutiveForm(
+    name="kocks_mecking_dislocation_evolution_strain_windowed",
+    kind=FormKind.RATE_LAW,
+    evaluate=kocks_mecking,
+    parameters={"k1": KM_K1, "k2": KM_K2},
+    validity=ValidityRange(
+        KOCKS_MECKING.validity.bounds
+        + (
+            ValidityBound(
+                name="accumulated_strain",
+                space=ValiditySpace.CONTROL,
+                low=UNBOUNDED,
+                high=KM_STRAIN_WINDOW_HIGH,
+                regime=(
+                    "fitted strain window; above it dynamic recrystallisation nucleates and "
+                    "consumes stored density, which the (k1, k2) pair cannot represent"
+                ),
+                high_kind=EdgeKind.APPROXIMATE,
+                fitted_scale=1.0,
+            ),
+        )
+    ),
+    provenance=(
+        "Kocks & Mecking as above, with the strain window the source's own fitting range "
+        "implies made explicit. Identical physics and identical parameters to "
+        "KOCKS_MECKING; the only difference is one further declared bound."
+    ),
+    governs=((Slot.Z, "substructure_density"),),
+)
+"""`KOCKS_MECKING` with one further declared bound, published **alongside** the
+original rather than amending it (ADR-047, docs/DECISIONS.md).
+
+**Why a second object and not an edit.** `ValidityRange.report` requires a value
+for every declared bound and raises otherwise — deliberately, since silently
+skipping an undeclared bound is how a validity range stops meaning anything
+(ADR-043). The consequence is that a form's validity range **cannot be extended
+without breaking every existing caller**: M11.3's chain and M11.4's sweep both
+call `KOCKS_MECKING.report` with three keys and would raise against a
+four-bound form. Declaring a sibling leaves those artefacts byte-stable.
+
+The cost is that Core §4's item-6 comparison now sees two forms where the physics
+is one. That refinement path is missing from the extension's design and is filed
+as `docs/V1.4-EDITS.md` E-40; this constant is the worked instance behind it.
+
+The lower edge is `UNBOUNDED` rather than `0.0`: accumulated strain is
+non-negative as a matter of the quantity's definition, not as a matter of where
+the form was fitted, and declaring a validity edge at a definitional floor would
+report every small-strain query as sitting far from a window centre that does not
+exist (ADR-043's one-sided rule). The upper edge is `APPROXIMATE` because a
+recrystallisation onset strain is route- and microstructure-dependent — the same
+honesty M11.3 applied to Koistinen–Marburger's lower edge.
+"""
 
 
 # --- Grain growth -------------------------------------------------------------
