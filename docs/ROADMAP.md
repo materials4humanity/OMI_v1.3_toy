@@ -405,6 +405,49 @@ gap after seeing it would be the goalpost-moving the pre-registration exists to
 prevent. Testing it needs a fresh pre-registration and a hold-out chosen so the
 declared form and the baseline differ along the held-out axis.
 
+### M11.5 — The fair-axis experiment (ADR-047)
+
+M11.4's design error was the axis, not the experiment. ADR-045's contestants,
+arms, costs, threshold procedure and ceiling caveat carry over unchanged; the
+hold-out moves to **accumulated strain**, where Kocks–Mecking's storage/recovery
+balance actually makes a prediction, and the withheld term becomes **dynamic
+recrystallisation above a critical strain** — a departure the declared form is
+dimensionally capable of representing wrongly, so the two misspecification arms
+stay interpretable. ADR-045 gains a standing **hold-out-discrimination
+requirement**, implemented as `omi.proposed.holdout` and run before registration.
+Contestant 1 is re-specified as a free-form **rate law**, integrated, because
+M11.4's `surface × γ` is a straw man on a strain hold-out.
+
+**Exit gate.** The discrimination check passes on the new axis and refuses M11.4's,
+before thresholds are registered. Thresholds registered in their own commit ahead
+of the sweep. Per-strain curves for every contestant, with the pooled figure named
+in advance as the registered criterion.
+
+**Outcome — gate met; the claim is REFUTED, and this null is informative.**
+`docs/M11.5-EXTRAPOLATION.md`. The gate admitted the strain axis at divergence
+14.57 against a bar of 2.0 and refused M11.4's on all three criteria (axis signal
+exactly 0.000), so the comparison could have detected an effect. It found none:
+every declared-form arm is **worse** than the free-form operator — `gap(1, 3a)`
+−64.49, `gap(1, 3b)` −2.50, ceiling `gap(1, 2)` −3.04, all against τ ≈ 0.32 — and
+an unchanged tabular baseline is best of the six at 3.27.
+
+Three findings came out of it. **Which kind of misspecification matters, and the
+answer is +61.98**: a missing *dependence* costs almost nothing (7.56 against the
+correct form's 8.10) while a missing *mechanism* is catastrophic (69.55, growing to
+123.0 at γ=6 because it cannot saturate) — declaring a form with a mechanism
+missing is far worse than declaring no form at all. **The declared forms lose by
+error cancellation, not ignorance**: the correct form is exact against a
+withheld-free truth (0.0000) and finishes fourth, while the winner is fourth on
+that measure and first on the registered one, its −7.49 bias nearly annihilating
+the withheld term's −6.56. Filed as **E-42**, with the sting that the diagnostic
+needs a modifiable generator and so is unavailable on field data. And **M11.4's
+untested γ=4 hypothesis is now tested and refuted** — the separation reverses once
+the baseline is an operator rather than a surface, exactly as ADR-047 suspected.
+
+Building the gate also corrected E-39's own proposed wording (**E-41**), and adding
+one bound to a form declared at M11.3 exposed that declarations cannot be refined
+without breaking every caller (**E-40**).
+
 ### Explicitly out of scope for M11
 
 Directional `ℓ_D` (E-30 stands as a finding; the build-coverage gap is recorded
