@@ -3482,6 +3482,218 @@ extension's central claim and it goes in the paper as one.
 
 ---
 
+## ADR-048 — v1.5's purpose extension: the framework decides what to do next, and prediction becomes a means
+
+**Status.** Accepted — **declaration only. No Core or Spec text is edited by this
+ADR, and no code changes.**
+**Track.** v1.5 planning, Part 1 (`docs/V1.5-PLANNING-BRIEF.md` records the brief).
+**Supersedes nothing.** Extends the scope every prior ADR was written under.
+
+### The decision
+
+**v1.3's purpose is representing and learning PSR linkages. v1.5's purpose is
+deciding what to do next under uncertainty.** Prediction is retained in full and
+demoted to a *means*; the diagnostics become the product.
+
+This is a scope change and not a feature, so it is declared here rather than
+allowed to accumulate. Every ADR from ADR-001 to ADR-047 was written under the
+v1.3 purpose; none is withdrawn, but each is now read against a larger objective,
+and where that changes what an ADR should have decided, the change is recorded as
+a new ADR rather than by editing the old one.
+
+### What the extension promotes and what it demotes
+
+The framework's existing machinery does not change; its **ranking** changes, and
+the ranking was previously implicit in prose rather than declared. Making it
+explicit is most of this ADR's content.
+
+| Machinery | v1.3 standing | v1.5 standing |
+|---|---|---|
+| Danger-score triage (Core §3.8, Spec §3.3) | one diagnostic among several | **spine** — it is the per-direction answer to "what do I not know that matters" |
+| The intervention table (`docs/V1.4-EDITS.md` §11) | a reading *of* the ledger | **spine** — the six practitioner interventions are the output space |
+| Refusal criterion (Core §3.9) | a credibility argument | **spine** — a first-class deliverable, on equal footing with an answer |
+| Blocking trichotomy (Spec §1.7) | sufficiency bookkeeping | **spine** — it names which purchase the deficit implies |
+| Asymmetric costs / decision layer (Spec §7.3) | selects within a degeneracy | **spine** — supplies the objective the rest is ranked against |
+| Class B machinery (Core §3.6, Spec §4) | "one of its main practical payoffs" | **supporting result** |
+| Erasure analysis (Core §3.9 condition (a), Spec §2) | headline v1.3 result | **supporting result** |
+| Forward accuracy, rollout curves, calibration | what the framework is judged on | **necessary but not sufficient** — inputs to a decision, not the deliverable |
+
+**Demotion is not deletion, and this must not be misread.** Class B distributions
+and erasure inventories remain required at their existing conformance levels and
+remain fully tested. What changes is that they no longer answer the framework's
+top-level question on their own. A v1.5 implementation that reports a beautiful
+Class B tail and cannot say which measurement to buy next has not delivered.
+
+**Why the demotion is defensible rather than fashionable.** M11 supplies the
+argument. `docs/V1.4-EDITS.md` **E-42** measured a case where forward accuracy
+against the full truth ranked six models *opposite* to their fidelity to the
+physics they expressed — the winner was fourth of six on the quantity that
+mattered and first on the quantity being scored. If the framework's own
+prescribed criterion (Spec §9.3) can inverse-rank models, then forward accuracy
+cannot be the top-level objective without qualification. The purpose extension is
+the principled version of a correction M11 forced empirically.
+
+### Existing conformance results: the user's recommendation, accepted, with a mechanism
+
+**Accepted as proposed.** Existing conformance results remain **valid and citable
+as v1.3-purpose results**; v1.5 conformance is a **separate claim**; existing
+results are **not** silently reinterpreted. Concretely: flagship's OMI-1 and
+contrast's OMI-0 stand unchanged and unqualified *as v1.3 claims*, and neither
+becomes a v1.5 claim by the passage of time or the merging of this branch.
+
+Three points make this more than an assurance.
+
+1. **The mechanism already exists, and this is its second consumer.**
+   `omi.conformance.ConformanceReport` carries a required
+   `omi.interface.SpecificationVersion`, and `compare_reports` refuses to compare
+   across versions with no suppression flag (E-35, ADR-042). That was built at
+   M10.4 for a smaller reason — that an archived level name is not
+   self-describing once a second version exists. The purpose extension is a
+   larger instance of exactly that shape, and it validates E-35's proposal rather
+   than needing new machinery. A v1.5 report will carry `PROPOSED_V1_5` and will
+   therefore be structurally incomparable with the archived v1.3 results.
+
+2. **But version-stamping is only sufficient if purpose is monotone with version,
+   and it is not.** A v1.3-purpose chain can be re-reported under a v1.5 version
+   stamp without ever declaring a decision; a v1.5 decision layer can be bolted
+   onto a chain whose conformance evidence was gathered for prediction. The
+   version stamp does not separate those. **A conformance claim needs a declared
+   *purpose*, not only a declared version.** Filed as a framework finding —
+   `docs/V1.4-EDITS.md` **E-43** — because it is a defect in Spec §9.1's text and
+   not merely in this repository's implementation of it.
+
+3. **The audit-preservation gate is the enforcement.** Every observation recorded
+   before M11 is byte-identical today (267 observations, `audit/pre-m11-observations.json`,
+   ADR-042). The same discipline applies to v1.5: the purpose extension must not
+   move a single pre-existing measured quantity, and if it does, that is the
+   signal the extension was not the additive change this ADR claims. The gate is a
+   standing requirement of the v1.5 track, not a milestone check.
+
+### Proposed rewording of Core §1.1 and the Abstract — proposed, NOT applied
+
+Recorded here so it can be reviewed as text before anyone edits the framework
+documents. **Neither document is touched by this ADR.**
+
+**Abstract, opening sentence — proposed replacement.**
+
+> OMI is a physics-informed mathematical framework for **deciding what to do next
+> in PSR systems under uncertainty**: systems of structured matter whose internal
+> organisation evolves under driving conditions, and whose measurable responses
+> are mediated by that organisation. It represents and learns
+> Process–Structure–Response linkages as a directed graph whose nodes are
+> infinite-dimensional state spaces and whose edges are operators — and it treats
+> that representation as a **means**. The framework's product is a set of
+> declared, measured diagnostics that say which action the current evidence
+> supports: which quantity is dangerous, which measurement would resolve it,
+> which purchase the residual deficit implies, and when to refuse. Prediction
+> serves those diagnostics; it is not the deliverable.
+
+**Core §1.1 Scope — proposed replacement of the three-feature test with four.**
+
+The existing test (control axis; hidden internal state; structure-mediated
+response) is a test for **representability**. It is silent on whether there is
+anything to decide, and a framework whose purpose is deciding must scope on that.
+Proposed fourth feature:
+
+> - a **decision under uncertainty** — a recurring choice among actions
+>   (set a control, commission a measurement, buy data, change the material,
+>   refuse) whose consequences are **asymmetric**, so that the cost of being
+>   wrong in one direction differs from the other.
+
+With the consequence stated plainly, as §1.1 already does for its exclusions:
+
+> A system exhibiting the first three features but not the fourth is
+> **representable but not a v1.5 subject**: OMI will model it and will have
+> nothing to recommend. Claiming such systems would make the purpose
+> unfalsifiable, in the same way that claiming domains with no control axis
+> would have weakened v1.3.
+
+**A consequence for this repository's own domains, stated rather than discovered
+later.** Neither flagship nor contrast presents a real decision at each step —
+both are fixed chains evaluated once. Under the proposed §1.1 they satisfy three
+of four features. That is precisely why v1.5 adds a sibling domain with a
+controllable composition axis and a decision at each step (Part 5), and it means
+**Core §7.3's generality argument does not yet cover the v1.5 purpose.** Recorded
+now so Part 5 is understood as filling a declared gap rather than adding a third
+example for its own sake.
+
+### The ledger's target version, and its name
+
+The standing requirement asks whether v1.5 supersedes v1.4 as the target, and
+records that this is itself a decision.
+
+**Decided: v1.5 is the target; the ledger keeps one continuous numbering and
+keeps its current filename.** New entries continue at **E-43**; no number is ever
+reused; the file remains `docs/V1.4-EDITS.md`.
+
+The filename is now imprecise, and that is the lesser cost. It is retained
+because **two commit-stamped snapshots cite that path** (`docs/REVIEW_PACK.md`,
+`build/REVIEW-EXTRACT.md`) and CLAUDE.md §10 forbids editing a snapshot's body —
+a rename would leave those citations permanently dangling with no legal
+correction available. Splitting into a second file was rejected for a different
+reason: the ledger's provenance discipline (implementation-attempt vs
+`[domain-assessment]`) and its "never renumbered, never reused" rule both work
+because there is exactly one place to look. The mitigation is a header note in the
+ledger recording that its target is v1.5 and why the v1.4 name persists — the
+same treatment E-34's retired number already receives.
+
+### Consequences
+
+- **Nothing in Core or Spec is edited by this ADR.** The rewording above is a
+  proposal for review; the inaccuracy list below is its evidence.
+- **Every subsequent v1.5 ADR is read against the extended purpose**, and where a
+  v1.3-era ADR would now decide differently, a new ADR supersedes it explicitly.
+- **Two new obligations attach to any future v1.5 conformance work**: a declared
+  purpose on the report (E-43), and a declared decision plus intervention set on
+  the instantiation (which is Core §4's item count, below).
+- **The v1.3 results are frozen, not reinterpreted.** `docs/M11-RECORD.md`,
+  `docs/M10.2-BASELINE-CHARACTERISATION.md` and the conformance demonstrations
+  remain v1.3-purpose evidence and are cited as such.
+
+### Sections whose text the extension makes inaccurate
+
+The gate deliverable. **Primary** = the text becomes *false* under the extended
+purpose. **Secondary** = the text becomes *incomplete or misranked*. **Wording** =
+a collision or a version-scoped headline. Nothing below is edited yet.
+
+| # | Section | Kind | What breaks |
+|---|---|---|---|
+| 1 | Core Abstract ¶1 | **Primary** | "a framework for representing and learning PSR linkages" is the purpose statement; under v1.5 that is the means |
+| 2 | Core §1.1 Scope | **Primary** | the three-feature test is a representability test and is not sufficient to scope a decision framework — a system can pass all three and present nothing to decide |
+| 3 | Core §1.2 Claims | **Primary** | the claim list omits the decision product entirely; and the non-claims omit the one v1.5 most needs (OMI does not claim the recommended action is optimal, only that it is accounted and its basis declared) |
+| 4 | Core §4 interface | **Primary** | "a domain enters by supplying **seven** items… Nothing else is required, and **nothing less suffices**" — under v1.5 the declaration must also carry the decision (targets with asymmetric costs) and the available intervention set. The count is wrong and "nothing less suffices" is false. Collides with the eighth-item proposals already open in E-32, E-40 and ADR-046 |
+| 5 | Core §5 decision layer **[Pass C]** | **Primary** | "**A corollary** reorganises the whole error budget — accuracy requirements derive from the decision." Under v1.5 this is not a corollary, it is the organising principle. The word is the defect |
+| 6 | Core §6.1 falsification | **Primary** | all six criteria test representational or predictive adequacy; **not one falsifies the decision claim.** A v1.5 implementation could satisfy all six and be useless for deciding, or fail criterion 4 and be valuable. Criterion 4 ("fail to beat tabular baselines on forward accuracy and prospective hit rate") now scores the demoted quantity — and E-42 measured that this criterion can rank models opposite to their physical fidelity |
+| 7 | Spec §9.1 conformance | **Primary** | OMI-0/1/2 require no declared decision, no intervention set, no evaluation of the refusal criterion, and no triage-to-action mapping. An implementation can reach **OMI-2 and deliver nothing the v1.5 purpose asks for.** This is where the "v1.3 results stay v1.3 claims" decision does its work |
+| 8 | Core §1 Introduction ¶2 | Secondary | "OMI replaces tabular mappings with an operator-graph representation" presents the representational contribution as *the* contribution |
+| 9 | Core §2.2 state selection | Secondary | framed as a bias–variance optimisation for *learnability*; under v1.5 the objective is decision-relevance, which is Spec §7.3's cost machinery — the facility E-36 found exists and is never applied |
+| 10 | Core §3.6 Class B | Secondary | presents the two-tier coupling as "one of its main practical payoffs"; that ranking is now demoted to supporting |
+| 11 | Core §3.9 dichotomy + refusal | Secondary | erasure analysis demoted; refusal *promoted* but its text presents refusal as a credibility argument ("more credible than one that always answers") rather than as a primary deliverable |
+| 12 | Core §5 inverse taxonomy | Secondary | control/structure is incomplete — "deciding what to do next" includes deciding what to *make*, which is Part 3's composition inverse |
+| 13 | Core §6.2 open problems | Secondary | the list is entirely representational |
+| 14 | Core §7.3 what the contrast establishes | Secondary | the generality argument is representational coverage; neither existing domain presents a decision, so §7.3 does not establish generality for the v1.5 purpose (see Part 5) |
+| 15 | Core §8 positioning | Secondary | positions against representational lineages (MKS, ICME, assimilation, neural operators). The v1.5 neighbours are Bayesian experimental design, active learning / BO, value of information, and sequential decision-making under model uncertainty. The **[Pass D]** lineage note is inadequate in a new direction |
+| 16 | Core Appendix C | Secondary | summary of structural claims, written against the old purpose |
+| 17 | Spec §1.7 blocking trichotomy | Secondary | promoted to spine, but its three branches (sensing / data / falsification) do not cover the intervention table's six rows |
+| 18 | Spec §3.3–§3.4 danger score, VOI | Secondary | promoted to spine; `ΔV_c/cost` being the framework's *only* priced intervention is presented as a feature and is now a defect (E-36) |
+| 19 | Spec §7.3 asymmetric costs | Secondary | scoped by its first line to selecting among process *routes*; under v1.5 it must supply the objective for intervention selection. E-36 proposed this; the purpose extension makes it mandatory |
+| 20 | Spec §9.3 baselines / "the honest case" | Secondary | the justification list is ordered with forward accuracy first; and this section already carries three measured defects (E-39, E-41, E-42) — the purpose extension adds a fourth pressure on the same text |
+| 21 | Spec §9.4 falsification thresholds **[Pass D]** | Secondary | scoped to Core §6.1's six criteria; grows if §6.1 gains a decision criterion |
+| 22 | Spec §12 architecture | Secondary | the component list is a prediction pipeline |
+| 23 | Core §2.6 properties/performances | Wording | "regarded as equivalent for a given **purpose**" now collides with the framework's own declared purpose; Core §0.2 is the precedent for resolving exactly this kind of collision |
+| 24 | Core Abstract ¶2–4 | Wording | "Version 1.3 makes the framework domain-neutral…", "Three new results carry the version" — version-scoped headlines, stale rather than false |
+| 25 | Spec header, allocation rule | Wording | "Core holds everything falsifiable, Spec everything executable" survives, but the decision diagnostics are simultaneously a claim and a procedure; the partition needs re-checking rather than assuming |
+
+**Seven primary, twelve secondary, three wording.** Two of the seven primary items
+(Core §4's item count, Spec §9.1's level table) are already under independent
+pressure from M11's findings, which is evidence the purpose extension is
+surfacing a strain that was there rather than creating one.
+
+**Pinned by.** Nothing yet — this ADR is a declaration, and the first thing that
+pins it is Part 2's construction being designed against the extended purpose.
+
+---
+
 ## Open questions
 
 Not decisions — hypotheses the code should settle. Full statements in
