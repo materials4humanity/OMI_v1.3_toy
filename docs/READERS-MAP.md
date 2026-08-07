@@ -15,7 +15,7 @@ The job of the code is to make the framework's claims **measurable and
 falsifiable**, not to predict well (`CLAUDE.md` §2). Read that before reading any
 result as a performance number.
 
-## The ledger: `docs/V1.4-EDITS.md` (41 entries, grouped by root cause)
+## The ledger: `docs/V1.4-EDITS.md` (43 entries, grouped by root cause)
 
 Entry IDs are permanent (E-34 was withdrawn into E-29 and its number retired, never
 reused). §1 holds the authoritative counts and the entry locator. The groups:
@@ -24,9 +24,9 @@ reused). §1 holds the authoritative counts and the entry locator. The groups:
   entries trace to it (E-14, E-21, E-22, E-24, E-25).
 - **§3 — Core §6.1's falsifiability claim** blocked by other unresolved rows (E-11, E-16).
 - **§4 — declarations satisfiable without their property** (E-12, E-13, E-17, E-20,
-  E-23, E-26, E-27, E-35). Eight entries, one shape.
+  E-23, E-26, E-27, E-35, E-43). Nine entries, one shape.
 - **§5 — the interface has no declarable category for something the physics needs**
-  (E-29–E-32, E-40). Four of the five domain-assessment entries live here.
+  (E-29–E-32, E-40, E-44). Four of the five domain-assessment entries live here.
 - **§6 — diagnostics blind to their own dominant error source** (E-03, E-04, E-18,
   E-05, E-06, E-15, E-19, E-33).
 - **§7 — status markers over/understating completeness** (E-01, E-02, E-08, E-09, E-10).
@@ -39,7 +39,7 @@ reused). §1 holds the authoritative counts and the entry locator. The groups:
   scope), and finds the framework prices only one of six.
 - **§12** states what the build never attempted.
 
-**Provenance matters and is not flattened:** 36 entries were found by *attempting to
+**Provenance matters and is not flattened:** 38 entries were found by *attempting to
 build* the framework; 5 (E-29–E-33, marked `[domain-assessment]`) by *reading it
 against physics* (`docs/PHYSICS-ADEQUACY.md`).
 

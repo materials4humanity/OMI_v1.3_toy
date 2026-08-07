@@ -3617,6 +3617,68 @@ controllable composition axis and a decision at each step (Part 5), and it means
 now so Part 5 is understood as filling a declared gap rather than adding a third
 example for its own sake.
 
+> **AMENDMENT (before Part 2). The paragraph immediately above is wrong, and the
+> error is instructive enough to correct in place rather than quietly.**
+>
+> It applies a **system-level scope test to an implementation**. Proposed §1.1
+> opens "The framework applies to **systems** exhibiting … features together" — the
+> test is on the domain being modelled, not on how deeply this repository simulates
+> it. That flagship and contrast are each built here as a single forward chain
+> evaluated once is a fact about `build.py`, not about whether a rolling line or a
+> cell under service presents a recurring asymmetric decision. Conflating the two
+> is precisely the class of error this ledger exists to catch, and it produced a
+> false conclusion about the framework's own generality evidence.
+>
+> **Corrected finding: both existing domains satisfy the fourth feature.**
+>
+> **Contrast (usage decision) — qualifies.** *Recurring*: `CyclingStep` models one
+> usage interval under a held current, and service is a sequence of them; the
+> erasure inventory is **empty** and `sei_thickness_monotone_nondecreasing` is a
+> declared invariant, so state accumulates irreversibly and each interval's choice
+> is carried forward. Sequential choice with irreversible accumulation is the
+> canonical decision-under-uncertainty setting, not a marginal instance.
+> *Actions*: item 2 declares a usage-determined `𝒰` bounded by manufacturer limits
+> (set a control); item 5's suite is genuinely poor and M3 **measured** contrast
+> leaving a larger fraction of target variance dangerous than flagship
+> (`contrast_unresolved_danger_fraction` > `flagship_unresolved_danger_fraction`,
+> `tests/test_domain_triage.py`), so commissioning a measurement is live and
+> already priced; `dendrite_risk` is Type-0/**Class B**, so derate-or-retire is
+> available. *Asymmetric*: a Class B rare-event failure distribution against
+> conservative derating is the asymmetry Core §5's decision layer already names.
+>
+> **Flagship (process decision) — also qualifies, and needs no composition axis to
+> do so.** A line sets a grade and route per unit; the actions are apparatus
+> settings (process inverse), a measurement from a rich suite where `ΔV_c/cost` is
+> the framework's one priced intervention, and rework/downgrade/scrap as refusal.
+> The asymmetry is **already written into the Spec**: §7.3 requires carrying "field
+> failure, downgrade, rework, and re-run" as costs that "differ by orders of
+> magnitude." Part 6's composition axis adds a *second, different* decision — what
+> to make — rather than supplying the first.
+>
+> **So Core §7.3's argument survives the purpose extension at the level of scope**,
+> and v1.5's generality evidence is two decision *kinds* (usage and process), not
+> zero. Item 14 of the inaccuracy table below is revised accordingly.
+>
+> **What does not survive, and it is a weaker claim than the one withdrawn.**
+> Scope is satisfied; **demonstration is not.** No domain's declaration expresses
+> its decision — there is no interface item for it, which is item 4 of the table
+> below — and no implementation has been driven through a decision loop. So §7.3
+> establishes that the framework's *structure* covers two decision kinds, and does
+> not yet establish that its *decision machinery* works on either.
+>
+> **Consequence for Part 5, restated.** The SDL domain is no longer filling a scope
+> gap. It is (a) the domain where the decision loop is actually exercised rather
+> than declared, and (b) a **third** decision kind — campaign/discovery, deciding
+> what to make — alongside usage and process. Both are better reasons than the one
+> this ADR originally gave, and Part 5 should be designed against them.
+>
+> **A distinct framework finding fell out of the correction and is filed as E-44**:
+> §1.1's scope features are never declared and never checked, three of the four are
+> only *indirectly* evidenced by interface items, and the fourth has no item at all
+> — so a domain in scope whose declaration is silent about the decision is
+> indistinguishable from a domain out of scope. This ADR's original error is the
+> worked example of that defect biting a careful reader.
+
 ### The ledger's target version, and its name
 
 The standing requirement asks whether v1.5 supersedes v1.4 as the target, and
@@ -3671,7 +3733,7 @@ a collision or a version-scoped headline. Nothing below is edited yet.
 | 11 | Core §3.9 dichotomy + refusal | Secondary | erasure analysis demoted; refusal *promoted* but its text presents refusal as a credibility argument ("more credible than one that always answers") rather than as a primary deliverable |
 | 12 | Core §5 inverse taxonomy | Secondary | control/structure is incomplete — "deciding what to do next" includes deciding what to *make*, which is Part 3's composition inverse |
 | 13 | Core §6.2 open problems | Secondary | the list is entirely representational |
-| 14 | Core §7.3 what the contrast establishes | Secondary | the generality argument is representational coverage; neither existing domain presents a decision, so §7.3 does not establish generality for the v1.5 purpose (see Part 5) |
+| 14 | Core §7.3 what the contrast establishes | Secondary | **revised by the amendment above.** Both domains *do* satisfy the fourth scope feature (contrast: usage decision; flagship: process decision, its costs already enumerated in Spec §7.3), so §7.3's argument survives at the level of scope and covers two decision kinds. What §7.3's text does not say, and now must, is that scope coverage is not demonstration: no declaration expresses its decision and no implementation has been driven through a decision loop, so the section overstates what two instantiations establish *for the v1.5 purpose* while understating the coverage they do have |
 | 15 | Core §8 positioning | Secondary | positions against representational lineages (MKS, ICME, assimilation, neural operators). The v1.5 neighbours are Bayesian experimental design, active learning / BO, value of information, and sequential decision-making under model uncertainty. The **[Pass D]** lineage note is inadequate in a new direction |
 | 16 | Core Appendix C | Secondary | summary of structural claims, written against the old purpose |
 | 17 | Spec §1.7 blocking trichotomy | Secondary | promoted to spine, but its three branches (sensing / data / falsification) do not cover the intervention table's six rows |
