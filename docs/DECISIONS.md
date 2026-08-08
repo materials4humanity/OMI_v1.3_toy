@@ -5010,6 +5010,224 @@ rather than removing it, and the entry is corrected in place. A finding that the
 isotropic at every plausible noise level would remove E-47's premise, and the entry
 would be withdrawn to a confirmation like E-07.
 
+## ADR-059 — The v1.5 declaration carrier: composition applied a second time, and a third `SpecificationVersion`
+
+**Status.** Accepted — declaration implemented; no operator, no campaign.
+**Track.** v1.5 planning, Part 5(2).
+**Pins.** `tests/test_sdl_declaration.py`, `tests/test_v14_boundary.py` (unchanged and still passing, which is the property this ADR exists to preserve).
+
+### The decision
+
+`omi.proposed.v15.ProposedV15Declaration` **holds** a `ProposedV14Declaration` whole, which
+holds a v1.3 `InstantiationDeclaration` whole. Three layers, each nesting the last, none
+modifying it. And `SpecificationVersion` gains a third value, `PROPOSED_V1_5`, exposed as a
+read-only property so a v1.5 declaration cannot be constructed claiming to be v1.4.
+
+### Why nesting rather than fields with defaults
+
+Adding v1.5's fields to `ProposedV14Declaration` with defaults would compile, break nothing,
+and be wrong for the reason ADR-042 already gave once:
+
+- **`omi.interface.diff` must keep receiving a v1.3 object.** Core §4's comparability claim
+  — "it is comparative... which is what converts a collection of examples into evidence of
+  generality" — is carried by that function, and M11's diff evidence was established against
+  it. Nesting preserves it *by construction* rather than by care.
+- **`specification_version` must stay unrepresentable-wrong.** ADR-042 made it a property
+  rather than a field precisely so a v1.4 declaration could not be constructed as v1.3. A
+  v1.4 object carrying v1.5's fields would return `PROPOSED_V1_4` while making a v1.5 claim,
+  which is E-35's defect reintroduced by the code that exists to fix it.
+- **A domain a version apart must differ only in what that version adds.** Three domains,
+  one per layer, is a controlled measurement of each extension. Fields-with-defaults makes
+  v1.4 and v1.5 domains structurally identical and distinguishable only by which optional
+  fields happen to be populated.
+
+**The generalisation, stated because it will be needed again:** the composition discipline
+is not a one-off for v1.4. Every future extension nests, and the version enum grows a value.
+The cost is one indirection per layer; the benefit is that no published comparability result
+ever needs re-establishing.
+
+### What the carrier holds
+
+| Field | Source | What it realises |
+|---|---|---|
+| `v14_core` | ADR-042 | the whole v1.4 declaration, including its constitutive forms |
+| `coupled_quantities` | ADR-049, ADR-052 | domain, coupling, tracked dimensions + justification, descriptor basis + underlying space, closure note |
+| `species_roles` | ADR-051 | role per (species, region) |
+| `attainable_region` | ADR-053 | the object ADR-053 said no domain supplied |
+| `decision_kind` | ADR-048, E-43 | which of Core §5's decisions the chain serves |
+
+Three queries make the design claims checkable rather than assertable: `roles_for` (one
+species' roles across regions), `parameter_only_species` (E-29's part 2, mechanically),
+and `quantities_with_coupling` (the predicate E-25's refusal needs).
+
+### One decision made against a first attempt, and it is the useful part
+
+The pairwise-exclusion constraint's **product budget** was first written as a module
+constant in `omi/proposed/v15.py`. It was moved into the domain's own declaration when the
+first realistic formulation inside the attainable region was certified `EXCLUDED_PAIR` by
+it. **The fix was not to retune the constant** — that would be adjusting a criterion to make
+a case fit, which the standing requirements forbid. It was to notice that the constant was
+in the wrong place:
+
+> "Cannot both be high" is a claim about a particular chemistry — where the two coordinates'
+> ranges sit and where their interaction actually bites. A fixed budget in domain-neutral
+> code is a domain claim on the wrong side of CLAUDE.md invariant 3, and a number no domain
+> ever had to defend, which is E-44's shape.
+
+So the exclusion is now a `(a, b, budget, reason)` quadruple, the budget is domain-declared
+with its basis stated, and an exclusion with a non-positive budget or an empty reason is
+refused at construction — an unexplained constraint on a practitioner's search is the
+unsourced-assertion shape ADR-043 rejects for constitutive forms.
+
+### Alternatives rejected
+
+*Fields with defaults on the v1.4 carrier.* Rejected — three reasons above.
+
+*A flat `ProposedV15Declaration` reproducing all v1.3 and v1.4 fields.* Rejected: it makes
+every existing test's `diff` call a special case and re-opens exactly the comparability
+question ADR-042 closed.
+
+*Reusing `PROPOSED_V1_4` for both extensions.* Rejected: E-35's argument is that a level
+name needs its version, and two extensions sharing a version label make a v1.5 claim
+indistinguishable from a v1.4 one — the defect, one layer up.
+
+*Enumerated reason codes for `tracked_justification`.* Not implemented, deliberately. It is
+a live candidate accepted at the Part 3 gate as needing **its own** decision, and folding it
+in here would settle by convenience a question that was explicitly left open.
+
+### What would change this decision
+
+A v1.4 document actually being published, at which point `PROPOSED_V1_4` becomes `V1_4` and
+the nesting's middle layer stops being provisional. Or a demonstration that the indirection
+costs more in reader effort than the comparability guarantee is worth — which would be an
+argument for flattening at a *release* boundary, never mid-track.
+
+---
+
+## ADR-060 — The discovery domain: a third decision kind, declared and not built
+
+**Status.** Accepted — **declaration only. No evolution operator, no campaign.**
+**Track.** v1.5 planning, Part 5(2).
+**Pins.** `tests/test_sdl_declaration.py` (12 checks).
+**Is not** where the decision machinery gets proved. Part 5(1) did that, and reported that
+two of four diagnostics do not currently drive anything.
+
+### What it is, and why it is genuinely third
+
+A supported heterogeneous catalyst formulated from a multi-metal precursor, calcined, then
+evaluated. The claim that it is a *third* case rests on one property, and it is the control
+axis:
+
+| Domain | Control axis | Decision | Inverse problem |
+|---|---|---|---|
+| flagship | **apparatus**-determined | which route to run on a given material | process (control) inverse |
+| contrast | **usage**-determined | how to operate a given artefact | usage (control) inverse |
+| **discovery** | **acquisition**-determined | **what to make** | **composition inverse** (ADR-053) |
+
+The third axis is not a variation on the first two. An apparatus operator follows a route
+and a service duty cycle is imposed by the application; an acquisition policy *chooses the
+next thing to exist*. That is what moves the Parameter-role quantities out of the fixed index
+and into the decision variables, which is exactly ADR-053's definition of the composition
+inverse. Composition is therefore the primary designed variable here rather than a
+constant — which no existing domain exercises.
+
+**Every one of Core §4's seven items differs from both existing domains** (measured, not
+asserted: `test_the_declaration_differs_from_both_existing_domains_on_every_item`). A third
+domain that agreed on several items would add little, since the existing pair was chosen to
+invert each other.
+
+### What it declares that neither existing domain does
+
+**1. Constitutive forms with composition-dependent validity** — two of them
+(`LANGMUIR_HINSHELWOOD`, `PARTICLE_COARSENING`), so the chain-level worst-case aggregation
+`worst_extrapolation` has something to aggregate; a single-form domain cannot exercise it.
+Plus ADR-054's second-order declaration: `COMPOSITION_VALIDITY_INTERVAL`, the descriptor
+interval over which those validity ranges are *themselves* claimed to hold.
+
+**2. Species roles per region** — and the promoter is `CONTROL` in the bulk and `STATE` in
+the surface layer, **simultaneously, in one chain**. ADR-051's central claim was that the
+same quantity takes different roles and that a framework hard-coding one is wrong; this is
+the first declaration in the repository where it is exercised rather than argued. Support is
+`PARAMETER` in both regions and is therefore returned by `parameter_only_species()`, making
+E-29's part 2 mechanical: a readout depending only on it is a readout of the grade, not of
+the process.
+
+**3. An attainable region** — the object ADR-053 explicitly declined to design a certificate
+for, because none existed and inventing one would be improvisation. Descriptor bounds,
+underlying-space bounds, a simplex constraint, one declared pairwise exclusion with its
+mechanism and its budget, and a prose route note. Its report names **which** constraint bound
+across four distinct verdicts, which is what makes the composition inverse a third inverse
+problem by Core §5's own separating criterion rather than a relabelled structure inverse.
+
+**4. `GLOBAL_POINT` on a fourth independent domain** — pore-network accessibility has no
+local value even in principle, which is E-22's revised case, the one that forced its first
+proposed wording (a field over the body) to be withdrawn.
+
+### Carrying Part 5(1)'s negative results forward, as required
+
+**The validity report goes from dark to live, and the declaration says exactly what that
+buys.** On contrast it was structurally unavailable: no declared form, nothing to report
+against. Here the report exists, aggregates over two forms, and names for a given evaluation
+which declared bound binds and in which space — so `ValidityAction` can distinguish
+*re-run the control inverse* from *buy physics*, which on contrast it could not do at all.
+
+**What it still cannot do is say whether the mechanism set is complete for the regime.** That
+is M11.5's measured finding and the reason §11's buy-physics row reads "signalled on the
+wrong axis". Declaring forms makes the diagnostic live; it does not make it sufficient. Said
+here so Part 6 inherits the limit rather than discovering it.
+
+**The triage stays degenerate, and this domain moves it to the other extreme rather than
+fixing it.** §5.2a measured that which degeneracy the near-diagonal share exhibits tracks one
+declared property: whether the chain declares an erasure. This domain declares one —
+calcination genuinely destroys precursor-history information — so it is **predicted** to sit
+at flagship's extreme, shares pinned at 0 or 1, margin ~0.5, rather than on contrast's
+rational ladder. That is not a rescue: both extremes are degenerate, and the observed/inferred
+label will be near-trivial here for the opposite reason. The prediction is recorded and
+asserted now (`test_the_erasure_inventory_is_non_empty_which_predicts_the_e48_extreme`) so
+Part 6 cannot mistake a trivial `observed` for an informative one.
+
+**The influence-median degeneracy (E-48's first half) is *not* escaped either.** This domain
+declares three target readouts over a seven-component state, so more than half the
+eigendirections will again have exactly zero influence and the median split will again be a
+tautology. Nothing in this declaration changes that, and nothing in it should — E-48's fix is
+a framework decision, and pre-empting it in a domain declaration would hide the defect behind
+a domain choice.
+
+### What is deliberately absent
+
+No `EvolutionOperator`. The erasure inventory names `CALCINATION` as a string, which is what
+item 3 asks for, and no operator implements it. The constitutive forms *are* evaluable, and
+that is not a contradiction: ADR-043 requires it — "a form you cannot evaluate is not a
+declaration, it is an assertion" — and a declared form is a functional relationship, not an
+operator that advances a state.
+
+ADR-054's **refusal** outside `COMPOSITION_VALIDITY_INTERVAL` is likewise declared and not
+implemented, because the refusal belongs to the operator that consumes the form. What is
+declared is the interval the refusal would fire outside.
+
+### Alternatives rejected
+
+*An alloy-design domain.* Rejected: it would be a third *metallurgical* domain, overlapping
+flagship's vocabulary and stage structure, so the generality claim would gain the least from
+exactly the place it needs the most.
+
+*Declaring no erasure, to escape §5.2a's flagship extreme.* Rejected as dishonest. Calcination
+erases precursor history; declaring otherwise to land on a different degeneracy would be
+choosing the physics to suit the diagnostic. The prediction is recorded instead.
+
+*One region instead of two.* Rejected: ADR-051's per-region claim is only exercised where a
+species holds different roles in different regions, and one region cannot exhibit it.
+
+*Naming real elements.* Rejected: it would imply a calibration this declaration does not have.
+The content is the role structure and the attainable region, not a particular chemistry — the
+same discipline `flagship_constitutive.forms` states for its parameter values.
+
+### What would change this decision
+
+A measurement showing the acquisition-determined axis is operationally the same as the
+apparatus-determined one would collapse the third decision kind into the first and remove this
+domain's reason to exist. Part 6 is where that becomes checkable.
+
 ---
 
 ## Open questions

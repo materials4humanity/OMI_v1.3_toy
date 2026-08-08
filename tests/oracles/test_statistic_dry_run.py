@@ -3,7 +3,7 @@ from exploration noise, and does its reading **grow** along the axis (ADR-057,
 docs/DECISIONS.md).
 
 Structural assertions only, at a reduced replicate count so the suite stays fast. The
-reported figures come from `scripts/run_v15_statistic_dry_run.py` at the module's declared
+reported figures come from `scripts/run_v15_part5_1.py` at the module's declared
 `N_REPLICATES`; what is asserted here is that the three **verdicts** are what the record
 says, which is the part a later change could silently break. The verdicts were checked to
 be identical at 16 and at 40 replicates before this file was written.

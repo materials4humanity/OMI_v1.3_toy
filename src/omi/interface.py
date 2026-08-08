@@ -80,6 +80,17 @@ class SpecificationVersion(Enum):
     v1.4 document exists: this is a candidate extension carrying evidence, not
     a released specification."""
 
+    PROPOSED_V1_5 = "proposed-v1.5"
+    """The proposed v1.5 extension (ADR-048 – ADR-060): the coupled-quantity,
+    role and attainability declarations, built *alongside* v1.4 by the same
+    composition discipline (`omi.proposed.v15`; ADR-059).
+
+    A third value rather than a re-use of :attr:`PROPOSED_V1_4`, because
+    `docs/V1.4-EDITS.md` E-35's finding is that a level name is not
+    self-describing without the version it is claimed against — and that
+    argument does not stop applying at the second extension. A domain declaring
+    v1.5's refinements is not making a v1.4 claim."""
+
 
 class InvariantKind(Enum):
     """Item 6's invariants are declared as free-text names (ADR-016); this is

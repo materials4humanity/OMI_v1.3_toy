@@ -15,7 +15,7 @@ The job of the code is to make the framework's claims **measurable and
 falsifiable**, not to predict well (`CLAUDE.md` §2). Read that before reading any
 result as a performance number.
 
-## The ledger: `docs/V1.4-EDITS.md` (51 entries, grouped by root cause)
+## The ledger: `docs/V1.4-EDITS.md` (52 entries, grouped by root cause)
 
 Entry IDs are permanent (E-34 was withdrawn into E-29 and its number retired, never
 reused). §1 holds the authoritative counts and the entry locator. The groups:
@@ -30,7 +30,7 @@ reused). §1 holds the authoritative counts and the entry locator. The groups:
   (E-29–E-32, E-40, E-44, E-46, E-52). Four of the five domain-assessment entries live here.
   Six missing categories, and the count is now the argument.
 - **§6 — diagnostics blind to their own dominant error source** (E-03, E-04, E-18,
-  E-05, E-06, E-15, E-19, E-33, E-45, E-47, E-48, E-49, E-51). Thirteen entries — the
+  E-05, E-06, E-15, E-19, E-33, E-45, E-47, E-48, E-49, E-51, E-53). Fourteen entries — the
   largest group. E-45 alone carries an argument rather than a measurement and says so;
   E-47 was argued, then measured, then **narrowed by the measurement**.
 - **§7 — status markers over/understating completeness** (E-01, E-02, E-08, E-09, E-10).
@@ -43,7 +43,7 @@ reused). §1 holds the authoritative counts and the entry locator. The groups:
   scope), and finds the framework prices only one of six.
 - **§12** states what the build never attempted.
 
-**Provenance matters and is not flattened:** 46 entries were found by *attempting to
+**Provenance matters and is not flattened:** 47 entries were found by *attempting to
 build* the framework; 5 (E-29–E-33, marked `[domain-assessment]`) by *reading it
 against physics* (`docs/PHYSICS-ADEQUACY.md`).
 
@@ -64,11 +64,15 @@ against physics* (`docs/PHYSICS-ADEQUACY.md`).
 | M11 | the constitutive-form extrapolation track — **refuted** | E-35, E-38, E-39, E-40, E-41, E-42; F1–F4 |
 | v1.5 planning, Parts 1–4 | **design and ADRs only, no code** — a declared composition axis, the interface-arity pressure it exposes, parameter equifinality | E-43, E-44, E-45, E-46, E-47; ADR-048–ADR-055, `docs/V1.5-PLANNING-BRIEF.md` |
 | v1.5 planning, Part 5(1) | the contrast decision loop (**design only**), the statistic dry-run, and E-47 **measured** | E-48–E-52; ADR-056–ADR-058, `docs/V1.5-PART5-1.md` |
+| v1.5 planning, Part 5(2) | the E-48 triage, and the SDL domain's **declaration** (no operators) | E-53; ADR-059–ADR-060, `docs/V1.5-PART5-2.md` |
 
 Parts 1–4 produced no implementation: five ledger entries found by *designing against*
 the framework rather than building on it, E-45 marked derived-not-measured. Part 5(1) kept
 the loop design-only but ran its inputs, its dry-run and the E-47 measurement — which
-confirmed E-47's mechanism and refuted two of its claims.
+confirmed E-47's mechanism and refuted two of its claims. Part 5(2) triaged E-48 (the
+degeneracy is a property of the *statistic*, and both implemented domains are degenerate at
+opposite extremes) and declared a **third domain** — `src/omi_domains/sdl/`, a third decision
+kind, with no operator and no campaign.
 
 M11 is the headline. Its account is `docs/M11-RECORD.md`; the two sweeps are
 `docs/M11.4-EXTRAPOLATION.md` and `docs/M11.5-EXTRAPOLATION.md`, each preceded by a
@@ -114,10 +118,13 @@ By declared scope (CLAUDE.md §9 anti-goals), never attempted, so the build has
   the **linear-Gaussian dichotomy proof** (Core §3.9), **compute-budget/modality
   numbers** (Spec §3.7, §12).
 
-And two limits of what *was* built: **one flagship + one thin contrast domain** (the
-generality claim rests on two, and M10's interface-fillability sketches; a third
-domain is future work), and **no real neural-operator training at scale** — analytic
-operators are ground truth throughout (CLAUDE.md §2: the operators are not the point).
+And two limits of what *was* built: **two domains with operators** — flagship plus a thin
+contrast (the generality claim rests on those two, on M10's interface-fillability sketches,
+and now on a **third domain declared but not built**: `src/omi_domains/sdl/` fills all seven
+items and the v1.5 refinements with no operator behind them, which is evidence for
+fillability and not for prediction) — and **no real neural-operator training at scale**:
+analytic operators are ground truth throughout (CLAUDE.md §2: the operators are not the
+point).
 
 ## The reproduction path
 

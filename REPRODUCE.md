@@ -33,13 +33,13 @@ Confirm the package imports and the suite runs:
 
 ```bash
 python -c "import omi, omi_domains; print('ok')"     # -> ok
-pytest -q                                            # ~315 s
+pytest -q                                            # ~325 s
 ```
 
 Expected tail:
 
 ```
-327 passed, 2 skipped in ~315s
+345 passed, 2 skipped in ~325s
 ```
 
 The two skips are intentional (torch-optional paths with a numpy fallback; the
@@ -47,7 +47,7 @@ fallback itself is tested). Type-checking and lints:
 
 ```bash
 mypy --config-file pyproject.toml src tests   # cold ~30 s, warm <1 s (on-disk .mypy_cache)
-# -> Success: no issues found in 128 source files
+# -> Success: no issues found in 136 source files
 
 pytest tests/lint -q                          # ~1 s -> 13 passed
 ```
@@ -245,8 +245,8 @@ CI runs the suite twice to catch it.
 | Result | Command | Runtime | Expected |
 |---|---|---|---|
 | install | `pip install -e '.[dev]'` | ~17 s | (wheels) |
-| full suite | `pytest -q` | ~315 s | 327 passed, 2 skipped |
-| types | `mypy --config-file pyproject.toml src tests` | ~30 s cold | Success, 128 files |
+| full suite | `pytest -q` | ~325 s | 345 passed, 2 skipped |
+| types | `mypy --config-file pyproject.toml src tests` | ~30 s cold | Success, 136 files |
 | lints | `pytest tests/lint -q` | ~1 s | 13 passed |
 | M11.5 refutation + asymmetry + cancellation | `python scripts/run_m11_5_extrapolation.py` | ~22 s | §2–§4 above |
 | M11.5 structural assertions | `pytest tests/test_m11_5_extrapolation.py -q` | ~5 s | 6 passed |
@@ -259,12 +259,15 @@ CI runs the suite twice to catch it.
 | Part 5(1) §5.1 diagnostic trace | `pytest tests/oracles/test_contrast_diagnostic_trace.py -q` | ~60 s | 7 passed |
 | Part 5(1) §5.2 statistic dry-run | `pytest tests/oracles/test_statistic_dry_run.py -q` | ~115 s | 5 passed |
 | Part 5(1) §5.3 E-47 measurement | `pytest tests/oracles/test_parameter_ridge.py -q` | ~33 s | 6 passed |
+| Part 5(2) §5.2a E-48 triage | `pytest tests/oracles/test_share_threshold_degeneracy.py -q` | ~4 s | 6 passed |
+| Part 5(2) SDL declaration | `pytest tests/test_sdl_declaration.py -q` | <1 s | 12 passed |
 
-The five v1.5 Part 5(1) rows were added after this file's fresh-virtualenv run and were
+The seven v1.5 Part 5(1) and 5(2) rows were added after this file's fresh-virtualenv run and were
 verified in the development environment rather than in a clean one — stated rather than
 folded in, since the rest of the table carries the stronger guarantee. They add no
 dependency, so the difference is a claim about what was checked, not about what would
-work. Their results are written up in `docs/V1.5-PART5-1.md`, which is a live document.
+work. Their results are written up in `docs/V1.5-PART5-1.md` and `docs/V1.5-PART5-2.md`, both
+live documents.
 
 ## 10. If something does not reproduce
 
