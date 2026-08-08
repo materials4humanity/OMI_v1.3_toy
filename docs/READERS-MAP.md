@@ -15,7 +15,7 @@ The job of the code is to make the framework's claims **measurable and
 falsifiable**, not to predict well (`CLAUDE.md` §2). Read that before reading any
 result as a performance number.
 
-## The ledger: `docs/V1.4-EDITS.md` (46 entries, grouped by root cause)
+## The ledger: `docs/V1.4-EDITS.md` (51 entries, grouped by root cause)
 
 Entry IDs are permanent (E-34 was withdrawn into E-29 and its number retired, never
 reused). §1 holds the authoritative counts and the entry locator. The groups:
@@ -27,21 +27,23 @@ reused). §1 holds the authoritative counts and the entry locator. The groups:
 - **§4 — declarations satisfiable without their property** (E-12, E-13, E-17, E-20,
   E-23, E-26, E-27, E-35, E-43). Nine entries, one shape.
 - **§5 — the interface has no declarable category for something the physics needs**
-  (E-29–E-32, E-40, E-44, E-46). Four of the five domain-assessment entries live here.
+  (E-29–E-32, E-40, E-44, E-46, E-52). Four of the five domain-assessment entries live here.
+  Six missing categories, and the count is now the argument.
 - **§6 — diagnostics blind to their own dominant error source** (E-03, E-04, E-18,
-  E-05, E-06, E-15, E-19, E-33, E-45, E-47). Ten entries; the last two carry an
-  argument rather than a measurement and say so.
+  E-05, E-06, E-15, E-19, E-33, E-45, E-47, E-48, E-49, E-51). Thirteen entries — the
+  largest group. E-45 alone carries an argument rather than a measurement and says so;
+  E-47 was argued, then measured, then **narrowed by the measurement**.
 - **§7 — status markers over/understating completeness** (E-01, E-02, E-08, E-09, E-10).
 - **§8 — defects between individually sound prescriptions** (E-28, E-36).
-- **§9 — a principle the framework never states** (E-37, E-39, E-41, E-42) — enlarged
-  by the M11 extrapolation track.
+- **§9 — a principle the framework never states** (E-37, E-39, E-41, E-42, E-50) —
+  enlarged by the M11 extrapolation track and again by v1.5 planning.
 - **§10 — confirmations** (E-07 found nothing wrong; E-38 a proposal that worked).
 - **§11** re-reads every entry by *which practitioner intervention it blocks* (buy
   sensing / characterisation / data / physics / run experiments / declare out of
   scope), and finds the framework prices only one of six.
 - **§12** states what the build never attempted.
 
-**Provenance matters and is not flattened:** 41 entries were found by *attempting to
+**Provenance matters and is not flattened:** 46 entries were found by *attempting to
 build* the framework; 5 (E-29–E-33, marked `[domain-assessment]`) by *reading it
 against physics* (`docs/PHYSICS-ADEQUACY.md`).
 
@@ -60,11 +62,13 @@ against physics* (`docs/PHYSICS-ADEQUACY.md`).
 | M9 | inverse design, reachability certificates, decision layer | E-06, E-17 |
 | M10 | remediation; baseline characterisation; falsification thresholds | E-16, E-26, E-27; `docs/M10.2-*` |
 | M11 | the constitutive-form extrapolation track — **refuted** | E-35, E-38, E-39, E-40, E-41, E-42; F1–F4 |
-| v1.5 planning | **design and ADRs only, no code** — a declared composition axis, the interface-arity pressure it exposes, parameter equifinality | E-43, E-44, E-45, E-46, E-47; ADR-048–ADR-055, `docs/V1.5-PLANNING-BRIEF.md` |
+| v1.5 planning, Parts 1–4 | **design and ADRs only, no code** — a declared composition axis, the interface-arity pressure it exposes, parameter equifinality | E-43, E-44, E-45, E-46, E-47; ADR-048–ADR-055, `docs/V1.5-PLANNING-BRIEF.md` |
+| v1.5 planning, Part 5(1) | the contrast decision loop (**design only**), the statistic dry-run, and E-47 **measured** | E-48–E-52; ADR-056–ADR-058, `docs/V1.5-PART5-1.md` |
 
-The last row is not a milestone and produced no implementation: five ledger entries
-found by *designing against* the framework rather than building on it. Every one is
-marked accordingly (E-45 derived-not-measured, E-47 Untested).
+Parts 1–4 produced no implementation: five ledger entries found by *designing against*
+the framework rather than building on it, E-45 marked derived-not-measured. Part 5(1) kept
+the loop design-only but ran its inputs, its dry-run and the E-47 measurement — which
+confirmed E-47's mechanism and refuted two of its claims.
 
 M11 is the headline. Its account is `docs/M11-RECORD.md`; the two sweeps are
 `docs/M11.4-EXTRAPOLATION.md` and `docs/M11.5-EXTRAPOLATION.md`, each preceded by a

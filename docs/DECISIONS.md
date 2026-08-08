@@ -4500,6 +4500,516 @@ connection between Part 4 and Part 6's campaign statistic, and Part 6's candidat
 - **It does not repair the identifiability.** It measures and names it. Per ADR-048,
   a diagnostic that says which purchase to make is the product.
 
+## ADR-056 — The contrast decision loop: an *ordered* rule over four diagnostics, with the ablation that decides whether it is driven or decorated
+
+**Status.** Accepted — **design only.** No loop implementation.
+**Track.** v1.5 planning, Part 5(1), §5.1.
+**Pins.** Nothing yet — deliberately. The measured diagnostic traces this ADR is
+designed against were produced by the Part 5(1) dry-run harness
+(`tests/oracles/contrast_insufficiency.py`), and they already decide three of the
+four diagnostics' fates before a line of loop code exists.
+
+### Why contrast, and what "driving" has to mean
+
+Contrast is sequential by construction (`CyclingStep` over intervals), declares an
+**empty erasure inventory** so state accumulates irreversibly, has the poorest
+observation suite in the repository (one evaluable modality of three declared), and
+already declares `dendrite_risk` as Type-0/Class-B, which supplies the asymmetric-cost
+structure Spec §7.3 and ADR-041 need. Every ingredient the loop consumes is declared
+by the domain rather than invented for the demonstration, which is the only reason the
+demonstration means anything.
+
+The requirement that shapes the whole design: **the loop must be driven by the
+diagnostics, not annotated with them.** A loop whose action sequence is unchanged when
+the diagnostics are replaced by constants has demonstrated nothing about the framework
+— it has demonstrated that a state-dependent policy can be written on top of a chain,
+which was never in doubt. So the ablation is part of the design, not a test written
+afterwards, and §"The vacuity ablation" below fixes it.
+
+### The action set, and the item that hosts none of it
+
+The brief's framing is that the actions come from contrast's declared items 2 and 5.
+Three of the four do. **The fourth does not, and that is a finding rather than a
+detail.**
+
+| Action | Declared home | Status |
+|---|---|---|
+| **set control** — choose next interval's current within `𝒰_adm` | item 2 (control space): "bounded by manufacturer charge/discharge limits" | declared |
+| **derate** — narrow the admissible current band for the remainder | item 2, as a restriction of `𝒰_adm` | declared |
+| **commission a measurement** — instrument the next interval with a declared modality | item 5 (observation suite): terminal current, voltage, surface temperature | declared, with one caveat below |
+| **retire** — end the campaign; the chain is no longer in scope at the required precision | **no item** | **undeclarable** |
+
+Retirement is Core §3.9's "declare out of scope" reached *during* operation rather
+than at design time. Core §4's seven items declare what a domain *is* and what can be
+*done to it*; none of them declares the criterion under which the instantiation stops
+being the right description. The loop must nonetheless take the action, so this design
+declares the retirement criterion in the **analysis**, alongside the target set
+(CLAUDE.md invariant 10), and records the absence rather than quietly siting it under
+item 6's invariants — an invariant is a conservation statement the chain must satisfy,
+not a decision rule about when to stop trusting it. Filed as a framework finding.
+
+**The caveat on item 5.** Contrast declares three observation modalities and the state
+schema supports two: there is no state component standing in for *surface
+temperature*, so a "commission the temperature sensor" action is declarable and not
+evaluable. The loop's candidate-measurement pool is therefore smaller than the
+declared suite, and the loop must say so rather than silently enumerating two of
+three. This is the same shape as E-44 (a scope feature declared with no item behind
+it) one level down: a modality declared with no state component behind it.
+
+### The rule: ordered, not scored
+
+At interval `k`, with the target set declared in advance (`dendrite_risk` as the
+Class-B target, `terminal_voltage` as the Class-A target), the loop evaluates the four
+diagnostics and takes the **first** action whose precondition holds:
+
+1. **Retire** — the declared target leaves its declared specification band with
+   probability above the declared tolerance (`omi.inverse.probability_of_conformance`
+   over the Class-B predictive distribution, per CLAUDE.md invariant 4).
+2. **Commission a measurement** — the blocking-term trichotomy
+   (`omi.sufficiency.diagnose_blocking_term`, Spec §1.7) returns `VARIANCE`, **and**
+   the best candidate placement's `ΔV_c/cost` (`omi.observability.value_of_information`,
+   `best_placement`, Spec §3.4) exceeds the declared cost floor.
+3. **Derate** — the asymmetric-cost threshold (ADR-041's
+   `decision_sensitive_threshold(σ, δ, c_FA, c_miss)`) is crossed by the hazard's
+   current posterior mean, with `c_miss ≫ c_FA` because a dendrite event is not
+   symmetric with a lost cycle.
+4. **Set control at nominal** — nothing above fired.
+
+**Why ordered rather than a scored objective.** Spec §7.3 requires an infeasibility
+report to say which of trust region, admissible control, or aleatoric spread binds,
+*in order*; E-06's finding is that an unordered report cannot say which of three terms
+is responsible when the three have a real dependency order, and §11 of the ledger
+names that ordered diagnosis as "the closest thing the framework has to a general
+intervention-selection mechanism." This loop is that mechanism applied to operations
+instead of to inverse design, so it inherits the ordering rather than inventing a
+weighted score whose weights no document supplies. A scored rule would also destroy
+the ablation: with four terms in one sum, freezing one changes the sum a little and the
+argmax rarely, so "did this diagnostic drive anything" becomes unanswerable.
+
+**The drift monitor is a gate on the other three, not a fifth action.** If the
+innovation monitor says the model is inconsistent with the data, then the posterior the
+other three diagnostics are computed from is not trustworthy, so acting on it is worse
+than not acting. When the monitor trips **upward** (innovations larger than the model
+predicts — the model is wrong), the loop may only commission or retire; it may not
+derate, because derating on a model known to be misspecified is acting confidently on
+a quantity just declared unreliable. When it trips **downward** (innovations smaller
+than predicted — the forecast covariance is overstated) the model is not wrong, it is
+over-hedged, and the correct response is the opposite: the loop may proceed, and the
+*commission* branch should be suppressed, because buying information to reduce an
+uncertainty that is already overstated buys nothing.
+
+`omi.assimilate.DriftReport` does not currently distinguish the two tails:
+`drift_detected` is a boolean array and `any_drift` a boolean, so a lower-tail trip and
+an upper-tail trip are indistinguishable to a caller. Since the two require **opposite**
+responses, this design cannot be implemented against the current API without reading
+`windowed_mean` against `lower_limit`/`upper_limit` by hand. Recorded here, filed as a
+framework finding, and **not fixed** — Part 5(1) is design-only for the loop.
+
+### What the measured traces already decide
+
+Contrast's diagnostics were traced over a 24-interval campaign with per-interval
+voltage telemetry (the numbers are in the Part 5(1) report and
+`build/observations.json`). Three of four are decided before the loop exists:
+
+| Diagnostic | Measured behaviour over the campaign | Can it drive a decision? |
+|---|---|---|
+| **Danger score / triage** | `influence_median` is **exactly 0.0** at every interval; the dangerous set holds three directions at every interval; total danger varies by 6×10⁻⁵ of its own mean across the campaign's interior; the label set changes at two of thirteen sampled intervals and **both changes are decided at machine precision** | **No — worse than no: it fires arbitrarily** |
+| **Validity report** | contrast declares **no** constitutive form and **no** validity range; only `flagship_constitutive` implements `extrapolation_report` | **No** — structurally unavailable on this domain |
+| **Innovation sequence** | per-window false-alarm rate on the null arm is at nominal (mean NIS 1.007), but `any_drift` fires on **38.5%** of null campaigns | **Yes, as a gate** — but not via `any_drift` |
+| **Blocking trichotomy** | needs matched-pair campaign data, which contrast can supply | **Yes** — and it is the only one of the four that ranks a *purchase* |
+
+**The triage failure is a threshold degeneracy, not a domain weakness, and it is
+worth stating precisely.** ADR-020 classifies a direction as influential when
+`influence ≥ influence_median`. Influence is a quadratic form `vᵀSᵀWSv`, hence
+non-negative. On contrast more than half the directions have influence exactly zero —
+`dendrite_risk` depends on two of seven components — so the median *is* zero and
+`influence ≥ 0` is a tautology. Every direction is "influential", `MARGINALISABLE` and
+`OBSERVED_BUT_IRRELEVANT` become unreachable, and the four-way triage collapses to the
+two-way identifiability split. The pre-existing `test_domain_triage.py` already records
+`contrast_influence_median == 0.0` and asserts it; what is new here is the
+*consequence* — that a decision loop keyed on the triage's labels cannot fire on this
+domain, and would not fire on any domain whose target set touches fewer than half the
+state components, which is most domains.
+
+**And there is a second, sharper degeneracy that the trace found and this design did not
+anticipate.** The categorical output is not constant: the label set gains an `observed`
+entry at two of thirteen sampled intervals. But it does not change because the
+information changed. ADR-020 operationalises Spec §3.3's "one near-diagonal Gramian term
+dominates" as a strict `share > 0.5` **with no margin**, and on contrast the share passes
+smoothly through 0.5. At the interval where it does, two eigendirections with shares of
+`0.5000000000596` and `0.4999999999856` — agreeing to eleven decimal places — receive
+**different labels**, one `observed` and one `inferred`. That is the distinction Core
+§3.8 describes as whether "the chain model, not any instrument, is doing the work", and
+here it is decided by the sign of a rounding error. The smallest margin to the threshold
+anywhere in the campaign is `1.4×10⁻¹¹`.
+
+So the honest statement is not that the triage's categorical output cannot fire. It is
+that **it fires arbitrarily**, which is a worse failure than silence: a loop keyed on the
+labels would derate or commission at two intervals distinguished by nothing physical.
+Both degeneracies push the same way and this design takes the same decision, but the
+second is the stronger reason for it.
+
+The total danger score's own jump at the **terminal** interval is separate and is
+excluded from the flatness claim rather than folded into it: at the last index there is
+no downstream observation left to propagate information from, so the posterior collapses
+to the prior. A campaign that has ended is not a campaign a decision changes.
+
+**Design consequence, taken rather than worked around.** The loop's step 2 is keyed on
+the **blocking trichotomy and `ΔV_c/cost`**, both continuous, and *not* on the triage's
+labels. The triage still supplies `variance_term` as the trichotomy's variance input,
+so it is not removed from the loop — but it enters as a number, not as a category, and
+the categorical output is reported as **never firing in the campaign's interior** rather
+than quietly dropped.
+
+### The vacuity ablation
+
+The loop is run four times over the same seeded campaign:
+
+- **full** — all diagnostics live;
+- **frozen-`k`** — one diagnostic replaced by its own campaign median, holding the
+  rest live, once per diagnostic;
+- **all-frozen** — every diagnostic replaced by its campaign median.
+
+The reported quantity is the **action-sequence edit distance** from *full*, per
+ablation. A diagnostic whose frozen run reproduces *full* exactly drove no decision,
+and is reported as such by name. If *all-frozen* reproduces *full*, the demonstration
+is vacuous and that is the result — not a bug to be tuned away.
+
+**Freezing at the median rather than at zero** is deliberate: zeroing a diagnostic
+changes the *scale* of every threshold comparison and would guarantee a different
+action sequence for a reason that has nothing to do with information content. The
+median preserves the magnitude and removes only the time variation, which is the
+property under test.
+
+### Alternatives rejected
+
+*A scored objective over the four diagnostics.* Rejected: no document supplies the
+weights, and it makes the ablation uninterpretable (above).
+
+*Adding a declared constitutive form to contrast so the validity report can fire.*
+Rejected for Part 5(1): it is domain code, the brief forbids it here, and the absence
+is more informative than the patch — a domain can be fully OMI-0 conformant and still
+have no validity signal available to an operational loop.
+
+*Siting the retirement criterion under item 6 (invariants).* Rejected: an invariant is
+a conservation law the chain satisfies; a retirement rule is a decision about when to
+stop believing the chain. Conflating them would let a domain claim it had declared an
+end-of-life criterion by listing a conservation law, which is exactly the
+satisfiable-without-the-property shape §4 of the ledger documents nine times.
+
+*Keying step 2 on `dangerous_set()`.* Rejected on the measurement: the set is
+non-empty and constant at every interval, so it carries no decision information on
+this domain.
+
+### What would change this decision
+
+A revision of ADR-020's median split that is well-defined when the influence
+distribution is more than half zero — a positive-influence-conditional median, or an
+absolute floor in declared target-variance units — would restore the categorical
+triage as a driver and change step 2. So would a `DriftReport` that reports which
+control limit was crossed, which would let the drift gate be implemented against the
+API rather than around it.
+
+---
+
+## ADR-057 — The statistic dry-run: two arms, a null-sigma separation, and why E-41's check cannot be called on a diagnostic
+
+**Status.** Accepted — **design, and executed.**
+**Track.** v1.5 planning, Part 5(1), §5.2.
+**Pins.** `tests/oracles/contrast_insufficiency.py`,
+`tests/oracles/test_statistic_dry_run.py`.
+**Fixes no thresholds.** Part 6's pre-registration happens in Part 6, in its own
+earlier commit. This ADR selects a candidate and establishes that it is not inert.
+
+### What the statistic has to do
+
+Part 6's claim needs a statistic that separates **model insufficiency** from
+**exploration noise**: an acquisition loop that keeps proposing and keeps failing must
+be distinguishable from one that is merely sampling a noisy surface. Both look like
+"the model is not improving". Only the first is a finding.
+
+So the dry-run runs **two arms** over the same seeded contrast campaign:
+
+| Arm | Construction | What a good statistic reads |
+|---|---|---|
+| **N** (noise only) | the declared state is sufficient; only observation noise | low |
+| **I** (insufficiency) | a per-cell latent **outside the declared schema** modulates the SEI growth rate; observation noise identical to Arm N | high, and **rising with campaign depth** |
+
+**Why a hidden latent and not a wrong rate constant.** The first design planted a
+porosity-dependent SEI rate — the truth's `sei_rate` multiplied by a function of
+electrode porosity, which the declared operator lacks. That is an *operator* error, not
+a *state* insufficiency: porosity is in the declared schema, so matching on the full
+declared state still determines the future, Axiom S still holds, and the sufficiency
+deficit is correctly **zero**. It would have made candidate 1 look inert for a reason
+that had nothing to do with candidate 1. The planted defect must be a genuine
+state-space insufficiency for the sufficiency deficit to be the right instrument at
+all, which is itself worth recording: *"the model is insufficient"* names two different
+failures, and Spec §1's machinery addresses exactly one of them.
+
+The latent is a scalar per cell, drawn once, constant over the campaign — so it is a
+hidden **state** component in Core §3.1's sense (Axiom S fails without it) rather than
+a noise process, and Arm N is the same generator with its variance set to zero. One
+code path, one switch, matching how `strain_experiment.labels(..., k_drx=0.0)` produces
+M11.5's withheld-free truth.
+
+### The three candidates, made precise
+
+Each is evaluated at a **near** and a **far** campaign depth, both reached by cycling
+the same declared chain — no extrapolation outside anything declared, because the
+question is whether the statistic's reading *grows*, not whether the chain is valid
+there.
+
+1. **`deficit` — sufficiency deficit trending upward.** Matched pairs are formed by
+   matching on the **observable** history (the voltage trajectory), which is what a real
+   campaign can match on and which leaves the unobserved components free to differ —
+   Spec §1.2's own point that "matching is performed on measurable proxies, never on the
+   state itself". Reported as `DeficitResult.deficit_squared` with all three terms
+   (ADR-021), never the raw gap.
+2. **`innovation_bias` — innovations biased rather than white.** The **signed mean**
+   innovation over a window, normalised by its own predicted standard error:
+   `|mean(d)| / sqrt(mean(S)/n)`. Deliberately **not** the NIS chi-squared statistic
+   `omi.assimilate.innovation_drift_monitor` computes: NIS is a squared, sign-blind
+   scale test, and a sequence biased by exactly the amount the model's own covariance
+   predicts passes it. This is close to the CUSUM variant ADR-026 rejected as the
+   default monitor, and the dry-run is the right place to find out whether the rejected
+   alternative is the one an SDL claim needs.
+3. **`parameter_spread` — parameter danger rising along the proposed direction.** The
+   declared operator's rate parameters are refitted on data up to the current depth over
+   many seeds; the statistic is the implied predictive spread of the declared target at
+   **twice** the current depth (the direction an acquisition proposing "cycle harder"
+   would move in), normalised by the same spread evaluated in-window. This is ADR-055's
+   parameter triage in its smallest honest form — a spread, not yet a danger score,
+   because the influence-times-uncertainty product needs the parameter information
+   matrix ADR-055 designs and Part 5(1) does not build. Reported as what it is.
+
+### The gate: E-41's criterion shape, with quantities a statistic can have
+
+E-41's divergence criterion is the standing requirement and it applies here: a
+candidate that is **flat** is inert regardless of its magnitude. The three criteria are
+kept in E-41's order and with E-41's meanings:
+
+| Criterion | Quantity | Fails as |
+|---|---|---|
+| the axis carries signal | how far the **planted insufficiency itself** moves between the two depths, in the observable's own noise units — Arm I's and Arm N's observable trajectories differenced | `INERT_AXIS` |
+| the statistic diverges | `growth_ratio = separation(far) / separation(near)` | `PARALLEL` |
+| the candidate has content | `separation_omi(far)` against `separation_baseline(far)` | `ADVERSE` |
+
+with the **separation** defined in null-arm sigma units:
+
+> `separation(depth) = |mean S(Arm I) − mean S(Arm N)| / sd S(Arm N)`
+
+**Why null-arm sigma units.** The three candidates have incommensurable natural units
+(a squared response gap, a dimensionless t-ratio, a normalised spread), and E-41's own
+lesson is that a *magnitude* cannot be compared across cases — the M11.4/M11.5 disagreements
+were 0.354 against 0.472, the same order, on a vacuous and a usable axis respectively.
+Dividing by the null arm's own scatter makes every candidate's reading "how many
+noise-widths does insufficiency move this statistic", which is the only common unit the
+three share, and it is the same reasoning CLAUDE.md invariant 1 gives for
+non-dimensionalising by aleatoric standard deviation.
+
+**The growth ratio is the reported quantity, not the separation.** A statistic with a
+huge but constant separation is a *detector* and not a *trend*, and Part 6's claim is
+about a loop that keeps failing as it keeps proposing — which is a trend. This is E-41
+verbatim: "an extrapolation test measures what happens as you go further; its
+precondition has to be about divergence, not difference."
+
+### Why `check_hold_out_discriminates` is not called
+
+`omi.proposed.holdout.check_hold_out_discriminates` implements exactly these three
+criteria in exactly this order, and this ADR does **not** call it. Its parameters are
+six prediction arrays and it scores them by RMSE against a withheld-free **truth**. A
+diagnostic statistic has no truth to be scored against — it has *arms*. Passing
+per-seed statistic values into slots named `candidate_near` and
+`truth_without_withheld_term_far` would compile and would compute numbers whose names
+lied about what they were, which is worse than a sibling.
+
+So a sibling report is written with the quantities named for what they are, citing E-41
+for the criterion structure. **This is a finding about E-39/E-41's proposed Spec §9.3
+wording, not about this repository's module:** the precondition was derived for
+comparing two *models* over a held-out region, and v1.5's own experiment needs the same
+precondition for a *diagnostic statistic*. The proposed wording as it stands does not
+reach the case the next milestone requires. Filed as a framework finding.
+
+### Baselines
+
+Spec §9.3 requires comparison against gradient-boosted trees and tabular regression;
+ADR-039 built both in numpy. The brief says "GP-baseline"; **this repository has no
+Gaussian-process baseline and one is not added** — CLAUDE.md §8 forbids a new pinned
+dependency for a comparison the Spec already specifies differently, and inventing a GP
+here would make the dry-run's baseline arm incomparable with M10.2's and M11's, which
+are the only baseline numbers in the repository. `GradientBoostedTreeRegressor` is used
+as the primary baseline and `RidgeRegressor` as the second, exactly as at M11.5. The
+substitution is recorded rather than silently made.
+
+The baseline's reading of each statistic is the same statistic computed from the
+baseline's own residuals in place of the chain's: a tabular surrogate fitted on the
+same observable history, with its held-out residual gap standing in for the deficit,
+its signed residual mean for the innovation bias, and its across-seed predictive
+spread for the parameter spread. A baseline that separates the arms as well as the
+chain does means the chain's diagnostic bought nothing, which is the `ADVERSE` verdict
+and a real result.
+
+### Alternatives rejected
+
+*Use the NIS drift monitor as candidate 2.* Rejected as the candidate, kept as a
+measurement. It is sign-blind (above), and its campaign-level aggregate `any_drift`
+fires on 38.5% of null campaigns because it is a maximum over nineteen windowed tests
+with no multiplicity correction. Both facts are reported; neither is fixed here.
+
+*One arm plus a threshold.* Rejected: with one arm there is no way to separate
+insufficiency from noise, which is the entire requirement. The two-arm construction is
+what makes the null-sigma denominator available.
+
+*Deciding the winner on separation magnitude.* Rejected — E-41's finding, applied to
+this ADR's own choice.
+
+### What would change this decision
+
+A candidate whose growth ratio passes but whose baseline arm also passes would move the
+choice to a fourth candidate rather than to a threshold, since a statistic a tabular
+surrogate reproduces is not evidence about the framework. And a `DriftReport` that
+separated its two tails would make candidate 2 implementable from the existing monitor
+rather than beside it.
+
+---
+
+## ADR-058 — Measuring E-47: the parameter metric, and why orientation rather than width is the reported quantity
+
+**Status.** Accepted — **design, and executed.**
+**Track.** v1.5 planning, Part 5(1), §5.3.
+**Pins.** `tests/oracles/test_parameter_ridge.py`.
+**Measures** `docs/V1.4-EDITS.md` E-47, which ADR-055 designed and filed as
+**Untested**.
+
+### What has to be shown, and what would refute it
+
+E-47 claims a declared constitutive form can be complete, in-window, excellently
+fitted, and still have parameters that are unidentifiable **along the axis being
+extrapolated**, so the extrapolated prediction is arbitrary within a range nothing
+reports. Its worked instance is Kocks–Mecking: fit `k₁` and `k₂` where recovery is
+barely exercised and many pairs fit equally well, implying different saturation levels
+`(k₁/k₂)²` — and saturation is what extrapolation along accumulated strain approaches.
+
+**A wide posterior is not the claim.** A parameter posterior that is wide in a direction
+the extrapolated prediction does not depend on is harmless, and reporting only the width
+would confirm E-47 on evidence that does not distinguish the harmful case from the
+harmless one. The claim is specifically about **alignment**. So the reported quantity is
+the angle between the ridge and the direction the extrapolation is sensitive to, and the
+in-envelope angle is reported beside it as the control.
+
+The measurement can refute the entry in a way the entry stands corrected rather than
+deleted: if the ridge is real but **orthogonal** to the extrapolation-sensitive
+direction, E-47's mechanism exists and its consequence does not, and the entry says so.
+
+### The construction
+
+The declared form is M11.5's contestant 2 — canonical Kocks–Mecking with the
+temperature-dependent recovery coefficient, `θ = (k₁, k₂₀, p)`, whose **mechanism set
+is complete for the training region by construction**: `TRAIN_STRAINS` all sit at or
+below `GEN_GAMMA_C`, so Generator C's withheld recrystallisation term is identically
+zero there. M11's failure is therefore absent by construction rather than by assumption,
+which is what makes this a measurement of a *different* failure.
+
+Fits are repeated over many seeds on the **same** in-envelope design of experiment with
+**observation noise added**, which is the one thing M11.5 did not have: its contestant 2
+recovered `k₁ = 8.000, k₂₀ = 2.000` exactly because its training labels were noiseless,
+and E-47's confidence statement rests on the claim that with noise the same fit becomes
+a ridge. That claim is what is being tested.
+
+Noise is **relative** (a fixed fraction of each label's own magnitude) rather than
+absolute, because the integrated stored density spans an order of magnitude across the
+query ensemble and a constant absolute noise would weight the low-`ρ` queries out of the
+fit entirely — an artefact of the noise model, not of the physics.
+
+### The declared metric, which is load-bearing here
+
+An angle between two directions in parameter space depends on how the parameters are
+scaled, so CLAUDE.md invariant 1 applies with full force and the metric is declared:
+
+> **Parameters are non-dimensionalised by their own true values**, `θ̃ᵢ = θᵢ / θᵢ*`, so
+> a displacement reads as a *fractional* change in that parameter.
+
+**Why not the invariant-1 default.** The default is to non-dimensionalise by the
+aleatoric standard deviation across the incoming population. Here the closest analogue
+would be the across-seed standard deviation of the fitted parameters — which is
+*derived from the very covariance whose anisotropy is being measured*. Scaling by it
+would force the diagonal of the covariance to unity and destroy the anisotropy the
+measurement exists to find. The true-value scale is fixed independently of the
+measurement, is available because this is a synthetic study, and is the honest choice;
+the fact that a real study has no `θ*` to divide by is a limitation of the measurement
+and is reported as one rather than hidden. A real study would use the nominal declared
+`parameters` dict (ADR-043), which for a fitted form is the best available stand-in and
+differs from `θ*` by exactly the bias the measurement is about.
+
+### The three reported quantities
+
+1. **Is it a ridge?** The condition number `λ₁/λ_min` of the across-seed parameter
+   covariance in declared units, with the per-parameter fractional standard deviations
+   beside it. A condition number near 1 means an isotropic cloud and no ridge, and E-47's
+   premise fails before its consequence is reached.
+2. **Where does the ridge point?** `alignment(γ) = |cos∠(v₁, e(γ))|` where `v₁` is the
+   covariance's leading eigenvector — the least-constrained direction — and `e(γ)` is the
+   leading right-singular vector of `∂ŷ(γ)/∂θ̃` at `θ*` over the query ensemble: the
+   direction in parameter space the prediction at accumulated strain `γ` is most sensitive
+   to. Reported as a **curve** over `γ` from the envelope edge outward, not at one point,
+   so "the ridge rotates into the extrapolation direction as you push along the axis" is
+   either visible or absent.
+3. **What does it cost?** The across-seed spread of the predicted response at the far
+   `γ`, against the same spread in-envelope and against the fit residual — the "range
+   nothing reports", in the response's own units. Plus the across-seed spread of the
+   saturation level `(k₁/k₂₀)²`, which is E-47's own named quantity.
+
+The in-envelope alignment is the control and is expected to be **low** almost by
+construction: `v₁` is approximately the null direction of the in-envelope Jacobian, so it
+is nearly orthogonal to what the in-envelope prediction is sensitive to. That is why the
+fit residual is excellent. The whole question is whether `e(γ)` **rotates away** from
+`e(γ_envelope)` as `γ` grows, and by enough to bring `v₁` into it.
+
+### The ADR-043 report is checked separately, and against the unwindowed form
+
+E-47's bullet list claims the validity report can be **clean** while all this is true.
+That is checkable directly and is checked against `KOCKS_MECKING` — which declares
+bounds on strain rate, temperature and stored density and **none on accumulated
+strain** — rather than against `KOCKS_MECKING_STRAIN_WINDOWED`. This is not
+cherry-picking the favourable form: the unwindowed declaration is the one the source
+actually establishes, the windowed sibling exists only because M11.5 needed the strain
+bound made explicit (E-40), and the whole point of E-47's bullet is that a form can be
+*silent* about the axis being extrapolated. The stored-density bound may nonetheless
+bind, since saturation `(k₁/k₂₀)²` approaches the declared ceiling of 20 at the low end
+of the temperature window. **Whichever way it comes out is reported, per query, as a
+fraction** — not restricted to a temperature sub-range that would make the bullet true,
+which would be adjusting the case to fit the criterion.
+
+### What is *not* measured, and named as such
+
+E-47's bullet "the state-direction triage reports a clean dangerous set" is not measured
+here. It is a claim about Spec §3.3 run on the M11 chain, and measuring it would require
+wiring a `ConformanceInputs` for a chain built for a different purpose. The entry's
+status is updated to reflect exactly which of its bullets carry measurements and which
+remain argued.
+
+### Alternatives rejected
+
+*A Laplace approximation / Fisher information at the fitted optimum.* Rejected as the
+primary: it is cheaper and it assumes the very local quadratic structure whose anisotropy
+is the finding, so a ridge it reports could be an artefact of the approximation. The
+across-seed refit is the E-15 precedent (300 reseeds turning an inferred mechanism into a
+demonstrated one) and it makes no such assumption. The Fisher matrix is a legitimate
+*second* reading and is out of scope here.
+
+*Reporting posterior width alone.* Rejected — it is the thing the brief specifically
+identifies as insufficient, and it cannot separate a harmful ridge from a harmless one.
+
+*Scaling parameters by their across-seed standard deviation.* Rejected: it destroys the
+measured quantity (above).
+
+### What would change this decision
+
+A refutation — a real ridge orthogonal to the extrapolation direction — narrows E-47
+rather than removing it, and the entry is corrected in place. A finding that the cloud is
+isotropic at every plausible noise level would remove E-47's premise, and the entry
+would be withdrawn to a confirmation like E-07.
+
 ---
 
 ## Open questions

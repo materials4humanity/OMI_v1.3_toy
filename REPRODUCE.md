@@ -33,13 +33,13 @@ Confirm the package imports and the suite runs:
 
 ```bash
 python -c "import omi, omi_domains; print('ok')"     # -> ok
-pytest -q                                            # ~110 s
+pytest -q                                            # ~315 s
 ```
 
 Expected tail:
 
 ```
-309 passed, 2 skipped in ~110s
+327 passed, 2 skipped in ~315s
 ```
 
 The two skips are intentional (torch-optional paths with a numpy fallback; the
@@ -47,7 +47,7 @@ fallback itself is tested). Type-checking and lints:
 
 ```bash
 mypy --config-file pyproject.toml src tests   # cold ~30 s, warm <1 s (on-disk .mypy_cache)
-# -> Success: no issues found in 122 source files
+# -> Success: no issues found in 128 source files
 
 pytest tests/lint -q                          # ~1 s -> 13 passed
 ```
@@ -194,7 +194,7 @@ before `src/omi/` was touched by the proposed-v1.4 extension) — is committed a
 `audit/pre-m11-observations.json`, so the check is one step from a clean clone:
 
 ```bash
-scripts/check_audit_gate.sh audit/pre-m11-observations.json    # ~110 s (runs the full suite)
+scripts/check_audit_gate.sh audit/pre-m11-observations.json    # ~320 s (runs the full suite)
 ```
 
 Expected:
@@ -245,16 +245,26 @@ CI runs the suite twice to catch it.
 | Result | Command | Runtime | Expected |
 |---|---|---|---|
 | install | `pip install -e '.[dev]'` | ~17 s | (wheels) |
-| full suite | `pytest -q` | ~110 s | 309 passed, 2 skipped |
-| types | `mypy --config-file pyproject.toml src tests` | ~30 s cold | Success, 122 files |
+| full suite | `pytest -q` | ~315 s | 327 passed, 2 skipped |
+| types | `mypy --config-file pyproject.toml src tests` | ~30 s cold | Success, 128 files |
 | lints | `pytest tests/lint -q` | ~1 s | 13 passed |
 | M11.5 refutation + asymmetry + cancellation | `python scripts/run_m11_5_extrapolation.py` | ~22 s | §2–§4 above |
 | M11.5 structural assertions | `pytest tests/test_m11_5_extrapolation.py -q` | ~5 s | 6 passed |
 | M11.4 vacuous-axis diagnosis | `python scripts/run_m11_4_extrapolation.py` | ~4 min | §5 above |
 | hold-out gate retro-validation | `pytest tests/test_holdout_discrimination.py -q` | ~50 s | 5 passed |
 | E-38 validity catch | `pytest "…::test_the_report_catches_koistinen_marburger_applied_at_the_soak_temperature" -q` | <1 s | 1 passed |
-| audit-gate invariance | `scripts/check_audit_gate.sh audit/pre-m11-observations.json` | ~110 s | PASS, 267 byte-identical |
+| audit-gate invariance | `scripts/check_audit_gate.sh audit/pre-m11-observations.json` | ~320 s | PASS, 267 byte-identical |
 | determinism | `scripts/check_determinism.sh` | ~220 s | passed |
+| v1.5 Part 5(1) figures | `python scripts/run_v15_part5_1.py` | ~10 min | `docs/V1.5-PART5-1.md` |
+| Part 5(1) §5.1 diagnostic trace | `pytest tests/oracles/test_contrast_diagnostic_trace.py -q` | ~60 s | 7 passed |
+| Part 5(1) §5.2 statistic dry-run | `pytest tests/oracles/test_statistic_dry_run.py -q` | ~115 s | 5 passed |
+| Part 5(1) §5.3 E-47 measurement | `pytest tests/oracles/test_parameter_ridge.py -q` | ~33 s | 6 passed |
+
+The five v1.5 Part 5(1) rows were added after this file's fresh-virtualenv run and were
+verified in the development environment rather than in a clean one — stated rather than
+folded in, since the rest of the table carries the stronger guarantee. They add no
+dependency, so the difference is a claim about what was checked, not about what would
+work. Their results are written up in `docs/V1.5-PART5-1.md`, which is a live document.
 
 ## 10. If something does not reproduce
 
