@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from fractions import Fraction
-from typing import Sequence
+from typing import Callable, Sequence
 
 import numpy as np
 
@@ -254,3 +254,156 @@ def flagship_lengthened_shares(repeats: int = 12, window: int = 1) -> tuple[Shar
     ]
     targets = [AggregateHardness(), BendAngleAtReferenceGeometry()]
     return _readings(chain, ensemble, sensors, targets, range(12, depth, 2), window)
+
+# --- what each of E-53's three options WOULD report -------------------------------
+#
+# Evidence for a decision, deliberately living in tests/ and not in src/omi/: none of
+# this changes `danger_triage`'s behaviour, and the E-53 milestone is design-only. These
+# functions read the same Gramian terms the triage already computes and evaluate the
+# alternative criteria against them, so the fork's disagreement is measured rather than
+# argued.
+
+
+@dataclass(frozen=True)
+class OptionComparison:
+    """One eigendirection at one index, read by all three of E-53's candidate criteria
+    (Spec §3.3; `docs/V1.4-EDITS.md` E-53).
+
+    Reported together because the fork's whole content is that the three **disagree**, and
+    a table showing each one's verdict separately would hide the disagreement that is the
+    decision input.
+    """
+
+    index: int
+    window: int
+    share: float
+    """ADR-020's current statistic: the near-diagonal *sum* over the *total*."""
+    current_label: str
+    near_diagonal_max: float
+    """`max_{j near} q_j` — the single largest near-diagonal contribution, which is what
+    Spec §3.3's own words ("a single near-diagonal term dominates") compare."""
+    downstream_max: float
+    near_diagonal_sum: float
+
+    @property
+    def support_observed(self) -> bool:
+        """**Option 1** — Spec's *"only"* made exact: `observed` iff any near-diagonal term
+        contributes at all, at the declared numerical tolerance."""
+        return self.near_diagonal_sum > _RANK_TOLERANCE
+
+    @property
+    def dominance_ratio(self) -> float:
+        """**Option 2** — Spec's *"a single term dominates"* made exact:
+        `max_{j near} q_j / max_{j>k+w} q_j`.
+
+        A ratio between two comparable quantities rather than a fraction of a total.
+        Infinite when nothing downstream contributes (unambiguously observed); `nan` when
+        neither side contributes, which is not a classification failure but an
+        unidentifiable direction.
+        """
+        if self.downstream_max > _RANK_TOLERANCE:
+            return self.near_diagonal_max / self.downstream_max
+        return float("inf") if self.near_diagonal_max > _RANK_TOLERANCE else float("nan")
+
+    def option_two_verdict(self, required_dominance: float, abstention_band: float) -> str:
+        """**Option 2 with option 3's abstention band.** Returns
+        ``"observed"``, ``"inferred"`` or ``"unresolved"``.
+
+        The band is expressed on the ratio, so a ratio within it of the declared dominance
+        factor abstains rather than being assigned — which is Core §3.9's refusal discipline
+        applied to the framework's own diagnostic. Both numbers are supplied by the caller;
+        neither is fixed here.
+        """
+        ratio = self.dominance_ratio
+        if not np.isfinite(ratio):
+            return "observed" if ratio == float("inf") else "unresolved"
+        if abs(ratio - required_dominance) <= abstention_band:
+            return "unresolved"
+        return "observed" if ratio > required_dominance else "inferred"
+
+
+_RANK_TOLERANCE = 1.0e-12
+"""Numerical floor below which a Gramian contribution counts as zero.
+
+Stands in for ADR-017's declared erasure rank tolerance, which is the tolerance option 1
+would reuse rather than introduce. Named and separated so it is visible as a declared
+choice rather than an inline literal."""
+
+
+def _option_comparisons(
+    chain: Chain,
+    ensemble: Ensemble,
+    sensors: Sequence[Observation],
+    targets: Sequence[object],
+    indices: Sequence[int],
+    window: int,
+    term_name: Callable[[int], str],
+    last_index: int,
+) -> tuple[OptionComparison, ...]:
+    prior = default_prior_covariance(Metric.from_ensemble(ensemble))
+    nominal = nominal_trajectory(chain, ensemble[0])
+    out: list[OptionComparison] = []
+    for k in indices:
+        gramian = compute_gramian(chain, nominal, k, sensors)
+        result = danger_triage(
+            chain, nominal, k, gramian, prior, list(targets), sensors, near_diagonal_window=window  # type: ignore[arg-type]
+        )
+        for direction in result.directions:
+            if direction.near_diagonal_share is None:
+                continue
+            v = direction.eigenvector
+            contributions = {
+                j: float(v @ gramian.terms[term_name(j)] @ v)
+                for j in range(k, last_index + 1)
+                if term_name(j) in gramian.terms
+            }
+            near = [q for j, q in contributions.items() if j <= k + window]
+            down = [q for j, q in contributions.items() if j > k + window]
+            out.append(
+                OptionComparison(
+                    index=k,
+                    window=window,
+                    share=float(direction.near_diagonal_share),
+                    current_label=direction.label.value,
+                    near_diagonal_max=max(near) if near else 0.0,
+                    downstream_max=max(down) if down else 0.0,
+                    near_diagonal_sum=sum(near),
+                )
+            )
+    return tuple(out)
+
+
+def contrast_option_comparison(window: int = 1) -> tuple[OptionComparison, ...]:
+    """All three options read across contrast's campaign interior (E-53's fork, measured)."""
+    chain, ensemble, sensors = _contrast_setup()
+    return _option_comparisons(
+        chain,
+        ensemble,
+        sensors,
+        [DendriteRisk()],
+        range(12, CONTRAST_DEPTH + 1, 2),
+        window,
+        lambda j: f"voltage_{j}",
+        CONTRAST_DEPTH,
+    )
+
+
+def flagship_option_comparison(window: int = 1) -> tuple[OptionComparison, ...]:
+    """The same three readings on flagship's declared chain."""
+    ensemble = flagship_incoming(N_PARTICLES, np.random.default_rng(0))
+    chain = flagship_chain()
+    sensors = [
+        Observation("station_1", ForceTorqueSensor(), np.array([[0.05]]), time_index=1),
+        Observation("station_2", CoatingGauge(), np.array([[0.01]]), time_index=2),
+    ]
+    targets = [AggregateHardness(), BendAngleAtReferenceGeometry()]
+    return _option_comparisons(
+        chain,
+        ensemble,
+        sensors,
+        targets,
+        range(0, len(chain.segments) + 1),
+        window,
+        lambda j: f"station_{j}",
+        len(chain.segments),
+    )

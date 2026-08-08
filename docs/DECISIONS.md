@@ -5228,6 +5228,160 @@ A measurement showing the acquisition-determined axis is operationally the same 
 apparatus-determined one would collapse the third decision kind into the first and remove this
 domain's reason to exist. Part 6 is where that becomes checkable.
 
+## ADR-061 — E-53 resolved: single-term dominance with abstention, both conventions declared per domain, and the reporting obligation that stops abstention becoming an escape
+
+**Status.** Accepted — **design only. No fix implemented.**
+**Track.** v1.5 planning, E-53 milestone.
+**Resolves.** `docs/V1.4-EDITS.md` E-53's `[authorial-choice]`, and E-48's proposed-wording fork.
+**Pins.** `tests/oracles/test_e53_option_comparison.py` (6 checks), which measures the fork rather than implementing the choice.
+**Does not change** `omi.observability.danger_triage`. Part 6 remains unauthorized.
+
+### The decision
+
+**Option 2 with option 3's abstention.** `observed` iff
+`max_{k ≤ j ≤ k+w} q_j > ρ · max_{j > k+w} q_j`; `inferred` iff the near-diagonal
+contribution vanishes at the declared numerical tolerance while the direction is
+identifiable from the total; **`unresolved`** whenever the ratio sits within a declared band
+of `ρ`, or when neither side contributes. `ρ`, the band, the window `w` and the tolerance are
+**all declared per domain** and travel with every reported classification.
+
+### Why, and the honest limit of the claim
+
+The brief's reading — option 2 plus abstention, with abstention the more important half — is
+**accepted**, and the measurement supports it more specifically than the argument did.
+
+**Option 2 removes the ladder, and that is measured rather than argued.** The near-diagonal
+share walks `1/12, 1/10, 1/8, 1/6, 1/4, 1/2` across contrast's interior and lands exactly on
+`0.5`. The dominance ratio is **`1.0` at every one of those indices**, to nine figures — the
+spread across indices is below `10⁻⁶`. The ladder was an artefact of *summing over a window
+and dividing by a total*; comparing two contributions that happen to be equal has no index
+dependence at all.
+
+**What option 2 does *not* do is remove a declared number, and the ADR says so.** `ρ` is
+declared and it changes the answer: at `ρ = 1` — the most literal reading of *dominates* —
+contrast's ratio of `1.0` sits *on* the criterion and abstains; at `ρ = 1.5` it reads
+`inferred` decisively. So the honest claim is about the **margin**, not about parameter
+elimination:
+
+| | old | new |
+|---|---|---|
+| the declared quantity | share vs `0.5` | ratio vs `ρ` |
+| distance from the criterion on contrast | **`1.4×10⁻¹¹`** | **`0.5`** at `ρ = 1.5`, or **`0`** at `ρ = 1`, where it abstains |
+| index dependence | six distinct values | one |
+
+A criterion approached to `10⁻¹¹` is decided by rounding. A criterion approached to `0.5`, or
+approached to `0` *and abstaining there*, is decided by the physics or by an explicit refusal.
+
+**Option 1 is rejected on measurement, not on taste.** The support test labels every contrast
+direction `observed`, including where the near-diagonal share is `1/12` — 8% of the
+information near-diagonal, 92% downstream. Spec §3.3's word *dominates* would then carry no
+content. It remains the cheapest option and the ADR records that it was rejected for making
+the distinction vacuous rather than for needing a number.
+
+**The abstention is the more important half, and here is the sharpest reason.** At `ρ = 1`,
+reporting *"the near-diagonal and downstream maxima are equal to eleven figures; this
+direction is neither observed nor inferred"* is true and actionable — it says the chain
+distributes this direction's information evenly, which is a fact about the chain. Forcing a
+label there reports a rounding error as a physical finding. This is Core §3.9's refusal
+discipline and CLAUDE.md §4's rule turned on the framework's own diagnostic, which is where
+this repository has repeatedly found it was not being applied.
+
+### The window: declared, not eliminated
+
+Measured, and the answer is the one that prevents a partial repair being reported as a whole
+one. **Option 2 does not eliminate the window.** Same chain, same indices, same criterion:
+
+| window | ratio | verdict at `ρ = 1.5` |
+|---|---|---|
+| `0` | `~10⁻³³` | `inferred` |
+| `1` | `1.0` | `inferred` |
+| `2` | `1.0` and `inf` | `inferred` **and `observed`** |
+
+So `near_diagonal_window` remains a free parameter spanning the answer, and it **must be
+declared per domain with a justification**, exactly as E-48's proposed wording (extended at
+the Part 5(2) triage) already requires. Fixing the threshold and leaving the window free
+would repair one of the two compounding conventions and report it as both.
+
+**What does improve is the character of the dependence.** Under the share, the window and the
+threshold compounded into a label decided at machine precision. Under option 2 each window
+gives a *decisive* reading (`~0`, `1`, `inf`), so the window becomes a visible modelling
+choice that a reader can disagree with rather than a hidden tie-breaker.
+
+### The reporting obligation that keeps abstention honest
+
+**Abstention has almost no cost in code and one real cost in the conformance ladder**, and
+the second is the reason for this clause.
+
+The cost that was feared did not materialise: **nothing numeric in this repository consumes
+the label.** `value_of_information`, `best_placement`, `worst_case_over_window` and
+`variance_term` are functions of the Gramian, the prior and the danger scores;
+`dangerous_set()` filters on `DANGEROUS`, which is decided by the influence/uncertainty
+median split (E-48's *first* half) and not by the near-diagonal share. Measured structurally:
+the same chain's numeric outputs are byte-identical across three window values that change
+every label.
+
+The cost that does exist is different. Spec §9.1's OMI-1 line item
+`observability_triage_with_dangerous_set_declared` checks that a triage was **reported**, not
+what it says. So a domain whose every direction abstains would satisfy OMI-1 with a triage
+that establishes nothing — a new instance of the satisfiable-without-the-property shape §4 of
+the ledger documents nine times, introduced by the fix intended to make the diagnostic honest.
+
+**So the decision carries a reporting obligation**: an implementation adopting abstention MUST
+report the **fraction of evaluated directions that abstained**, and Spec §9.1's OMI-1 item MUST
+require that fraction alongside the triage. Abstention is then a measured property of the
+chain rather than a way to satisfy a checklist by declining to answer.
+
+### The publication consequence, stated plainly
+
+**This reaches the papers, and not through the numbers.** Core §3.8 calls inferred directions
+the case "which no tabular model can recover", and Spec §3.3 calls them "the framework's
+distinctive contribution". That is the central argument for the operator graph over a
+baseline, and it is currently stated as a **categorical count** — how many directions are
+inferred.
+
+No option preserves that form. Under any of the three, the label's population changes, and
+under option 2 with abstention some directions carry no label at all. The claim has to become
+a **measured quantity**: *"these directions' information accrues predominantly downstream, by
+a dominance ratio of X"*, which is falsifiable and reportable where a count of labelled
+directions is neither.
+
+**The good news is that the substantive reading barely moves on the two implemented domains.**
+Under option 2 at `ρ = 1.5`, contrast reads `inferred` at all twelve readings and flagship
+reads `observed` wherever its erasure leaves only near-diagonal information — the same
+substantive answer the current criterion gives at eleven of contrast's twelve readings. The
+one reading that changes is the arbitrary flip. So the papers' *conclusion* survives; the form
+of its statement does not.
+
+### Alternatives rejected
+
+*Option 1 alone.* Rejected on measurement (above).
+
+*Option 3 alone — keep the share, add a band.* Rejected: it leaves the operationalisation
+mismatched with Spec's own words in both directions (a sum where Spec says a single term, a
+magnitude where Spec says a support condition), so it makes an arbitrary label honest without
+making it correct.
+
+*Option 2 with a framework-fixed `ρ`.* Rejected for the reason ADR-059 records about the
+exclusion budget: where dominance begins is a property of a chain's sensitivity structure, so
+a framework constant would be a domain claim in the wrong place and a number no domain had to
+defend.
+
+*Eliminating the window by fixing `w = 0`.* Tempting, because at `w = 0` contrast reads a
+decisive `inferred` and the "single near-diagonal term" is literally the term at `k`. Rejected:
+it would make `observed` unreachable for any chain whose readout at index `k` has no
+sensitivity to the direction in question — which is contrast's case at every index, and which
+is a property of the *readout*, not of the information structure. Choosing the window to make
+one domain's answer clean is adjusting a criterion to fit a case.
+
+### What would change this decision
+
+A chain whose dominance ratio sits *stably* near its declared `ρ` — neither at `1` nor at
+`0`/`inf` — would show that option 2's margin advantage is domain-specific rather than
+structural, and would strengthen option 3's band from a safeguard into the load-bearing part.
+Neither implemented domain provides one, and E-54 records why: both sit at extremes of the
+error-control dichotomy, and the interior case may be rarer than the statistic's continuous
+form suggests.
+
 ---
 
 ## Open questions
