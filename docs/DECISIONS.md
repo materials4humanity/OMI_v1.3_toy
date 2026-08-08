@@ -4047,6 +4047,40 @@ arity redesign must move ahead of Part 3. Recorded explicitly so that judgement 
 available to a reviewer rather than buried in a design that assumed the generous
 reading.
 
+> **The flip condition was exercised at the Part 3 gate, and the strict reading was
+> taken. Filed as `docs/V1.4-EDITS.md` E-46.**
+>
+> The reviewer's judgement: **item 1's charter does not cover a non-state quantity.**
+> ADR-049's widening is legitimate for `ν` — which evolves, is assimilated, and carries
+> a per-particle value in the ensemble — and illegitimate for `c̄`, which does none of
+> those and is a fixed index on the operator family. Hosting both under item 1 means a
+> reader encounters *what the material is* and *what the operator is parameterised by*
+> with nothing in the declaration distinguishing them.
+>
+> **No reorder.** Part 3's ADRs (050–054) are written so the parameter role
+> **relocates rather than rewrites**: the declaration's content — declared domain,
+> coupling direction, tracked dimensions, descriptor basis — is unchanged by where it
+> is hosted, and only the item number moves. E-46 is therefore evidence carried into
+> the arity redesign, not a trigger to redo Part 3.
+>
+> **The pressure count is now recorded both ways rather than settled**, because the
+> difference between them *is* the question the redesign must answer:
+>
+> - **Generous reading** (item 1 stretches): eight pressures, the parameter role
+>   absorbs E-29, **seven** remain.
+> - **Strict reading** (the reviewer's, and the one taken): `INVARIANT` coupling gives
+>   the parameter a *representation* but not a *home*, so **E-29 is unresolved**, and
+>   the charter question is an **additional** pressure. **Nine.**
+>
+> Picking one here would smuggle the redesign's central settlement into a Part 3
+> caveat. What is not in doubt on either reading: **the redesign cannot be done by
+> appending**, because the count itself moves on a judgement that appending would never
+> surface. E-46's proposed wording splits item 1 into `1` (state schema) and `1b`
+> (operator parameterisation) rather than widening it, with the deliberate provision
+> that one physical quantity may appear on both sides when the regions are named —
+> carbon is a parameter in the bulk and a depleted state variable in a decarburising
+> layer simultaneously (ADR-051).
+
 ---
 
 ## ADR-050 — The composition decomposition `c = c̄ + δc`: what is constant, what evolves, and what makes the split checkable
@@ -4347,6 +4381,124 @@ proposal rather than to annotate it.
   regime-boundary check's result is not well-defined. **The constancy residual is a
   precondition for this check**, which is a dependency between two Part 3 ADRs worth
   naming rather than discovering later.
+
+---
+
+## ADR-055 — Parameter equifinality: extending the observability triage from state directions to declared-form parameters
+
+**Status.** Accepted — **design only.**
+**Track.** v1.5 planning, Part 4.
+**Distinct from M11's finding**, and the distinction is the reason this exists.
+
+### The failure this addresses, and why it is not M11's
+
+M11.5 measured what happens when a declared form's **mechanism set is incomplete**:
+69.55 against a free-form operator's 5.06. This is a different failure with the same
+symptom:
+
+> **The form is complete. The parameters are unidentifiable along the axis being
+> extrapolated.**
+
+Fit Kocks–Mecking's `k₁` and `k₂` in-envelope and **many pairs fit equally well** —
+because in-envelope the response is dominated by the storage term and the recovery
+term is barely exercised. Those pairs imply **different saturation levels**
+`(k₁/k₂)²`, and saturation is precisely what extrapolation along accumulated strain
+approaches. So the fit is excellent, the form is right, the query is inside every
+declared window, and the extrapolated prediction is arbitrary within a range nothing
+reports.
+
+**Nothing in the current framework would flag it.** Filed as `docs/V1.4-EDITS.md`
+**E-47**.
+
+**The two failures land on different rows of the intervention table** (ADR-048's
+spine), which is the cleanest demonstration that they are distinct rather than two
+readings of one thing:
+
+| Failure | Diagnosis | Intervention |
+|---|---|---|
+| M11's — mechanism missing | the declared physics is incomplete for the regime | **buy physics** |
+| this one — parameters unidentifiable | the declared physics is right and under-determined | **buy sensing / run experiments** — and it names *which* measurement |
+
+### The construction
+
+Same Fisher-information construction, same danger score, **different object**.
+
+| | Spec §3.3's existing triage | this extension |
+|---|---|---|
+| object | state directions (eigenvectors of `P_k`) | **declared-form parameter directions** (eigenvectors of the parameter posterior) |
+| information | observability Gramian `𝐆` over state | **parameter Fisher matrix** `Σ_j (∂y_j/∂θ)ᵀ R_j⁻¹ (∂y_j/∂θ)` from in-envelope residuals |
+| influence | `v* S* W S v` — target-variance contribution | target-readout sensitivity to `θ`, **evaluated at the extrapolation query** |
+| uncertainty | `v* P_k v` | the parameter posterior's own eigenvalue |
+| danger score | influence × uncertainty | **unchanged** |
+| labels | `Triage`'s four-way split | **unchanged** |
+
+### Reuse verdict, stated plainly as the gate requires
+
+**It reuses the decision layer and needs a new information layer.** Neither "pure
+reuse" nor "fully parallel" is accurate, and claiming either would be wrong.
+
+**Reuses, essentially unchanged:** eigendecomposition of the posterior;
+`influence × uncertainty`; `Triage`'s four-way labelling and the median-threshold
+convention (ADR-020); `TriageResult.dangerous_set()`'s ranked output;
+`value_of_information` and `best_placement` — "which measurement would disambiguate
+the parameters" *is* VOI computed against the parameter Gramian, with no new
+mathematics.
+
+**Requires a genuinely new construction, for three reasons that are not cosmetic:**
+
+1. **The derivative is with respect to a different object.** `propagate_jvp(chain,
+   nominal, k, j, v)` perturbs the *state at index k* and reads at `j`. A parameter
+   perturbation **has no `k`**: `θ` enters every operator that declares that form, at
+   every index it appears, simultaneously. The sensitivity is a sum over all such
+   indices, not a propagation from one. The existing signature cannot express it.
+2. **The evaluation point is outside the envelope, and that is the entire point.**
+   State triage asks "is this direction identifiable *here*." Parameter triage asks
+   "is this parameter identifiable **along the axis I am extrapolating**." So
+   information must be gathered **in-envelope** (where the data is) while influence is
+   evaluated **out-of-envelope** (where the decision is). The existing machinery has
+   one `nominal_trajectory` and no such pairing.
+3. **The dangerous quantity is a divergence, not a magnitude at a point.** The
+   equifinality signature is a parameter direction along which in-envelope fit is flat
+   and extrapolated prediction is not — a ratio of two sensitivities at two different
+   evaluation points.
+
+**Point 3 is E-41 recurring, and the design should borrow rather than reinvent.**
+E-41 established, by measurement, that the discriminating quantity for a hold-out is
+**divergence along the axis** and not disagreement at a point — the vacuous and usable
+axes showed the same absolute disagreement and differed by 14× in growth. Parameter
+equifinality has the identical shape: parameters that **agree in-envelope and
+disagree out-of-envelope**. So the two-point near/far probe structure of
+`omi.proposed.holdout` is the right skeleton, and the parameter danger score should be
+read as a divergence between the two probes rather than as a score at one.
+
+### For a self-driving lab this is an experiment-selection signal, not a warning
+
+The near-null direction of the parameter Fisher matrix is a *vector in parameter
+space*, and VOI against that matrix ranks candidate measurements by how much they
+would shrink it. So the output is **"measure this"** rather than "beware":
+
+> `k₂` is unidentifiable from the in-envelope campaign; a single measurement at high
+> accumulated strain would resolve it, and here is its value per unit cost.
+
+That is the same `ΔV_c/cost` denominator Spec §3.4 already supplies — the framework's
+**only** priced intervention (E-36) — now pointed at parameters. It is the most direct
+connection between Part 4 and Part 6's campaign statistic, and Part 6's candidate
+"parameter danger scores rising along the proposed direction" is exactly this quantity.
+
+### Scope and what is not decided
+
+- **Design only.** No implementation.
+- **Thresholds are not chosen here.** ADR-041's `decision_sensitive_threshold` is the
+  procedure and it needs a declared minimum effect and cost ratio, which belong to
+  whichever experiment consumes this — not to the construction.
+- **Free-form parameters are out of scope, and the reason is worth stating.** A
+  free-form operator's coefficients are also unidentifiable, often more so. But they
+  carry no physical meaning, so the actionable output ("measure the thing that pins
+  `k₂`") has no analogue — the answer would be "measure everything." The diagnostic is
+  useful *because* the parameters are declared and named, which is an argument for the
+  declared-form category that M11.5's negative result did not supply.
+- **It does not repair the identifiability.** It measures and names it. Per ADR-048,
+  a diagnostic that says which purchase to make is the product.
 
 ---
 

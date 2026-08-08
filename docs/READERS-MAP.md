@@ -15,20 +15,22 @@ The job of the code is to make the framework's claims **measurable and
 falsifiable**, not to predict well (`CLAUDE.md` §2). Read that before reading any
 result as a performance number.
 
-## The ledger: `docs/V1.4-EDITS.md` (44 entries, grouped by root cause)
+## The ledger: `docs/V1.4-EDITS.md` (46 entries, grouped by root cause)
 
 Entry IDs are permanent (E-34 was withdrawn into E-29 and its number retired, never
 reused). §1 holds the authoritative counts and the entry locator. The groups:
 
 - **§2 — Core §2.5, the body-indexed state.** The single most consequential gap; four
-  entries trace to it (E-14, E-21, E-22, E-24, E-25).
+  entries trace to it (E-14, E-21, E-22, E-25). A fifth, E-24, is grouped here because
+  it *bounds* the gap: a promotion confirming Core §4 item 2 is **not** blocked by it.
 - **§3 — Core §6.1's falsifiability claim** blocked by other unresolved rows (E-11, E-16).
 - **§4 — declarations satisfiable without their property** (E-12, E-13, E-17, E-20,
   E-23, E-26, E-27, E-35, E-43). Nine entries, one shape.
 - **§5 — the interface has no declarable category for something the physics needs**
-  (E-29–E-32, E-40, E-44). Four of the five domain-assessment entries live here.
+  (E-29–E-32, E-40, E-44, E-46). Four of the five domain-assessment entries live here.
 - **§6 — diagnostics blind to their own dominant error source** (E-03, E-04, E-18,
-  E-05, E-06, E-15, E-19, E-33, E-45).
+  E-05, E-06, E-15, E-19, E-33, E-45, E-47). Ten entries; the last two carry an
+  argument rather than a measurement and say so.
 - **§7 — status markers over/understating completeness** (E-01, E-02, E-08, E-09, E-10).
 - **§8 — defects between individually sound prescriptions** (E-28, E-36).
 - **§9 — a principle the framework never states** (E-37, E-39, E-41, E-42) — enlarged
@@ -39,7 +41,7 @@ reused). §1 holds the authoritative counts and the entry locator. The groups:
   scope), and finds the framework prices only one of six.
 - **§12** states what the build never attempted.
 
-**Provenance matters and is not flattened:** 39 entries were found by *attempting to
+**Provenance matters and is not flattened:** 41 entries were found by *attempting to
 build* the framework; 5 (E-29–E-33, marked `[domain-assessment]`) by *reading it
 against physics* (`docs/PHYSICS-ADEQUACY.md`).
 
@@ -58,6 +60,11 @@ against physics* (`docs/PHYSICS-ADEQUACY.md`).
 | M9 | inverse design, reachability certificates, decision layer | E-06, E-17 |
 | M10 | remediation; baseline characterisation; falsification thresholds | E-16, E-26, E-27; `docs/M10.2-*` |
 | M11 | the constitutive-form extrapolation track — **refuted** | E-35, E-38, E-39, E-40, E-41, E-42; F1–F4 |
+| v1.5 planning | **design and ADRs only, no code** — a declared composition axis, the interface-arity pressure it exposes, parameter equifinality | E-43, E-44, E-45, E-46, E-47; ADR-048–ADR-055, `docs/V1.5-PLANNING-BRIEF.md` |
+
+The last row is not a milestone and produced no implementation: five ledger entries
+found by *designing against* the framework rather than building on it. Every one is
+marked accordingly (E-45 derived-not-measured, E-47 Untested).
 
 M11 is the headline. Its account is `docs/M11-RECORD.md`; the two sweeps are
 `docs/M11.4-EXTRAPOLATION.md` and `docs/M11.5-EXTRAPOLATION.md`, each preceded by a
