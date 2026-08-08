@@ -3756,6 +3756,220 @@ pins it is Part 2's construction being designed against the extended purpose.
 
 ---
 
+## ADR-049 — The declared-domain construction: one object for `ν` and for `c̄`, with a declared coupling direction and declared tracked dimensions
+
+**Status.** Accepted — **design only. No implementation, no domain code.**
+**Track.** v1.5 planning, Part 2. Consumed by Part 3 (composition) without
+modification; a parallel mechanism for `c̄` would be an architectural error.
+**Reads.** `docs/V1.4-EDITS.md` §2 in full, E-22 (both proposed wordings), E-25.
+**Does not resolve.** Core §2.5. That remains an anti-goal (CLAUDE.md §9) and the
+root of four ledger entries; resolving it is a research programme, not a
+prerequisite for this construction.
+
+### The problem, stated once for both consumers
+
+E-22 found that Core §2.5's repair — `s : X_body → S`, "evolution acts pointwise or
+with local coupling" — is correct for `m`, `z` and `Γ` and **wrong for `ν`**, because
+Core §3.1 defines `ν` as the one slot that "pointwise evolution operators cannot
+own." Three structurally unrelated domains exposed it independently, and the third
+(crystallisation's well-mixed supersaturation) forced a revision of E-22's own first
+proposal: "a field over the body" over-localises a quantity with **no local value at
+all**, just as §2.5's formula over-localises one with a nonlocal one.
+
+Part 3's composition decomposition `c(x) = c̄ + δc(x)` needs the identical object for
+`c̄`: a mean over a **declared** domain, which may be the whole body, a declared
+region, or a single global value. **These are one construction.** They are grouped in
+ledger §2 for the same reason: both trace to Core §2.5, and both are asking the same
+question — *over what does this quantity have a value, and how is it coupled to the
+states that do have per-point values?*
+
+### The construction: three declarations, attached to an existing interface item
+
+**Design constraint honoured deliberately: this adds no interface item.** Core §4
+item 1 already asks for "occupants of each slot, with resolution limits, and which
+slots are empty." Resolution limits are the seed of this construction; the three
+declarations below are a **refinement of item 1**, not an eighth item. Given the
+arity pressure documented below, adding to it would have been the wrong move.
+
+#### 1. `DeclaredDomain` — over what the quantity has a value
+
+A **per-quantity** declaration, not a property of the framework. Three kinds,
+covering exactly the cardinalities E-22's revised proposal requires:
+
+| Kind | Meaning | E-22's worked case |
+|---|---|---|
+| `GLOBAL_POINT` | the trivial one-point domain; a single shared value, no local value exists even in principle | crystallisation's well-mixed supersaturation |
+| `REGIONS` | a declared finite collection of named subdomains, each carrying one value | the intermediate case E-22 named as "not yet observed but not excluded" |
+| `FIELD` | a value at every point of a declared dimension set | layer-wise additive's part-scale stress |
+
+Formally, this is E-22's proposed wording (1 of 2) made declarable:
+`s : X_body → (m, z, Γ)` — a genuine section, evolving pointwise or with local
+coupling exactly as §2.5 says — **coupled to** `q : X_q → 𝒱_q` via a declared
+coupling operator, with `X_q` declared independently and *not* fixed to either
+`X_body` or a point.
+
+#### 2. `CouplingDirection` — how it is coupled, which is independent of where
+
+E-22's proposed wording (2 of 2), adopted as a taxonomy with **per-case obligations**,
+because the entry's own argument is that a corrected spatial type with the wrong
+coupling dynamics "is no better than the current under-declaration."
+
+| Direction | What it means | What the declaration MUST supply | The check it makes possible |
+|---|---|---|---|
+| `DETERMINED_BY` | instantaneous function of the point states; eliminable in principle as a derived quantity | the **closure map** from point states (and controls) to the value | **closure residual**: the value at step `k` must be reproducible from the point states at `k` alone |
+| `DEPLETED_BY` | conservation-coupled; carries its own dynamical state and memory; not eliminable | the **conserved quantity**, the **aggregation functional** over the population, its **own initial condition**, and any **replenishment flux** | **conservation residual** over a closed step |
+| `INTERMEDIATE` | spatially extended, but primarily history-determined rather than conservation-depleted | the **history functional** it is determined by, **and** a statement of why neither pure case applies | closure residual against accumulated history rather than instantaneous state |
+| `INVARIANT` | constant over the chain; indexes the operator family and is transported by nothing | the **domain over which constancy is claimed**, and whether that domain is closed | **constancy residual** along the chain |
+
+**`INVARIANT` is a fourth case E-22 did not name, and it is added for a reason
+rather than for symmetry.** Part 3's `c̄` is constant along the chain *by
+definition*, and the brief states that "constancy is checkable and a violation means
+the declaration is wrong." That is nearly right and the construction sharpens it: a
+mean over a **closed** domain is constant by conservation, so a constancy violation
+does not simply mean "the declaration is wrong" — it means **the domain is open and
+the coupling should have been declared `DEPLETED_BY`**. Decarburisation is the worked
+instance: mean carbon over a surface layer is not constant, because solute leaves
+through a boundary. The constancy check therefore yields a *specific* corrective
+diagnosis rather than a bare failure, which is the difference between a test and a
+diagnostic.
+
+**A consequence worth flagging rather than claiming.** `INVARIANT` coupling is,
+structurally, E-29's missing **static-parameter** category — a quantity that
+parameterises operators without being transported by them. If that identification
+holds, this construction partially addresses a `[domain-assessment]` finding as a
+side effect. It is **not** claimed closed here: E-29 is about the *schema* having no
+slot, and Part 3's role declaration (parameter / control / state) is where the
+identification either holds or does not. Recorded for Part 3 to settle, not resolved
+in Part 2.
+
+#### 3. `TrackedDimensions` — at what resolution, with a required justification
+
+A declared subset of a closed dimension set — `THROUGH_THICKNESS`, `IN_PLANE`,
+`FULL_3D`, `NONE` — with a **required, non-empty justification** string.
+
+This is Spec §4.4's dimensional-reduction argument arriving on a different axis. For
+planar product, through-thickness is where composition gradients live
+(decarburisation, interdiffusion, mid-plane segregation) and in-plane is effectively
+uniform, so a 1-D profile captures the real behaviour at a fraction of a 3-D field's
+cost.
+
+**The justification is required at every kind, including `GLOBAL_POINT`, and that is
+where it matters most.** A `GLOBAL_POINT` declaration with `tracked = NONE` is an
+assertion of spatial uniformity, and *that* is the assumption which became an
+unexamined default in v1.3 — the point-valued state was never declared, so nobody had
+to defend it. Per E-44, an undeclared modelling choice that no diff can see is
+precisely the defect class this repository keeps finding. Requiring the justification
+where the declaration is most degenerate is what stops the degenerate case being the
+silent default again.
+
+**Stated honestly: a free-text justification field checks nothing by itself**, and
+E-17 and E-31 both warn about exactly this — a good-faith string that satisfies a
+requirement without establishing the property. What the field buys is that the choice
+becomes **visible to `interface.diff`**, so two implementations claiming operator
+reuse can be compared on it. That is weaker than a check and stronger than silence,
+and it is the honest description.
+
+### Scope discipline
+
+Declare the full construction; implement a strict subset.
+
+| Case | v1.5 |
+|---|---|
+| `GLOBAL_POINT`, any coupling | **implement** |
+| `REGIONS` with exactly one region | **implement** |
+| `REGIONS` with more than one region | **refuse** — `NotSpecified` citing `C-2.5` |
+| `FIELD`, any dimension set | **refuse** — `NotSpecified` citing `C-2.5` |
+| `DEPLETED_BY` lifted over an ensemble | **refuse** — `NotSpecified` citing `C-3.3`; see E-25 below |
+
+The refusals are CLAUDE.md §4's move 1, which is always legal, and they cite live
+`docs/COVERAGE.md` row ids as `omi.gaps.NotSpecified` requires. **The formalism says
+more than the code does**, which has been the pattern throughout and is why the
+ledger has value.
+
+### E-25 becomes detectable, and is not fixed
+
+**This is the construction's strongest single payoff and it is worth more than the
+`ν` fix.**
+
+E-25 established that Core §3.3's lift is **linear in the measure** — pushforward of
+a fixed map, and a Markov kernel `K_k(s,·)` with no `μ` argument — and that a
+`depleted-by` quantity requires a mean-field (McKean–Vlasov) lift that Core neither
+names nor provides. It also established that this repository's
+`EvolutionOperator.lift` calls `step` once per particle with no reference to the
+ensemble, and that the tension has been avoided "**by accident of how the two
+mechanisms evolved, not by a stated policy**."
+
+Declaring the coupling direction converts that accident into a **stated policy with a
+detectable violation.** The unsound configuration is now expressible as a predicate:
+
+> coupling is `DEPLETED_BY` **and** the quantity is shared across the particles of an
+> ensemble being lifted.
+
+That is exactly the configuration in which `.lift()` produces ensemble-mean physics —
+which CLAUDE.md invariant 2 already forbids ("Type errors here silently produce
+ensemble-mean physics, which is wrong for every Class B readout"). v1.5 therefore
+**refuses** that configuration rather than computing it, citing `C-3.3`.
+
+**v1.5 does not fix E-25.** No mean-field lift is supplied and none is designed here.
+What changes is that the defect moves from *silently avoided* to *loudly refused*, and
+per the brief a declaration that surfaces a known-unfixed defect is worth more than
+one that hides it. The corollary E-25 left open — that Core §3.6's independence
+assumption for sub-volumes is itself questionable when the same coupling is present —
+becomes detectable by the same predicate and is likewise not fixed.
+
+### The interface arity question: one decision, now under eight pressures
+
+The brief names four. There are **eight**, and the count matters because it is the
+argument against patching serially.
+
+| # | Pressure | Source | What it wants |
+|---|---|---|---|
+| 1 | static parameter has no slot | E-29 `[domain-assessment]` | a parameter category — possibly met by `INVARIANT` coupling above |
+| 2 | symmetry group undeclarable | E-30 `[domain-assessment]` | an item |
+| 3 | characterisation suite undeclarable | E-31 `[domain-assessment]` | an item — **explicitly out of scope for v1.5** |
+| 4 | constitutive form refused by name | E-32 `[domain-assessment]`, ADR-046 | ADR-046 already chose "a new interface item" |
+| 5 | declarations cannot be refined | E-40 | a lineage field or item |
+| 6 | scope features never declared | E-44 | a scope declaration |
+| 7 | decision and intervention set undeclarable | ADR-048 | item(s) carrying targets with asymmetric costs |
+| 8 | composition role, descriptor metric, composition-dependent validity | Part 3 | item(s) |
+
+And the arity is **already** not clean before any of these: E-01 found Core §7.2's own
+comparison table names **six** of the seven items, and ADR-034 superseded ADR-003's
+pinning test over exactly that discrepancy.
+
+**The decision this implies, stated and deliberately not taken:** Core §4's arity is
+**one decision under eight pressures** and must be taken once, as a redesign of the
+interface, rather than as eight appended items accumulated in the order the pressures
+happened to arrive. Eight serial patches would produce a fifteen-item checklist whose
+grouping reflects this repository's discovery order rather than the physics — which is
+the failure mode the ledger's own root-cause grouping was created to avoid
+(`docs/V1.4-EDITS.md` §0: "Forty-three entries in discovery order is a log; grouped by
+cause, it is a diagnosis").
+
+**Part 2 resolves none of them, and adds no ninth.** That is why this construction
+attaches to item 1 rather than proposing an item of its own. The arity redesign is
+recorded here as a standing open question and is v1.6 business at the earliest.
+
+### Consequences
+
+- Part 3 consumes `DeclaredDomain`, `CouplingDirection` and `TrackedDimensions`
+  unchanged for `c̄`. If Part 3 finds it needs a variant, that is evidence this ADR
+  got the construction wrong and it supersedes rather than extends.
+- No interface item is added; item 1's "resolution limits" is refined.
+- Three refusal paths exist and all cite live coverage rows.
+- E-22's proposed wording (2 of 2) was rated **medium-high** confidence precisely
+  because "Core's own text would need to commit to this specific taxonomy rather than
+  some other framing." **v1.5 commits to it.** That converts a proposal into a
+  decision, and the thing that could be wrong is the taxonomy's cut, not its
+  necessity — recorded so a reviewer knows which part is load-bearing choice rather
+  than derivation.
+
+**Pinned by.** Nothing yet — design only. The first thing that would pin it is a
+`GLOBAL_POINT` + `DEPLETED_BY` declaration refusing an ensemble lift, which is the
+E-25 detection above and the natural first test when implementation begins.
+
+---
+
 ## Open questions
 
 Not decisions — hypotheses the code should settle. Full statements in
