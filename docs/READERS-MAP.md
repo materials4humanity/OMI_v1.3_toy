@@ -15,7 +15,7 @@ The job of the code is to make the framework's claims **measurable and
 falsifiable**, not to predict well (`CLAUDE.md` §2). Read that before reading any
 result as a performance number.
 
-## The ledger: `docs/V1.4-EDITS.md` (43 entries, grouped by root cause)
+## The ledger: `docs/V1.4-EDITS.md` (44 entries, grouped by root cause)
 
 Entry IDs are permanent (E-34 was withdrawn into E-29 and its number retired, never
 reused). §1 holds the authoritative counts and the entry locator. The groups:
@@ -28,7 +28,7 @@ reused). §1 holds the authoritative counts and the entry locator. The groups:
 - **§5 — the interface has no declarable category for something the physics needs**
   (E-29–E-32, E-40, E-44). Four of the five domain-assessment entries live here.
 - **§6 — diagnostics blind to their own dominant error source** (E-03, E-04, E-18,
-  E-05, E-06, E-15, E-19, E-33).
+  E-05, E-06, E-15, E-19, E-33, E-45).
 - **§7 — status markers over/understating completeness** (E-01, E-02, E-08, E-09, E-10).
 - **§8 — defects between individually sound prescriptions** (E-28, E-36).
 - **§9 — a principle the framework never states** (E-37, E-39, E-41, E-42) — enlarged
@@ -39,7 +39,7 @@ reused). §1 holds the authoritative counts and the entry locator. The groups:
   scope), and finds the framework prices only one of six.
 - **§12** states what the build never attempted.
 
-**Provenance matters and is not flattened:** 38 entries were found by *attempting to
+**Provenance matters and is not flattened:** 39 entries were found by *attempting to
 build* the framework; 5 (E-29–E-33, marked `[domain-assessment]`) by *reading it
 against physics* (`docs/PHYSICS-ADEQUACY.md`).
 

@@ -3943,8 +3943,8 @@ interface, rather than as eight appended items accumulated in the order the pres
 happened to arrive. Eight serial patches would produce a fifteen-item checklist whose
 grouping reflects this repository's discovery order rather than the physics — which is
 the failure mode the ledger's own root-cause grouping was created to avoid
-(`docs/V1.4-EDITS.md` §0: "Forty-three entries in discovery order is a log; grouped by
-cause, it is a diagnosis").
+(`docs/V1.4-EDITS.md` §0: "[N] entries in discovery order is a log; grouped by
+cause, it is a diagnosis" — the count there is live and rises as entries are filed).
 
 **Part 2 resolves none of them, and adds no ninth.** That is why this construction
 attaches to item 1 rather than proposing an item of its own. The arity redesign is
@@ -3967,6 +3967,386 @@ recorded here as a standing open question and is v1.6 business at the earliest.
 **Pinned by.** Nothing yet — design only. The first thing that would pin it is a
 `GLOBAL_POINT` + `DEPLETED_BY` declaration refusing an ensemble lift, which is the
 E-25 detection above and the natural first test when implementation begins.
+
+### Amendment (at the Part 2 gate) — two questions settled before Part 3
+
+#### A. The tracked-dimension justification is a known weakness, not a solved requirement
+
+Restated so it cannot be read as discharged: **a free-text justification field is
+satisfiable by an arbitrary string.** That is E-17's lesson exactly — a caller can
+declare a form *named* Koistinen–Marburger with an arbitrary callable — and it
+applies here one level down. The field is **visible to `interface.diff`** and
+therefore comparable across implementations claiming operator reuse; it is **not**
+inspectable by the type system and **nothing verifies it is true**. Weaker than a
+check, stronger than silence, and recorded as an open weakness.
+
+**A machine-checkable candidate, recorded as a candidate and explicitly not closing
+the question.** Carry an **enumerated reason code** alongside the free text, naming
+*why* a dimension is untracked. The value of the enumeration is not tidiness — it is
+that **three of the four codes name machinery that already exists or is already
+proposed**, so the code converts unfalsifiable prose into a claim that points at its
+own check:
+
+| Reason code | Meaning | What could check it |
+|---|---|---|
+| `NOT_LOAD_BEARING` | variation exists and is resolvable but moves no declared readout | **checkable today** — Spec §3.3's observability triage; an untracked direction with zero influence on the declared target set is exactly the `OBSERVED_BUT_IRRELEVANT`/marginalisable classification |
+| `UNIFORM_BY_PROCESS` | the process makes the dimension uniform | checkable *if* the domain declares the symmetry that makes it so — which is **E-30**'s missing category |
+| `BELOW_RESOLUTION` | variation exists but is finer than the instrument can see | checkable against the characterisation suite — which is **E-31**'s missing category, and out of scope for v1.5 |
+| `OUT_OF_SCOPE` | deliberately excluded with the cost accepted | **not checkable, and that is honest** — this is the refusal case, and naming it as such is better than dressing it as one of the other three |
+
+`NOT_LOAD_BEARING` is the interesting one: it is checkable with machinery this
+repository already has, which means the enum is not a promissory note in at least
+one case.
+
+**Why this does not close the question.** The enum is itself satisfiable by choosing
+the wrong code — a domain can declare `NOT_LOAD_BEARING` where the truth is
+`BELOW_RESOLUTION`, and nothing catches it. That is E-17's good-faith residual
+recurring, and recording it is the honest stopping point. Deciding the enumeration
+is an implementation-time choice needing its own ADR; it is **not** taken here.
+
+#### B. Part 3 fits the current seven items. No reorder, and no ninth pressure
+
+Tested per addition rather than asserted.
+
+| Part 3 addition | Home | New item? |
+|---|---|---|
+| **Role: control** | **item 2** — control space and `𝒰_adm`, already declares exactly this | no |
+| **Role: state** | **item 1** — which slot `δc` occupies | no |
+| **Role: parameter** | **ADR-049's `INVARIANT` coupling**, attached to item 1 | no — see the charter caveat below |
+| **Descriptor metric** | a **field on ADR-049's coupled-quantity declaration**, beside domain and tracked dimensions | no |
+| **Composition-dependent validity** | a **refinement of the item ADR-046 already decided to add** (pressure 4) | no — extends an existing pressure, does not create one |
+
+Three of these deserve their reasoning shown.
+
+**The parameter role, and why it addresses E-29 rather than adding a pressure.**
+E-29's complaint is verbatim: Core §6.2 "asks how much of an operator is
+'composition-*parameterised*', so the framework has the word and no place to declare
+a parameter." ADR-049's `INVARIANT` coupling **is** that place — a quantity with its
+own declared domain, constant along the chain, transported by no operator, indexing
+the operator family. E-29's part 2 (a readout depending only on parameters cannot be
+flagged) also becomes detectable: a readout whose arguments are all
+`INVARIANT`-coupled is mechanically identifiable. So the parameter role consumes an
+existing pressure instead of creating a new one.
+
+**The descriptor metric belongs beside domain and tracked dimensions because it is
+the same kind of declaration.** Domain answers *over what* the quantity has a value;
+tracked dimensions answer *at what resolution*; the descriptor basis answers *in what
+coordinates*. All three are representation declarations on one quantity, so the
+descriptor basis is a third field on one object rather than a new interface item.
+
+**The charter caveat, stated so it can be overruled.** ADR-049 widened item 1 from
+"state schema" to "state schema **plus the quantities coupled to it**" in order to
+host `ν`'s domain and coupling — legitimate, since `ν` is a slot occupant. Part 3
+leans on that widening to host a quantity that is **not** state at all. That is a
+further stretch of item 1's charter, and whether item 1 should be *renamed* is
+arity-redesign business, not Part 3's.
+
+**The condition under which this verdict flips:** if item 1's charter is judged unable
+to cover a non-state quantity, the parameter role becomes a **ninth** pressure and the
+arity redesign must move ahead of Part 3. Recorded explicitly so that judgement is
+available to a reviewer rather than buried in a design that assumed the generous
+reading.
+
+---
+
+## ADR-050 — The composition decomposition `c = c̄ + δc`: what is constant, what evolves, and what makes the split checkable
+
+**Status.** Accepted — **design only.**
+**Track.** v1.5 planning, Part 3.1. Consumes ADR-049 unchanged.
+**Scope.** Implement `c̄` plus sub-resolution `δc` in `z`. Resolved bands stay
+declarable and unimplemented.
+
+### The decomposition
+
+$$c(x) = \bar{c} + \delta c(x)$$
+
+**`c̄` — the mean over a declared domain.** It is an ADR-049
+coupled-quantity declaration with `coupling = INVARIANT`, and that is the whole
+content of "constant along the chain by definition." It indexes the operator family;
+no operator transports it.
+
+**`δc(x)` — the fluctuation field.** Ordinary state, evolving under ordinary
+operators, living in whichever slot its length scale puts it in: sub-resolution
+clustering in `z`, resolved segregation bands in `m`, boundary segregation in `Γ`.
+Nothing new is required for `δc` — it is item 1's existing business.
+
+### The constancy check, and what a violation actually means
+
+ADR-049's `INVARIANT` case supplies a **constancy residual** along the chain. The
+brief's reading — "a violation means the declaration is wrong" — is nearly right, and
+the construction sharpens it into a *specific* diagnosis rather than a bare failure:
+
+> A mean over a **closed** domain is constant by conservation. So a constancy
+> violation does not mean the declaration is arbitrary nonsense; it means **the
+> declared domain is open**, and the coupling should have been `DEPLETED_BY` with a
+> declared boundary flux.
+
+**Decarburisation is the worked instance**: mean carbon over a surface layer is not
+constant, because carbon leaves through a free surface. Interdiffusion across a
+coating interface is the second. In both cases the correct repair is not "fix `c̄`" but
+"re-declare the domain as open and name the flux" — which the coupling taxonomy can
+express and the v1.3 schema cannot.
+
+### The projection scale is the load-bearing declaration, and nothing currently detects a mismatch
+
+The split between `c̄` and `δc` is set by a **declared projection scale**, which is
+itself a function of the characterisation suite (`docs/PHYSICS-ADEQUACY.md` §3.3):
+what counts as "mean" versus "fluctuation" depends on what the instrument resolves.
+
+**Operator reuse between two implementations is valid only if their splits match, and
+no mechanism detects a mismatch.** Two chains can declare the same `c̄` descriptor
+values, the same operators, and the same readouts, while having drawn the `c̄`/`δc`
+line at different length scales — in which case the operators are not the same
+operator and reuse is unsound. This is the same shape as E-33's unit-dependence
+finding: a quantity compared across implementations without its basis travelling with
+it.
+
+The projection scale is therefore declared as part of `c̄`'s ADR-049 tracked-dimension
+declaration, and **`interface.diff` must surface it**. That makes a mismatch visible
+without making it checkable — the honest position, and the same one ADR-049 took for
+the justification field.
+
+**Filed as a framework finding.** The projection scale is a declarable modelling
+choice that determines whether operator reuse is sound, and Core §4 has no item for
+it — the characterisation suite that fixes it is **E-31**, already out of scope for
+v1.5. This decomposition makes the dependency explicit rather than resolving it, and
+the new finding (that operator *reuse* silently depends on it) is filed as **E-45**.
+
+### Consequences
+
+- `c̄` requires no new machinery beyond ADR-049.
+- `δc` in `z` is implementable now; resolved bands in `m` require `FIELD` domains,
+  which ADR-049 refuses citing `C-2.5`.
+- The constancy residual is the first concrete check ADR-049's `INVARIANT` case
+  yields, and it is the natural first test when implementation begins.
+
+---
+
+## ADR-051 — Chemistry's role is declared per species per region, and the same quantity takes different roles in different chains
+
+**Status.** Accepted — **design only.**
+**Track.** v1.5 planning, Part 3.2.
+
+### The decision
+
+A composition species' **role** is a per-species, per-region declaration, not a
+property of the framework or of the species:
+
+| Role | Meaning | Interface home |
+|---|---|---|
+| **Parameter** | fixed for the chain; indexes the operator family | ADR-049's `INVARIANT` coupling (item 1's refinement) |
+| **Control** | set by the experimenter; lives in `𝒰_adm` | **item 2**, unchanged |
+| **State** | evolves under some operator | **item 1**, which slot |
+
+**The same quantity takes different roles in different chains, and the interface must
+express both without either being the default.** Bulk carbon is a *parameter* in a
+hot-stamping chain — fixed by the incoming coil, indexing every transformation
+operator — and a *control* in a discovery campaign, where the experimenter sets it per
+sample. Neither reading is more correct; what is wrong is a framework that hard-codes
+one.
+
+**Per-region, not only per-species.** The same species can hold different roles in
+different declared regions of one chain: carbon is a parameter in the bulk and a
+`DEPLETED_BY` state variable in a decarburising surface layer, simultaneously. This is
+why the role attaches to the (species, region) pair and why ADR-049's `REGIONS` domain
+kind is what makes the declaration expressible at all.
+
+### What this closes
+
+**E-29's part 1, the missing parameter category.** E-29's own words: Core §6.2 "asks
+how much of an operator is 'composition-*parameterised*', so the framework has the
+word and no place to declare a parameter." The Parameter role, realised as `INVARIANT`
+coupling, is that place.
+
+**E-29's part 2 becomes detectable.** E-29 also found that "a readout depending only
+on parameters cannot be flagged." With roles declared, a readout whose arguments are
+all Parameter-role quantities is **mechanically identifiable** — it is a readout of the
+grade, not of the process, and Core §2.6's property/performance distinction says that
+is a legitimate case that must not be confused with a defect. The declaration
+separates them.
+
+**Not claimed: transfer.** Whether an operator fitted at one parameter value predicts
+another is composition-family transfer, explicitly **out of scope for v1.5** and the
+v1.6 question. The Parameter role is its *precondition*, not its answer, and coupling
+the two would make both unreviewable.
+
+---
+
+## ADR-052 — `c̄` is declared over physics descriptors, with raw fractions as the underlying space
+
+**Status.** Accepted — **design only.**
+**Track.** v1.5 planning, Part 3.3.
+
+### The decision
+
+`c̄`'s value is declared in a **descriptor basis** — carbon equivalent, `Ms`,
+hardenability index, stacking-fault energy, valence electron count — with **raw mass
+or atomic fractions declared as the underlying space**. Both are carried; the
+descriptors are the metric, the fractions are the ground truth.
+
+This is a third field on ADR-049's coupled-quantity declaration, beside domain and
+tracked dimensions, because it is the same kind of declaration: domain answers *over
+what*, tracked dimensions *at what resolution*, descriptor basis *in what
+coordinates*.
+
+### The reason is checkability, not convenience
+
+> *"This operator depends on chemistry only through carbon equivalent"* is a
+> **falsifiable claim**.
+
+It is testable by holding out a composition that varies other elements **at fixed
+CE**. That is the whole argument, and it is why the descriptor basis is not a
+presentational choice:
+
+- **Raw fractions give a meaningless metric.** A one-sigma change in carbon and a
+  one-sigma change in nickel are not comparable quantities, so any distance in
+  fraction space is arbitrary — which CLAUDE.md invariant 1 already forbids for
+  Lipschitz constants and trust radii, and which applies identically here.
+- **A learned embedding gives no transfer guarantee and fails silently across a phase
+  boundary.** It will interpolate smoothly through a region where the physics does
+  not, and nothing in the embedding announces it.
+- **A declared descriptor basis states which functionals the operator claims to depend
+  on**, which is a claim about argument structure and therefore refutable.
+
+**Structurally this is Axiom S on a second axis.** Axiom S says evolution depends on
+history only through the current state; the descriptor claim says evolution depends on
+composition only through the declared descriptors. Both are sufficiency claims about a
+projection, and both are falsified the same way — by finding two inputs that agree on
+the projection and disagree on the response.
+
+### Two obligations that follow
+
+**The hold-out must pass E-41's vacuity gate first.** A composition hold-out varying
+other elements at fixed CE is exactly the kind of axis that can be *inert*: if the
+withheld variation moves no declared readout, the test satisfies Spec §9.3 in full and
+measures nothing. `omi.proposed.holdout.check_hold_out_discriminates` is the
+precondition, and applying it here is not optional — M11.4 is what happens otherwise.
+
+**The simplex constraint is architecture, never a penalty.** Components sum to one,
+which is precisely the treatment phase fractions already receive
+(`omi.constraints.simplex`, CLAUDE.md invariant 5). A composition *inverse* is an
+optimiser searching composition space, and CLAUDE.md invariant 5's reasoning applies
+verbatim: "an optimiser searching for an optimal route finds precisely where
+enforcement is weak." Off-manifold constraint tests are required, not optional.
+
+---
+
+## ADR-053 — The composition inverse: a third inverse problem that falls out of the formalism
+
+**Status.** Accepted — **design only.**
+**Track.** v1.5 planning, Part 3.4a.
+
+### The decision
+
+Core §5 declares two inverse problems — the **control inverse** (target response →
+driving programme, with process and usage instances) and the **structure inverse**
+(target response → state). The composition decomposition yields a **third**:
+
+> **Composition inverse** — target response → chemistry. Its output is a declared
+> `c̄` in the descriptor basis, which must then be checked for realisability
+> (does an alloy with these descriptors exist and can it be made?) exactly as the
+> structure inverse's output must be fed to a control inverse and may be certified
+> unreachable there.
+
+**This is materials discovery, and it now falls out of the formalism rather than being
+bolted on.** That is the claim worth making carefully: the composition inverse is not
+a new mechanism but the same constrained-optimal-control problem of Core §5 with the
+Parameter-role quantities moved from the fixed index into the decision variables.
+
+### Why it is genuinely third rather than a relabelled structure inverse
+
+The two are distinguishable by what certifies infeasibility, which is the criterion
+Core §5 itself uses to separate its existing pair:
+
+| Inverse | Decision variable | Infeasibility certificate |
+|---|---|---|
+| control | `u ∈ 𝒰_adm` | apparatus constraint manifold |
+| structure | `s ∈ 𝒮` | `s ∉ 𝓜_reach` plus nearest reachable state |
+| **composition** | `c̄` in the descriptor basis | **the descriptors are not jointly attainable by any real alloy**, or the resulting chemistry leaves the declared mechanism set's validity region (ADR-054) |
+
+The third certificate has no analogue in the existing pair, which is the evidence that
+it is a distinct problem rather than a renaming. **Conflating them produces
+unrealisable answers** in exactly the way Core §5 warns about for its own two: a
+composition inverse that ignores descriptor attainability returns beautiful,
+unmeltable alloys.
+
+### Consequences
+
+- The Part 5 SDL domain is the natural vehicle: a discovery campaign is a composition
+  inverse run repeatedly under a decision.
+- Core §5's taxonomy becomes incomplete as written — recorded as item 12 of ADR-048's
+  inaccuracy table, now with a specific replacement rather than a note.
+- The descriptor-attainability certificate is **not designed here**. It needs a
+  declared attainable region in descriptor space, which no domain currently supplies,
+  and inventing one would be the improvisation CLAUDE.md §4 forbids.
+
+---
+
+## ADR-054 — Validity ranges become functions over composition space, and the regime-boundary check that follows
+
+**Status.** Accepted — **design only.**
+**Track.** v1.5 planning, Part 3.4b. **Extends** ADR-043's validity mechanism; this is
+a genuine extension, not a reuse.
+
+### The decision
+
+A declared constitutive form's validity interval is **a function over composition
+space**, not a pair of numbers.
+
+`Ms` is not universal. Koistinen–Marburger's `α` is not universal. Both depend on
+chemistry, so ADR-043's `ValidityBound(low, high)` — two floats — is structurally
+unable to express a bound that moves as `c̄` moves. The extension:
+
+> `ValidityBound`'s edges become **callables over the declared descriptor basis**,
+> evaluated at the declaring domain's `c̄`, with the same `EdgeKind`
+> (`SHARP` / `APPROXIMATE`) and the same one-sided/two-sided rules ADR-043 established.
+
+**Why this is an extension rather than a reuse, stated plainly because ADR-043's
+machinery superficially looks sufficient.** ADR-043's `extrapolation_factor` divides a
+distance by a *fixed* half-width or a *declared* `fitted_scale`. If the window itself
+moves with composition, then the factor is a ratio of two composition-dependent
+quantities, and the question "am I outside the window" has a different answer at every
+`c̄`. E-40's finding bites here too: a form whose window is a function cannot be
+refined into one whose window is a pair of numbers, or vice versa, without breaking
+every caller.
+
+### The regime-boundary check
+
+The extension yields a new diagnostic, and it is the one that matters for the v1.5
+purpose:
+
+> **Does the proposed chemistry still support my declared mechanism set?**
+
+A composition inverse (ADR-053) proposes a `c̄`. Crossing a phase boundary can
+**invalidate a declared mechanism** — the form was fitted where that mechanism
+operated, and at the proposed chemistry a different one does. The check evaluates every
+declared form's composition-dependent validity at the proposed `c̄` and reports which
+forms, if any, no longer apply.
+
+**This is M11's finding arriving on the composition axis, and the connection is
+load-bearing rather than decorative.** M11.5 measured that a declared form with an
+**incomplete mechanism set** is far worse than no declared form at all — 69.55 against
+a free-form operator's 5.06, a gap of +61.98 between the two misspecification arms
+against a declared minimum effect of 0.63. The regime-boundary check is the mechanism
+by which *composition change* causes exactly that incompleteness: the mechanism set was
+complete for the fitted chemistry and is incomplete for the proposed one.
+
+**So the check is a refusal, not a warning.** Per ADR-048, the refusal criterion is
+spine rather than credibility argument, and M11.5's magnitude is the argument for
+treating a regime-boundary crossing as grounds to refuse a composition-inverse
+proposal rather than to annotate it.
+
+### What this does not do
+
+- It does not decide **where** the phase boundaries are. That is domain physics, and a
+  domain must declare it.
+- It does not address whether an operator **transfers** across the boundary — out of
+  scope, v1.6.
+- It inherits ADR-049's `INVARIANT` constancy check: if `c̄` is not constant along the
+  chain, the validity functions are being evaluated at a moving argument, and the
+  regime-boundary check's result is not well-defined. **The constancy residual is a
+  precondition for this check**, which is a dependency between two Part 3 ADRs worth
+  naming rather than discovering later.
 
 ---
 
