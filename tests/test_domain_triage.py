@@ -226,31 +226,69 @@ def test_full_triage_classification_is_asserted_for_both_domains(observe: Observ
     observe("flagship_influence_median", f_result.influence_median, "== 0.0 (collapses OBSERVED_BUT_IRRELEVANT/MARGINALISABLE)")
     observe("contrast_influence_median", c_result.influence_median, "== 0.0 (same mechanism)")
 
-    assert f_labels <= {Triage.OBSERVED.value, Triage.INFERRED.value, Triage.DANGEROUS.value, Triage.MARGINALISABLE.value}
-    assert c_labels <= {Triage.OBSERVED.value, Triage.INFERRED.value, Triage.DANGEROUS.value, Triage.MARGINALISABLE.value}
+    allowed = {
+        Triage.OBSERVED.value,
+        Triage.INFERRED.value,
+        Triage.DANGEROUS.value,
+        Triage.MARGINALISABLE.value,
+        Triage.UNRESOLVED.value,
+    }
+    assert f_labels <= allowed
+    assert c_labels <= allowed
     assert Triage.OBSERVED.value not in f_labels
     assert Triage.OBSERVED.value not in c_labels
     assert f_result.influence_median == 0.0
     assert c_result.influence_median == 0.0
 
-    # Contrast does produce Triage.INFERRED directions (weighted search, per
-    # instruction) -- confirmed present, danger score reported alongside so
-    # the "present but negligible" nature of the finding is on record too.
-    c_inferred = [d for d in c_result.directions if d.label is Triage.INFERRED]
+    # ADR-061: both domains now report UNRESOLVED at this index, and the reason is
+    # substantive rather than presentational. At time_index 0 with the framework
+    # default window of 0 there is no near-diagonal observation in either declared
+    # suite, so for a direction carrying no Gramian information at all the
+    # dominance ratio is undefined -- and Spec 3.3's "inferred" requires the
+    # direction to be identifiable FROM THE TOTAL, which it is not. The superseded
+    # criterion swept those directions into `inferred` through its else-branch.
+    observe("flagship_abstained_fraction", f_result.abstained_fraction, "> 0 -- ADR-061's required output")
+    observe("contrast_abstained_fraction", c_result.abstained_fraction, "> 0 -- ADR-061's required output")
+    assert f_result.abstained_fraction > 0.0
+    assert c_result.abstained_fraction > 0.0
+
+    # The corrected `inferred` sets, and the ones the superseded criterion reported.
+    # Recorded under NEW names: the old names' values are declared audit-gate
+    # exceptions (audit/e53-label-changes.json), and silently reusing a name whose
+    # meaning changed is exactly what that file exists to prevent.
+    c_inferred = list(c_result.inferred_set())
+    f_inferred = list(f_result.inferred_set())
     observe(
-        "contrast_inferred_directions_danger_scores",
+        "contrast_inferred_danger_scores_adr061",
         [d.danger_score for d in c_inferred],
         "present (len > 0); ~zero, per docstring -- not evidence of a dangerous inferred direction",
     )
-    assert len(c_inferred) > 0
-
-    f_inferred = [d for d in f_result.directions if d.label is Triage.INFERRED]
     observe(
-        "flagship_inferred_directions_danger_scores",
+        "flagship_inferred_danger_scores_adr061",
         [d.danger_score for d in f_inferred],
-        "present (len > 0); some nonzero, since flagship's targets have nonzero influence over more directions",
+        "present (len > 0); ALL ZERO under ADR-061 -- see below",
     )
+    observe(
+        "flagship_unresolved_danger_scores_adr061",
+        [d.danger_score for d in f_result.unresolved_set()],
+        "narrative; contains flagship's two largest danger scores",
+    )
+    assert len(c_inferred) > 0
     assert len(f_inferred) > 0
+
+    # **The correction that matters.** Under the superseded criterion flagship's two
+    # LARGEST danger scores were reported as `inferred` -- the framework's own
+    # differentiator, "what no tabular baseline can recover" (Core 3.8). They carry
+    # no observational information at all: their dominance ratio is undefined
+    # because neither near-diagonal nor downstream terms contribute. They were
+    # classed identifiable by the uncertainty median (a tight PRIOR, not data),
+    # which is E-48's first-half degeneracy. Asserting the correction so a later
+    # change cannot silently re-inflate the differentiator.
+    assert all(d.danger_score == 0.0 for d in f_inferred), (
+        "flagship reports a nonzero-danger inferred direction again: check whether it "
+        "carries real Gramian information or whether the else-branch is back"
+    )
+    assert max((d.danger_score for d in f_result.unresolved_set()), default=0.0) > 0.0
 
 
 def _unresolved_danger_fraction(chain, nominal, prior, sensors, target_readouts) -> float:  # type: ignore[no-untyped-def]

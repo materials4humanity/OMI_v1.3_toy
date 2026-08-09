@@ -30,7 +30,7 @@ reach* does not.
 
 `V1.4-EDITS.md` asks whether the framework is *internally coherent*: does a
 section contradict another, is a marker stale, can a declaration be satisfied
-without the property it exists to establish. Fifty-three entries, and they
+without the property it exists to establish. Fifty-four entries, and they
 hold regardless of what physics instantiates the framework.
 
 This document asks a different question: **is the framework adequate to the

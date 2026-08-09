@@ -100,7 +100,9 @@ procedure is unwritten. Report the total only, with the metric declared.
 - Posterior covariance; Prop 3.1 as a documented *upper bound*, never quoted as
   achieved precision.
 - Danger score; the four-way triage.
-- **Observed vs inferred split, actually computed** — accumulate the Gramian
+- **Observed / inferred / unresolved split, actually computed** (criterion corrected at the
+  E-53 milestone, ADR-061: single-term dominance against a declared factor, with abstention;
+  the abstained fraction is a required output) — accumulate the Gramian
   term-by-term, retain per-term contributions, classify each eigendirection by
   concentration of information across `j`. *Inferred* directions are the
   framework's distinctive output and what no tabular baseline recovers; they
@@ -145,7 +147,9 @@ process.
 - EnKF along the chain; ensemble smoother; innovation sequence as drift
   monitor (Core §3.8, S-10 proposition only).
 - Demonstrate a latent variable that no instrument measures becoming
-  *inferred* — closing the loop with M3's classification.
+  *inferred* — closing the loop with M3's classification, as corrected by ADR-061: the
+  classification a latent direction must reach is `INFERRED` under the dominance criterion,
+  which is a stronger claim than the superseded share threshold made (E-55).
 
 **Exit gate.** Oracle with a known latent trajectory: smoother recovers it
 within stated intervals. Innovation monitor detects a planted drift.

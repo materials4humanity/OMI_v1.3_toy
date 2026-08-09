@@ -339,3 +339,37 @@ same blocker as the later flagship bend campaign's thin regime) and
 `tests/oracles/test_known_ranking_inversion.py::test_ranking_inversion_is_not_empirically_validated_as_an_emergent_effect`
 (added and permanently skipped, same review) for the record that the
 stronger claim remains unchecked.
+
+---
+
+## Addendum, 2026-08-09 — the observed/inferred criterion this pack describes has been superseded
+
+**This document is a snapshot at `e43d858` and its body is unchanged** (CLAUDE.md §10). What
+follows corrects a reading, not the record.
+
+§"danger-score triage and observed/inferred split (ADR-020)" describes the criterion in force
+at that commit: a direction was *observed* if the **sum** of near-diagonal Gramian terms
+exceeded half the **total**. At the E-53 milestone that criterion was **superseded by ADR-061**
+for two measured reasons:
+
+- It does not implement Spec §3.3's own words. Spec asks whether "a **single** near-diagonal
+  term dominates"; the share asks whether an aggregate exceeds a fraction. `V1.4-EDITS.md`
+  E-53 records that these are different questions and that Spec's two stated conditions do not
+  partition the cases.
+- Its threshold was **approached to `1.4×10⁻¹¹`** on this repository's contrast chain, so two
+  eigendirections in numerically identical situations received different labels (E-48).
+
+The criterion is now single-term dominance against a **declared** factor `ρ`, with an
+**abstention** outcome (`Triage.UNRESOLVED`) and a required abstained fraction; `ρ`, the
+abstention band and the near-diagonal window are declared per domain with justifications.
+
+**What that changes for a reader of this pack.** Any label population quoted here was computed
+under the superseded rule. On flagship, three of the four directions this pack's triage counted
+as *inferred* — including **both** of the nonzero-danger ones — carry no observational
+information at all and now abstain (E-55). So a count of inferred directions taken from this
+pack over-states the framework's differentiator. The citable quantity is the per-direction
+**dominance ratio**, which this pack predates.
+
+Nothing numeric in this pack moved: every per-direction danger score, Gramian and posterior is
+byte-identical, verified by the audit-preservation gate with the label changes enumerated in
+`audit/e53-label-changes.json`. Current account: `docs/V1.5-E53-FIX.md`.

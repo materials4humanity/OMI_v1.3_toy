@@ -15,7 +15,7 @@ The job of the code is to make the framework's claims **measurable and
 falsifiable**, not to predict well (`CLAUDE.md` §2). Read that before reading any
 result as a performance number.
 
-## The ledger: `docs/V1.4-EDITS.md` (53 entries, grouped by root cause)
+## The ledger: `docs/V1.4-EDITS.md` (54 entries, grouped by root cause)
 
 Entry IDs are permanent (E-34 was withdrawn into E-29 and its number retired, never
 reused). §1 holds the authoritative counts and the entry locator. The groups:
@@ -35,15 +35,17 @@ reused). §1 holds the authoritative counts and the entry locator. The groups:
   E-47 was argued, then measured, then **narrowed by the measurement**.
 - **§7 — status markers over/understating completeness** (E-01, E-02, E-08, E-09, E-10).
 - **§8 — defects between individually sound prescriptions** (E-28, E-36).
-- **§9 — a principle the framework never states** (E-37, E-39, E-41, E-42, E-50) —
-  enlarged by the M11 extrapolation track and again by v1.5 planning.
+- **§9 — a principle the framework never states** (E-37, E-39, E-41, E-42, E-50, E-55) —
+  enlarged by the M11 extrapolation track and again by v1.5 planning. **E-55 is the one with a
+  publication consequence**: the framework's differentiator against a tabular baseline must be
+  cited as a per-direction dominance ratio, never as a count of inferred directions.
 - **§10 — confirmations** (E-07 found nothing wrong; E-38 a proposal that worked).
 - **§11** re-reads every entry by *which practitioner intervention it blocks* (buy
   sensing / characterisation / data / physics / run experiments / declare out of
   scope), and finds the framework prices only one of six.
 - **§12** states what the build never attempted.
 
-**Provenance matters and is not flattened:** 48 entries were found by *attempting to
+**Provenance matters and is not flattened:** 49 entries were found by *attempting to
 build* the framework; 5 (E-29–E-33, marked `[domain-assessment]`) by *reading it
 against physics* (`docs/PHYSICS-ADEQUACY.md`).
 
@@ -66,6 +68,7 @@ against physics* (`docs/PHYSICS-ADEQUACY.md`).
 | v1.5 planning, Part 5(1) | the contrast decision loop (**design only**), the statistic dry-run, and E-47 **measured** | E-48–E-52; ADR-056–ADR-058, `docs/V1.5-PART5-1.md` |
 | v1.5 planning, Part 5(2) | the E-48 triage, and the SDL domain's **declaration** (no operators) | E-53; ADR-059–ADR-060, `docs/V1.5-PART5-2.md` |
 | v1.5 planning, E-53 milestone | the observed/inferred blast radius, and the criterion **chosen but not implemented** | E-54; ADR-061, `docs/V1.5-E53-DECISION.md` |
+| v1.5 planning, E-53 **fix** | the criterion **implemented**; `Triage.UNRESOLVED`; E-54 settled by a constructed intermediate chain | E-55; ADR-061 amended, ADR-062, `docs/V1.5-E53-FIX.md` |
 
 Parts 1–4 produced no implementation: five ledger entries found by *designing against*
 the framework rather than building on it, E-45 marked derived-not-measured. Part 5(1) kept

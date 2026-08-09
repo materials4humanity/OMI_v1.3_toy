@@ -5,6 +5,7 @@ from __future__ import annotations
 from omi.interface import InstantiationDeclaration
 
 from omi_domains.flagship.state import FLAGSHIP_SCHEMA
+from omi.observability import ObservedInferredConvention
 
 FLAGSHIP_DECLARATION = InstantiationDeclaration(
     state_schema=FLAGSHIP_SCHEMA,
@@ -48,3 +49,25 @@ FLAGSHIP_DECLARATION = InstantiationDeclaration(
         "an anti-goal per CLAUDE.md §9 and is not implemented."
     ),
 )
+
+
+FLAGSHIP_OBSERVED_INFERRED = ObservedInferredConvention(
+    dominance_factor=2.0,
+    abstention_band=0.25,
+    near_diagonal_window=0,
+    justification=(
+        "Window 0, the most literal reading of Spec 3.3's 'j ~ k': this chain's stations are "
+        "far apart in state-space terms -- HEATING_AND_SOAK is a declared erasure -- so an "
+        "observation one segment later is not 'near' anything, and admitting it would be a "
+        "modelling claim rather than a notational convenience. rho = 2.0 rather than the "
+        "framework's 1.5 because the erasure makes the ratio structurally 0 or infinite here "
+        "(measured: tests/oracles/test_share_threshold_degeneracy.py), so a demanding factor "
+        "costs nothing and states plainly that a marginal near-diagonal excess would not be "
+        "accepted as dominance on a chain whose information structure is this decisive."
+    ),
+)
+"""Flagship's declared observed/inferred convention (ADR-061; Spec §3.3).
+
+The values are cheap here **because** the domain is degenerate in the direction that makes
+them cheap, and the justification says so rather than presenting a comfortable choice as a
+considered one."""

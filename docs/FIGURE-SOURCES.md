@@ -138,7 +138,7 @@ analysis code.
 ### F8 — The observability triage on two domains
 
 - **Shows.** Per-direction classification of state directions into observed /
-  inferred / dangerous relative to a *declared* target set, on flagship and
+  inferred / unresolved / dangerous relative to a *declared* target set, on flagship and
   contrast; contrast's poorer observation suite leaves a larger fraction of target
   variance dangerous.
 - **Source.** observations `flagship_label_set`, `contrast_label_set`,
@@ -150,7 +150,7 @@ analysis code.
   is invalid if the target set changes.** State the target set in the caption. Note
   also that `influence_median == 0` collapses two of the four nominal categories
   (OBSERVED_BUT_IRRELEVANT / MARGINALISABLE) on both domains, so the label set seen
-  is a subset of {inferred, dangerous} — a figure showing "four categories" would
+  is a subset of {inferred, dangerous, **unresolved**} (ADR-061) — a figure showing "four categories" would
   overstate what these domains exercise.
 
 ## The invariance claim
@@ -181,3 +181,24 @@ physics-versus-baseline extrapolation comparison in materials, OMI or not. **F1 
 F2 are the domain result.** F5–F8 are the pre-M11 measurement machinery that
 establishes the build measures what it claims to; each is sound within its caveat
 and misleading without it.
+
+---
+
+## Addendum — the observed/inferred figure candidate, after ADR-061
+
+**Do not draw a figure that counts inferred directions.** `docs/V1.4-EDITS.md` E-55 measured
+that the superseded criterion's count included directions carrying *no* observational
+information — on flagship, the two with the largest danger scores. A bar chart of label
+populations would reproduce that inflation in a form no caption can undo.
+
+The figure that is safe, and better: the **dominance ratio per direction** against the declared
+factor `ρ`, with the abstention band shaded and the abstained fraction quoted. Source:
+`TriageResult.directions[*].dominance_ratio` and `TriageResult.abstained_fraction`. The caveat
+that must travel with it is the declared convention — `ρ`, the band and the window — because the
+reading moves with all three (E-48).
+
+A second figure candidate the E-53 milestone created and which has no such hazard: the
+**turnover curve** from `tests/oracles/test_known_decaying_sensitivity.py` — dominance ratio
+against decay rate `λ`, with the closed-form `λ^{−2(w+1)}` overlaid and the three label regions
+marked. It shows the criterion discriminating, locates the turnover, and is the evidence that
+E-54's strong form was refuted.

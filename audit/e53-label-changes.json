@@ -1,0 +1,59 @@
+{
+  "declared_by": "ADR-061 (docs/DECISIONS.md); docs/V1.5-E53-FIX.md",
+  "why_this_file_exists": [
+    "The audit-preservation gate (ADR-042) exists so that a change to src/omi/ cannot move a",
+    "previously-reported number silently. ADR-061 changes the observed/inferred CRITERION, which",
+    "is an approved change to what a label means -- so some label-valued observations must move,",
+    "and a gate that forbade all movement would either block an approved change or be switched",
+    "off, which is worse than either.",
+    "",
+    "This file is the third option: every moved observation is enumerated in advance with its",
+    "before and after values and its reason. The gate reports declared movements separately and",
+    "still FAILS on any undeclared one, so the property it protects -- nothing changes silently",
+    "-- is preserved rather than relaxed.",
+    "",
+    "The gate additionally REFUSES an exception whose before or after value is numeric. That is",
+    "the mechanical form of the claim this change rests on: ADR-061 alters a label, not a",
+    "computed quantity. An attempt to except a number would fail the gate rather than pass it."
+  ],
+  "changed": [
+    {
+      "name": "contrast_label_set",
+      "before": ["dangerous", "inferred"],
+      "after": ["dangerous", "inferred", "unresolved"],
+      "reason": "ADR-061. At time_index 0 with the framework default window of 0, contrast's declared suite has no near-diagonal observation, so a direction carrying no Gramian information has an undefined dominance ratio. Spec 3.3's 'inferred' requires identifiability FROM THE TOTAL, which such a direction lacks; the superseded criterion swept it into `inferred` through its else-branch."
+    },
+    {
+      "name": "flagship_label_set",
+      "before": ["dangerous", "inferred"],
+      "after": ["dangerous", "inferred", "unresolved"],
+      "reason": "ADR-061, same mechanism as contrast_label_set."
+    },
+    {
+      "name": "old_target_labels",
+      "before": ["inferred", "inferred", "dangerous", "inferred", "inferred", "dangerous", "dangerous"],
+      "after": ["unresolved", "unresolved", "dangerous", "inferred", "unresolved", "dangerous", "dangerous"],
+      "reason": "ADR-061. Three of flagship's four previously-`inferred` directions carry no observational information at all and now abstain. The two whose danger scores were largest are among them -- the correction that matters, recorded in E-55."
+    },
+    {
+      "name": "new_target_labels",
+      "before": ["inferred", "inferred", "dangerous", "inferred", "inferred", "dangerous", "dangerous"],
+      "after": ["unresolved", "unresolved", "dangerous", "inferred", "unresolved", "dangerous", "dangerous"],
+      "reason": "ADR-061, same as old_target_labels. That the two lists still agree is the point of the test that records them (ADR-037's re-run check): adding `bend_angle` to the target set does not reorder the triage, and that remains true under the corrected criterion."
+    }
+  ],
+  "retired": [
+    {
+      "name": "contrast_inferred_directions_danger_scores",
+      "before": [3.1089238649276825e-12, 0.0, 0.0, 0.0],
+      "replaced_by": "contrast_inferred_danger_scores_adr061",
+      "reason": "A NUMERIC observation whose value is a label-filtered list. Its numbers did not move -- every per-direction danger score is byte-identical -- but the filter selecting them changed, so the list would have. Retired under its old name and reissued under a new one rather than silently reusing a name whose meaning changed. Reusing it would have been the only way this change could have moved a number while appearing not to."
+    },
+    {
+      "name": "flagship_inferred_directions_danger_scores",
+      "before": [7.999999979801942, 4.308568691817097, 0.0, 0.0],
+      "replaced_by": "flagship_inferred_danger_scores_adr061",
+      "reason": "Same, and this is the sharpest single piece of evidence for E-55: the two largest values here, 8.00 and 4.31, belong to directions that carry NO observational information and are now `unresolved`. Under the superseded criterion the framework's own differentiator -- 'what no tabular baseline can recover' -- was carried on flagship by its two highest-danger directions, neither of which any instrument or chain informs at all."
+    }
+  ]
+}

@@ -24,6 +24,7 @@ from omi.proposed.v15 import (
 
 from omi_domains.sdl.forms import SDL_FORMS
 from omi_domains.sdl.state import DESCRIPTORS, SDL_SCHEMA
+from omi.observability import ObservedInferredConvention
 
 SDL_V13_CORE = InstantiationDeclaration(
     state_schema=SDL_SCHEMA,
@@ -222,3 +223,25 @@ per region** (making ADR-051's one-species-two-roles claim exercised rather than
 and an **attainable region** (the object ADR-053 said no domain supplied, without which its
 composition-inverse infeasibility certificate could not be designed).
 """
+
+
+SDL_OBSERVED_INFERRED = ObservedInferredConvention(
+    dominance_factor=2.0,
+    abstention_band=0.5,
+    near_diagonal_window=0,
+    justification=(
+        "Window 0: the evaluation reading and the preparation steps are separated by a declared "
+        "erasure (CALCINATION), so nothing one segment away is near-diagonal in any sense the "
+        "physics supports. rho = 2.0 for the same reason as flagship's -- an erasure makes the "
+        "ratio structurally decisive, so a demanding factor is free. The band is WIDER than "
+        "either existing domain's, at 0.5, and that is the one value here chosen against "
+        "convenience: this domain's chain is not implemented (ADR-060), so no measurement "
+        "supports a narrow band, and a wide band abstains more often. Abstaining while "
+        "undeclared-by-measurement is the honest default, and ADR-061's required abstained "
+        "fraction makes the cost of it visible rather than hidden."
+    ),
+)
+"""The discovery domain's declared observed/inferred convention (ADR-061; Spec §3.3).
+
+Declared **before** any operator exists, which is the point: the convention is part of the
+domain's declaration rather than a tuning knob discovered while looking at results."""

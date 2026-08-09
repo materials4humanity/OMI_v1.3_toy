@@ -74,7 +74,7 @@ Use these terms exactly. They are defined in Core; do not coin synonyms.
 | **Property vs performance** | Property is invariant under configuration within a test class, i.e. a functional of the constitutive operator alone. Performance requires geometry. |
 | **Sufficiency deficit** `δ` | The bias term from matched-history pairs, **decomposed** to remove repeat noise and imperfect matching |
 | **Danger score** `𝒟ᵢ` | influence × residual uncertainty, per state direction, relative to *declared* targets |
-| **Observed / inferred** | A direction is *observed* if one near-diagonal Gramian term dominates; *inferred* if information accrues only through downstream terms — the chain model, not any instrument, is doing the work |
+| **Observed / inferred / unresolved** | A direction is *observed* if a **single** near-diagonal Gramian term exceeds the largest downstream term by a **declared** dominance factor `ρ`; *inferred* if the near-diagonal contribution vanishes while the direction is identifiable from the total — the chain model, not any instrument, is doing the work; ***unresolved*** if the ratio sits within a declared band of `ρ`, or if nothing contributes at all. The dominance factor, the band and the near-diagonal window are declared **per domain** with justifications, and the **abstained fraction is a required output** (ADR-061; V1.4-EDITS E-48, E-53). Never cite the *size* of the inferred set as evidence of chain-specific recovery — cite the per-direction dominance ratio (E-55) |
 | **Control inverse / structure inverse** | Target response → driving programme / target response → state. Distinct problems; conflating them produces unrealisable designs. |
 | **Closure defect** `𝒟_λ` | Non-commutation of coarse-graining with evolution. Measured, never assumed small. |
 
@@ -178,7 +178,7 @@ src/omi/                  domain-neutral framework — NO domain vocabulary
   constraints.py          hard structural constraints
   erasure.py              erasure measurement; surviving subspace
   sufficiency.py          deficit decomposition; probe sets; augmentation loop
-  observability.py        Gramian; danger triage; observed/inferred; VOI
+  observability.py        Gramian; danger triage; observed/inferred/unresolved; VOI
   assimilate.py           EnKF; smoother; innovation drift monitor
   classb.py               driver/tail separation; N_eff; validation ladder
   inverse.py              constrained control; certificates; decision layer

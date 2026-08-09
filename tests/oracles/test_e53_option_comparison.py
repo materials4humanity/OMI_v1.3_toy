@@ -214,7 +214,9 @@ def test_nothing_numeric_in_the_repository_consumes_the_label(
     are computed at three window values, which change every label, and they do not move.
     """
     from omi.observability import (
+        DEFAULT_CONVENTION,
         Observation,
+        ObservedInferredConvention,
         compute_gramian,
         danger_triage,
         default_prior_covariance,
@@ -246,7 +248,19 @@ def test_nothing_numeric_in_the_repository_consumes_the_label(
     labels: dict[int, list[str]] = {}
     for window in (0, 1, 2):
         result = danger_triage(
-            chain, nominal, index, gramian, prior, targets, sensors, near_diagonal_window=window
+            chain,
+            nominal,
+            index,
+            gramian,
+            prior,
+            targets,
+            sensors,
+            convention=ObservedInferredConvention(
+                dominance_factor=DEFAULT_CONVENTION.dominance_factor,
+                abstention_band=DEFAULT_CONVENTION.abstention_band,
+                near_diagonal_window=window,
+                justification="window swept to change the labelling while holding everything else",
+            ),
         )
         voi = value_of_information(
             chain, nominal, index, prior, gramian, sensors[-1], targets

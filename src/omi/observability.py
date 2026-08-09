@@ -177,13 +177,106 @@ def sensitivity_operator(
 
 class Triage(str, Enum):
     """The four-way triage of Core §3.8 / Spec §3.3, plus the "observed but
-    irrelevant" entry Spec §3.3's table names explicitly."""
+    irrelevant" entry Spec §3.3's table names explicitly, plus
+    :attr:`UNRESOLVED` (ADR-061).
+    """
 
     OBSERVED = "observed"
     INFERRED = "inferred"
     DANGEROUS = "dangerous"
     MARGINALISABLE = "marginalisable"
     OBSERVED_BUT_IRRELEVANT = "observed_but_irrelevant"
+
+    UNRESOLVED = "unresolved"
+    """The observed/inferred question was asked and **refused** (ADR-061;
+    `docs/V1.4-EDITS.md` E-48, E-53).
+
+    Spec §3.3's two stated conditions do not partition the cases: between "a single
+    near-diagonal term dominates" and "information accrues only downstream" lies every
+    direction whose near-diagonal terms contribute something without any one of them
+    dominating. E-53 records that the threshold an implementation must invent is filling a
+    hole in the *definition*, and E-48 measured what that costs — on a chain without
+    erasure the invented threshold is approached to `1.4×10⁻¹¹`, so the label is decided by
+    rounding.
+
+    This value is the honest answer there. It is returned when the dominance ratio sits
+    within a declared band of the declared dominance factor, and when neither the
+    near-diagonal nor the downstream terms contribute at all. Reporting "the near-diagonal
+    and downstream contributions are equal, so neither label is warranted" is a true
+    statement about the chain; forcing a label is not, and Core §3.9 with CLAUDE.md §4 both
+    say a framework that knows when to refuse is more credible than one that always
+    answers.
+
+    **A triage MUST report the abstained fraction** — see
+    :attr:`TriageResult.abstained_fraction`. Without that, a domain abstaining on every
+    direction satisfies Spec §9.1's OMI-1 item while establishing nothing, which is the
+    satisfiable-without-the-property defect this value would otherwise introduce."""
+
+
+@dataclass(frozen=True)
+class ObservedInferredConvention:
+    """The declared conventions the observed/inferred split needs (ADR-061; Spec §3.3;
+    Core §3.8), each with a required justification.
+
+    Spec §3.3 distinguishes observed from inferred by "which terms of the Gramian sum
+    supply the information" and leaves **two** quantities unspecified: how near an index
+    must be to count as near-diagonal, and how much one term must exceed the others to
+    "dominate". `docs/V1.4-EDITS.md` E-48 measured that the two compound — on this
+    repository's contrast chain the same direction at the same index reads *inferred* at a
+    window of 0, *observed* at 2, and splits between the labels at 1, where the criterion is
+    approached to `1.4×10⁻¹¹`.
+
+    So both are declared here, per domain, with justifications. Declaring one and leaving
+    the other free would repair half of a compounding pair and report it as the whole.
+    """
+
+    dominance_factor: float
+    """`ρ ≥ 1`: how far the largest near-diagonal contribution must exceed the largest
+    downstream one before the direction counts as **observed**.
+
+    A ratio between two comparable quantities rather than a fraction of a total, which is
+    why it degrades gracefully where ADR-020's share did not: two equal contributions give
+    a ratio of exactly `1`, which fails any `ρ > 1` cleanly and reports the tie instead of
+    resolving it by rounding (ADR-061)."""
+
+    abstention_band: float
+    """Half-width on the ratio within which the split is **refused** rather than decided.
+
+    The half of the fix that matters most (ADR-061): it converts an arbitrary label into an
+    explicit abstention, which is Core §3.9's refusal discipline applied to the framework's
+    own diagnostic."""
+
+    near_diagonal_window: int
+    """How many indices past `k` still count as "`j ≈ k`" (Spec §3.3's own notation).
+
+    Not eliminated by the ratio form and measured not to be: the window still spans the
+    answer on contrast, so it is declared rather than defaulted (ADR-061)."""
+
+    justification: str
+    """Why these three values, for this domain — required and non-empty.
+
+    A free-text field **checks nothing by itself**, and E-17 and E-31 both warn about
+    good-faith strings that satisfy a requirement without establishing its property. What it
+    buys is that the choice becomes visible to a reader and comparable across domains, which
+    is weaker than a check and stronger than the silent default that produced E-48."""
+
+    def __post_init__(self) -> None:
+        if self.dominance_factor < 1.0:
+            raise ValueError(
+                f"dominance_factor must be at least 1.0, got {self.dominance_factor}: a value "
+                "below 1 would call a direction observed while a downstream term contributes "
+                "more than the near-diagonal one, which inverts the distinction"
+            )
+        if self.abstention_band < 0.0:
+            raise ValueError(f"abstention_band must be non-negative, got {self.abstention_band}")
+        if self.near_diagonal_window < 0:
+            raise ValueError(f"near_diagonal_window must be non-negative, got {self.near_diagonal_window}")
+        if not self.justification.strip():
+            raise ValueError(
+                "an ObservedInferredConvention must justify its values: E-48's finding is that "
+                "two silent conventions compounded into a label decided at machine precision, "
+                "and an undeclared choice no reader can see is how that happened"
+            )
 
 
 @dataclass(frozen=True)
@@ -204,19 +297,62 @@ class DirectionDiagnostic:
     """Fraction of this direction's Gramian quadratic form supplied by
     near-diagonal observations (``time_index`` within the declared window of
     `k`); ``None`` when the direction is unidentifiable or there are no
-    near-diagonal observations at all (ADR-020)."""
+    near-diagonal observations at all (ADR-020).
+
+    **Retained and no longer the criterion** (ADR-061). E-48 measured that a threshold on
+    this quantity is decided by rounding on a chain without erasure, and E-53 that it
+    replaces both of Spec §3.3's stated conditions. It is kept because it is a legible
+    summary a reader may want, and because dropping a reported quantity would break the
+    audit trail of every result that quoted it; :attr:`dominance_ratio` is what the label
+    is computed from."""
+
+    dominance_ratio: float | None
+    """`max_{k ≤ j ≤ k+w} q_j / max_{j > k+w} q_j` — the criterion (ADR-061; Spec §3.3's
+    own words, "a single near-diagonal term dominates", made exact).
+
+    ``inf`` when nothing downstream contributes, which is unambiguously observed. ``None``
+    when the direction is unidentifiable, or when neither side contributes at the declared
+    tolerance — the case that returns :attr:`Triage.UNRESOLVED` rather than a label.
+
+    A ratio of comparables rather than a fraction of a total, which is the whole reason it
+    is the criterion: on this repository's contrast chain it takes the single value `1.0` at
+    every index where the share walked `1/12, 1/10, 1/8, 1/6, 1/4, 1/2` and landed on the
+    threshold."""
+
     label: Triage
 
 
 @dataclass(frozen=True)
 class TriageResult:
     """The complete per-direction triage at one chain index (Spec §3.3),
-    with the median thresholds used (ADR-020) kept alongside it."""
+    with the median thresholds used (ADR-020) and the declared observed/inferred
+    convention (ADR-061) kept alongside it."""
 
     directions: tuple[DirectionDiagnostic, ...]
     """Ordered by :attr:`~DirectionDiagnostic.danger_score`, descending."""
     influence_median: float
     uncertainty_median: float
+    convention: ObservedInferredConvention
+    """The declared dominance factor, band and window this triage used (ADR-061).
+
+    Carried on the result rather than left at the call site, by the same discipline
+    CLAUDE.md invariant 1 imposes on metric-dependent quantities: a classification whose
+    value depends on a declared choice travels with that choice."""
+
+    @property
+    def abstained_fraction(self) -> float:
+        """Fraction of directions returned as :attr:`Triage.UNRESOLVED` (ADR-061; Spec
+        §9.1's OMI-1 item as this repository proposes extending it).
+
+        **A required output, not a convenience.** Abstention makes an arbitrary label
+        honest; without this number it also makes the conformance item satisfiable by
+        declining to answer — a triage abstaining on every direction would report a triage
+        and establish nothing, which is the shape §4 of `docs/V1.4-EDITS.md` documents nine
+        times. Reporting the fraction turns abstention into a measured property of the chain.
+        """
+        if not self.directions:
+            return 0.0
+        return sum(1 for d in self.directions if d.label is Triage.UNRESOLVED) / len(self.directions)
 
     def dangerous_set(self) -> tuple[DirectionDiagnostic, ...]:
         """The actionable output (Spec §3.3): influential and unidentifiable
@@ -226,8 +362,55 @@ class TriageResult:
     def inferred_set(self) -> tuple[DirectionDiagnostic, ...]:
         """Directions identifiable only through chain dynamics plus
         downstream measurement (Core §3.8) — what no tabular baseline
-        recovers, and reported separately per docs/ROADMAP.md M3."""
+        recovers, and reported separately per docs/ROADMAP.md M3.
+
+        **Read this alongside :meth:`unresolved_set` and never as a count on its own**
+        (ADR-061). Core §3.8 states the framework's differentiator against a tabular
+        baseline as the *membership* of this set; E-53's measurement is that the membership
+        depends on a declared dominance factor, so the citable quantity is each direction's
+        :attr:`~DirectionDiagnostic.dominance_ratio`, not the size of this tuple.
+        """
         return tuple(d for d in self.directions if d.label is Triage.INFERRED)
+
+    def unresolved_set(self) -> tuple[DirectionDiagnostic, ...]:
+        """Directions on which the observed/inferred question was refused (Spec §3.3's
+        distinction, refused rather than forced; Core §3.9's refusal discipline; ADR-061).
+
+        Non-empty is a finding about the chain rather than about the implementation: it says
+        the near-diagonal and downstream terms contribute comparably, so *which terms supply
+        the information* has no answer at the declared dominance factor.
+        """
+        return tuple(d for d in self.directions if d.label is Triage.UNRESOLVED)
+
+
+DEFAULT_CONVENTION = ObservedInferredConvention(
+    dominance_factor=1.5,
+    abstention_band=0.25,
+    near_diagonal_window=0,
+    justification=(
+        "Framework default, used only where a caller declares nothing (ADR-061). rho=1.5 "
+        "reads 'dominates' as a half-again margin rather than as bare inequality, so a "
+        "direction whose near-diagonal and downstream maxima are comparable is not called "
+        "observed; the band of 0.25 refuses the label across [1.25, 1.75]. The window is 0, "
+        "the most literal reading of Spec 3.3's 'j ~ k' -- only an observation AT k counts. "
+        "A DOMAIN SHOULD DECLARE ITS OWN: E-48 measured that these two conventions compound, "
+        "and a framework default no domain had to defend is how they became invisible."
+    ),
+)
+"""The convention used when a caller declares none (ADR-061).
+
+Kept as a **default rather than a required argument** for one reason and it is not
+convenience: making the argument required would change every existing call site at once, and
+the audit-preservation gate (ADR-042) exists precisely so that a change to `src/omi/` can be
+shown not to have moved any previously-reported number. A default that reproduces the most
+literal reading of Spec §3.3 keeps that check meaningful. The justification string says
+plainly that a domain should declare its own."""
+
+_RATIO_TOLERANCE = 1.0e-12
+"""Below this a Gramian quadratic-form contribution counts as zero (ADR-061).
+
+Stands in for ADR-017's declared erasure rank tolerance — the same question, asked of the
+same kind of quantity — rather than introducing a second numerical convention."""
 
 
 def danger_triage(
@@ -239,23 +422,31 @@ def danger_triage(
     target_readouts: Sequence[FunctionalReadout],
     observations: Sequence[Observation],
     importance_weights: FloatArray | None = None,
-    observed_share_threshold: float = 0.5,
-    near_diagonal_window: int = 0,
+    convention: ObservedInferredConvention = DEFAULT_CONVENTION,
 ) -> TriageResult:
     """The full danger-score triage at *time_index* (Core §3.8; Spec §3.3):
     eigendecompose the posterior covariance, weight each eigendirection by
     its influence on the declared *target_readouts*, and classify by the
-    median-split convention of ADR-020 (docs/DECISIONS.md).
+    median-split convention of ADR-020 (docs/DECISIONS.md) for the
+    identifiability axis and by *convention* for the observed/inferred axis.
 
-    *near_diagonal_window* operationalises "a near-diagonal term `j ≈ k`"
-    (Spec §3.3): observations with ``time_index`` within this many steps of
-    *time_index* are "near-diagonal"; the default, 0, is the most literal
-    reading (only an observation *at* `k` itself counts). A direction is
-    *observed* if the near-diagonal observations together supply more than
-    *observed_share_threshold* of its Gramian quadratic form; *inferred* if
-    it is identifiable at all but that information accrues only through
-    farther, downstream observations — "the chain model, not the
-    instrument, is doing the work" (Core §3.8).
+    **The observed/inferred criterion is ADR-061's, not ADR-020's**, and the change is a
+    correction rather than a refinement. ADR-020 asked whether the *sum* of near-diagonal
+    terms exceeded half the *total*; Spec §3.3 asks whether "a single near-diagonal term
+    dominates", and `docs/V1.4-EDITS.md` E-53 records that the two are different questions
+    while E-48 measured what the substitution cost — on a chain without erasure the share
+    lands exactly on its threshold and the label is decided by rounding. So:
+
+    - **observed** — `max_{k ≤ j ≤ k+w} q_j > ρ · max_{j > k+w} q_j`;
+    - **inferred** — the near-diagonal contribution vanishes at the declared tolerance while
+      the direction is identifiable from the total, i.e. Spec's *"only through Σ_{j>k}"*;
+    - **unresolved** — the ratio sits within the declared band of `ρ`, or neither side
+      contributes. Refused rather than assigned, and counted in
+      :attr:`TriageResult.abstained_fraction`.
+
+    `w`, `ρ`, the band and the tolerance all travel on the returned
+    :class:`TriageResult`, because a classification whose value depends on a declared choice
+    must carry it (CLAUDE.md invariant 1).
     """
     posterior = posterior_covariance(prior, gramian.total)
     sensitivity = sensitivity_operator(chain, nominal, time_index, target_readouts)
@@ -272,8 +463,10 @@ def danger_triage(
     influence_median = float(np.median(influences))
     uncertainty_median = float(np.median(uncertainties))
 
+    window = convention.near_diagonal_window
     relevant = [o for o in observations if o.time_index >= time_index]
-    near_diagonal_names = [o.name for o in relevant if o.time_index <= time_index + near_diagonal_window]
+    near_diagonal_names = [o.name for o in relevant if o.time_index <= time_index + window]
+    downstream_names = [o.name for o in relevant if o.time_index > time_index + window]
     near_diagonal_term = None
     if near_diagonal_names:
         near_diagonal_term = sum(
@@ -295,12 +488,21 @@ def danger_triage(
             if total_quad > 0:
                 near_diagonal_share = float(v @ near_diagonal_term @ v) / total_quad
 
-        if identifiable and influential:
-            label = (
-                Triage.OBSERVED
-                if (near_diagonal_share is not None and near_diagonal_share > observed_share_threshold)
-                else Triage.INFERRED
+        dominance_ratio: float | None = None
+        if identifiable:
+            near_max = max(
+                (float(v @ gramian.terms[name] @ v) for name in near_diagonal_names), default=0.0
             )
+            down_max = max(
+                (float(v @ gramian.terms[name] @ v) for name in downstream_names), default=0.0
+            )
+            if down_max > _RATIO_TOLERANCE:
+                dominance_ratio = near_max / down_max
+            elif near_max > _RATIO_TOLERANCE:
+                dominance_ratio = float("inf")
+
+        if identifiable and influential:
+            label = _observed_inferred_label(dominance_ratio, convention)
         elif identifiable and not influential:
             label = Triage.OBSERVED_BUT_IRRELEVANT
         elif not identifiable and influential:
@@ -309,11 +511,42 @@ def danger_triage(
             label = Triage.MARGINALISABLE
 
         diagnostics.append(
-            DirectionDiagnostic(v, influence, uncertainty, influence * uncertainty, near_diagonal_share, label)
+            DirectionDiagnostic(
+                v,
+                influence,
+                uncertainty,
+                influence * uncertainty,
+                near_diagonal_share,
+                dominance_ratio,
+                label,
+            )
         )
 
     diagnostics.sort(key=lambda d: d.danger_score, reverse=True)
-    return TriageResult(tuple(diagnostics), influence_median, uncertainty_median)
+    return TriageResult(tuple(diagnostics), influence_median, uncertainty_median, convention)
+
+
+def _observed_inferred_label(
+    dominance_ratio: float | None, convention: ObservedInferredConvention
+) -> Triage:
+    """ADR-061's criterion, in one place so the three outcomes are visible together.
+
+    ``None`` means neither side contributes at the declared tolerance: the direction was
+    classed identifiable by the *uncertainty median* (ADR-020) while carrying no Gramian
+    information at all, which is E-48's first-half degeneracy surfacing. Spec §3.3's
+    *"inferred"* requires the direction to be identifiable **from the total**, which it is
+    not, so the honest answer is a refusal rather than a label — and it is counted, so the
+    refusal cannot pass unnoticed.
+    """
+    if dominance_ratio is None:
+        return Triage.UNRESOLVED
+    if np.isinf(dominance_ratio):
+        return Triage.OBSERVED
+    if abs(dominance_ratio - convention.dominance_factor) <= convention.abstention_band:
+        return Triage.UNRESOLVED
+    if dominance_ratio > convention.dominance_factor:
+        return Triage.OBSERVED
+    return Triage.INFERRED
 
 
 def value_of_information(

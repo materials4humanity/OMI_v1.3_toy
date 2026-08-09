@@ -33,13 +33,13 @@ Confirm the package imports and the suite runs:
 
 ```bash
 python -c "import omi, omi_domains; print('ok')"     # -> ok
-pytest -q                                            # ~340 s
+pytest -q                                            # ~560 s
 ```
 
 Expected tail:
 
 ```
-351 passed, 2 skipped in ~340s
+357 passed, 2 skipped in ~560s
 ```
 
 The two skips are intentional (torch-optional paths with a numpy fallback; the
@@ -47,7 +47,7 @@ fallback itself is tested). Type-checking and lints:
 
 ```bash
 mypy --config-file pyproject.toml src tests   # cold ~30 s, warm <1 s (on-disk .mypy_cache)
-# -> Success: no issues found in 137 source files
+# -> Success: no issues found in 139 source files
 
 pytest tests/lint -q                          # ~1 s -> 13 passed
 ```
@@ -194,7 +194,8 @@ before `src/omi/` was touched by the proposed-v1.4 extension) — is committed a
 `audit/pre-m11-observations.json`, so the check is one step from a clean clone:
 
 ```bash
-scripts/check_audit_gate.sh audit/pre-m11-observations.json    # ~320 s (runs the full suite)
+scripts/check_audit_gate.sh audit/pre-m11-observations.json \\
+    audit/e53-label-changes.json                               # ~570 s (runs the full suite)
 ```
 
 Expected:
@@ -245,15 +246,15 @@ CI runs the suite twice to catch it.
 | Result | Command | Runtime | Expected |
 |---|---|---|---|
 | install | `pip install -e '.[dev]'` | ~17 s | (wheels) |
-| full suite | `pytest -q` | ~340 s | 351 passed, 2 skipped |
-| types | `mypy --config-file pyproject.toml src tests` | ~30 s cold | Success, 137 files |
+| full suite | `pytest -q` | ~560 s | 357 passed, 2 skipped |
+| types | `mypy --config-file pyproject.toml src tests` | ~30 s cold | Success, 139 files |
 | lints | `pytest tests/lint -q` | ~1 s | 13 passed |
 | M11.5 refutation + asymmetry + cancellation | `python scripts/run_m11_5_extrapolation.py` | ~22 s | §2–§4 above |
 | M11.5 structural assertions | `pytest tests/test_m11_5_extrapolation.py -q` | ~5 s | 6 passed |
 | M11.4 vacuous-axis diagnosis | `python scripts/run_m11_4_extrapolation.py` | ~4 min | §5 above |
 | hold-out gate retro-validation | `pytest tests/test_holdout_discrimination.py -q` | ~50 s | 5 passed |
 | E-38 validity catch | `pytest "…::test_the_report_catches_koistinen_marburger_applied_at_the_soak_temperature" -q` | <1 s | 1 passed |
-| audit-gate invariance | `scripts/check_audit_gate.sh audit/pre-m11-observations.json` | ~320 s | PASS, 267 byte-identical |
+| audit-gate invariance | `scripts/check_audit_gate.sh audit/pre-m11-observations.json audit/e53-label-changes.json` | ~570 s | PASS: 0 undeclared, 4 declared label changes, 2 retirements, no numeric movement |
 | determinism | `scripts/check_determinism.sh` | ~220 s | passed |
 | v1.5 Part 5(1) figures | `python scripts/run_v15_part5_1.py` | ~10 min | `docs/V1.5-PART5-1.md` |
 | Part 5(1) §5.1 diagnostic trace | `pytest tests/oracles/test_contrast_diagnostic_trace.py -q` | ~60 s | 7 passed |
@@ -262,13 +263,20 @@ CI runs the suite twice to catch it.
 | Part 5(2) §5.2a E-48 triage | `pytest tests/oracles/test_share_threshold_degeneracy.py -q` | ~4 s | 6 passed |
 | Part 5(2) SDL declaration | `pytest tests/test_sdl_declaration.py -q` | <1 s | 12 passed |
 | E-53 fork comparison | `pytest tests/oracles/test_e53_option_comparison.py -q` | ~12 s | 6 passed |
+| E-54 settled (decaying sensitivity) | `pytest tests/oracles/test_known_decaying_sensitivity.py -q` | ~4 s | 6 passed |
 
 The eight v1.5 Part 5(1), 5(2) and E-53-milestone rows were added after this file's fresh-virtualenv run and were
 verified in the development environment rather than in a clean one — stated rather than
 folded in, since the rest of the table carries the stronger guarantee. They add no
 dependency, so the difference is a claim about what was checked, not about what would
 work. Their results are written up in `docs/V1.5-PART5-1.md`, `docs/V1.5-PART5-2.md` and
-`docs/V1.5-E53-DECISION.md`, all live documents.
+`docs/V1.5-E53-DECISION.md` and `docs/V1.5-E53-FIX.md`, all live documents.
+
+**The audit gate now takes a second argument.** ADR-061 changed what the observed/inferred
+label means, so four label-valued observations moved and two numeric label-filtered ones were
+retired. `audit/e53-label-changes.json` enumerates all six with before/after values and reasons;
+the gate reports them separately, refuses a numeric *change*, requires a retirement to name a
+present replacement, and still FAILS on anything undeclared (ADR-062).
 
 ## 10. If something does not reproduce
 

@@ -22,7 +22,9 @@ import numpy as np
 
 from omi.assimilate import DataObservation, innovation_drift_monitor, run_filter
 from omi.observability import (
+    DEFAULT_CONVENTION,
     Observation,
+    ObservedInferredConvention,
     TriageResult,
     compute_gramian,
     danger_triage,
@@ -63,6 +65,53 @@ OBSERVED_SHARE_THRESHOLD = 0.5
 """ADR-020's default near-diagonal share threshold, restated here so the margin measured
 against it is not a hardcoded narrative number (CLAUDE.md §8)."""
 
+
+
+def _convention(window: int) -> ObservedInferredConvention:
+    """A convention differing from the framework default only in the window.
+
+    The dominance factor and band are ADR-061's defaults: these measurements are about the
+    **share** and about the window, so holding the other two at their defaults keeps the
+    comparison one-dimensional.
+    """
+    return ObservedInferredConvention(
+        dominance_factor=DEFAULT_CONVENTION.dominance_factor,
+        abstention_band=DEFAULT_CONVENTION.abstention_band,
+        near_diagonal_window=window,
+        justification=(
+            "Measurement scaffolding, not a domain declaration: the window is swept because "
+            "E-48's finding is that it spans the answer, and the other two are held at "
+            "ADR-061's defaults so only one convention varies."
+        ),
+    )
+
+
+SUPERSEDED_SHARE_THRESHOLD = 0.5
+"""ADR-020's threshold, **superseded by ADR-061** and retained here deliberately.
+
+The measurements in this module are the *evidence for* ADR-061. If they were re-pointed at
+ADR-061's criterion they would stop being that evidence — a repository cannot show why it
+changed a criterion using only the criterion it changed to. So the superseded rule is
+re-expressed locally, below, and applied to the share `danger_triage` still reports.
+"""
+
+
+def superseded_label(direction: object) -> str:
+    """ADR-020's observed/inferred rule, applied to a direction's reported share.
+
+    Reproduces exactly what `danger_triage` returned before ADR-061: `observed` iff the
+    near-diagonal **sum** exceeded half the **total**, `inferred` otherwise. Only the
+    observed/inferred axis is reproduced; `dangerous` and `marginalisable` come from the
+    identifiability/influence medians and ADR-061 did not touch them, so the live label is
+    used for those.
+    """
+    label = getattr(direction, "label")
+    if label.value not in ("observed", "inferred", "unresolved"):
+        return str(label.value)
+    share = getattr(direction, "near_diagonal_share")
+    if share is not None and share > SUPERSEDED_SHARE_THRESHOLD:
+        return "observed"
+    return "inferred"
 
 @dataclass(frozen=True)
 class TriageTrace:
@@ -184,17 +233,17 @@ def triage_trace(*, seed: int = 0, step: int = 2) -> TriageTrace:
     for k in range(0, CAMPAIGN_DEPTH + 1, step):
         gramian = compute_gramian(chain, nominal, k, sensors)
         result: TriageResult = danger_triage(
-            chain, nominal, k, gramian, prior, list(TARGETS), sensors, near_diagonal_window=1
+            chain, nominal, k, gramian, prior, list(TARGETS), sensors, convention=_convention(1)
         )
         intervals.append(k)
         medians.append(result.influence_median)
-        labels.append(tuple(sorted({d.label.value for d in result.directions})))
+        labels.append(tuple(sorted({superseded_label(d) for d in result.directions})))
         danger.append(variance_term(result))
         counts.append(len(result.dangerous_set()))
         with_share = [d for d in result.directions if d.near_diagonal_share is not None]
         shares.append(tuple(float(d.near_diagonal_share) for d in with_share))  # type: ignore[arg-type]
         split_labels.append(
-            tuple((float(d.near_diagonal_share), d.label.value) for d in with_share)  # type: ignore[arg-type]
+            tuple((float(d.near_diagonal_share), superseded_label(d)) for d in with_share)  # type: ignore[arg-type]
         )
 
     return TriageTrace(

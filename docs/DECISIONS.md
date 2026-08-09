@@ -5373,6 +5373,37 @@ sensitivity to the direction in question — which is contrast's case at every i
 is a property of the *readout*, not of the information structure. Choosing the window to make
 one domain's answer clean is adjusting a criterion to fit a case.
 
+### Implemented at the E-53 fix, with four choices this ADR did not anticipate
+
+**1. The share is retained and reported, and is no longer the criterion.**
+`DirectionDiagnostic.near_diagonal_share` stays; `dominance_ratio` is added beside it and the
+label is computed from the ratio. Dropping the share would break the audit trail of every
+result that quoted it, and it remains a legible summary.
+
+**2. A framework `DEFAULT_CONVENTION` exists, and its justification string says a domain should
+not use it.** Making the convention a required argument would change every call site at once and
+destroy the audit gate's ability to show that no number moved. The default reproduces the most
+literal reading of Spec §3.3 (window 0) with `ρ = 1.5`, and all three domains declare their own.
+
+**3. `UNRESOLVED` is returned when the ratio is *undefined*, not only when it is inside the
+band** — and that is where the substantive correction turned out to be. A direction classed
+identifiable by the *uncertainty median* while carrying no Gramian information has no ratio;
+Spec §3.3's "inferred" requires identifiability *from the total*, which it lacks. On flagship
+that moved the domain's **two largest danger scores** out of the inferred set. Filed as
+`docs/V1.4-EDITS.md` **E-55**, and it is the sharpest evidence for this ADR that the milestone
+produced: the count the framework cites as its differentiator included directions no
+observation informs.
+
+**4. Core and Spec were NOT edited.** The E-53 milestone's brief asked for Core §3.8 and Spec
+§3.3 to be reworded. They are the v1.3 specification **under audit**, not repository-owned
+documents: every one of the ledger's entries cites a location in them, and editing the text
+would make those citations unverifiable and make this repository the framework's author rather
+than its implementer. The replacement wording lives where the repository's conventions put it —
+E-53's and E-55's `Proposed wording` fields — and the four repository-owned documents that
+restate the criterion (`CLAUDE.md`, `docs/ROADMAP.md`, `docs/COVERAGE.md`,
+`docs/FIGURE-SOURCES.md`) were reworded in place, with `docs/REVIEW_PACK.md` corrected by dated
+addendum.
+
 ### What would change this decision
 
 A chain whose dominance ratio sits *stably* near its declared `ρ` — neither at `1` nor at
@@ -5381,6 +5412,83 @@ structural, and would strengthen option 3's band from a safeguard into the load-
 Neither implemented domain provides one, and E-54 records why: both sit at extremes of the
 error-control dichotomy, and the interior case may be rarer than the statistic's continuous
 form suggests.
+
+## ADR-062 — The audit gate gains **declared exceptions**, refuses numeric ones, and requires a retirement to name its replacement
+
+**Status.** Accepted — implemented.
+**Track.** v1.5 planning, the E-53 fix.
+**Pins.** `scripts/check_audit_gate.sh`, `audit/e53-label-changes.json`.
+
+### The problem ADR-061 created
+
+ADR-042's audit-preservation gate exists so that a change to `src/omi/` cannot move a
+previously-reported number silently: any movement is a FAIL and the instruction is to reopen the
+ADR rather than re-baseline. ADR-061 changes the observed/inferred **criterion**, which is an
+approved change to what a reported *label* means. Some label-valued observations therefore must
+move.
+
+That leaves three options and two of them are bad. Blocking the change makes the gate a veto on
+approved work. Switching the gate off, or re-baselining, destroys the property it protects and
+would do so at exactly the moment the repository is touching its most-cited diagnostic.
+
+### The decision
+
+**Enumerate every moved observation in advance**, in a declared-exceptions file naming its
+before value, its after value and its reason. The gate then reports declared movements
+separately and **still FAILS on any undeclared one**. Nothing changes silently; an approved
+change is expressible.
+
+Two guards make that more than a rubber stamp, and both were added because the first version
+was one:
+
+**1. A declared CHANGE may not be numeric.** This is the mechanical form of the claim ADR-061
+rests on — that a label moved and a computed quantity did not. A numeric observation taking a
+new value under its old name is not a relabelling, and a mechanism that could wave it through
+would be worse than no mechanism, because it would carry the gate's authority. Bools are
+exempted deliberately: in this repository's observations `True`/`False` are categorical readings,
+not measurements.
+
+**2. A RETIREMENT must name a replacement, and the replacement must be present in the run.**
+Retirement is the honest handling for a *numeric* observation whose value is a label-filtered
+list: its numbers did not move, but the filter selecting them did, so the list would have.
+Withdrawing the name and reissuing under a new one makes that visible where reusing the name
+would hide it. Without the replacement check, "retired" would be a way to delete an inconvenient
+observation, so the guard is not optional.
+
+**The distinction between the two is the whole design.** A `changed` numeric observation is
+readable under its old name and returns a different number — the failure the gate exists to
+prevent. A `retired` one is not readable under its old name at all, its old value is recorded
+verbatim in the exceptions file, and its successor is named. The audit trail survives by
+construction rather than by trust.
+
+### What it caught, which is why the guards are in the ADR
+
+The first version of this mechanism refused *all* numeric exceptions and therefore failed on the
+two retirements — `contrast_inferred_directions_danger_scores` and
+`flagship_inferred_directions_danger_scores`, both numeric-valued. That failure was correct
+about the danger and wrong about the case, and the fix was to make the distinction explicit
+rather than to relax the refusal. Recorded because the alternative — widening the refusal's
+exemption until the run passed — is precisely how a gate becomes decorative.
+
+### Alternatives rejected
+
+*Re-baseline at the E-53 commit.* Rejected: it discards the 267-observation invariance record
+that makes every M11 result citable, in exchange for convenience at a single commit.
+
+*A `--allow-label-changes` flag.* Rejected: a boolean cannot say *which* observations were
+expected to move or *why*, so it grants blanket permission and leaves no record. The whole value
+is in the enumeration.
+
+*Splitting observations into numeric and categorical streams at record time.* Rejected as
+larger and later: it would touch the `observe` fixture and every test that uses it, and the
+distinction is only needed at comparison time. The `is_numeric` check does it there. Worth
+revisiting if a second criterion change arrives.
+
+### What would change this decision
+
+A second declared-exception file arriving for an unrelated change would be the signal that
+label semantics are churning rather than being corrected once — at which point the right move is
+a versioned baseline per criterion rather than an accumulating exception list.
 
 ---
 
