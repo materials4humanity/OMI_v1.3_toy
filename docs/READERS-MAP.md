@@ -15,7 +15,7 @@ The job of the code is to make the framework's claims **measurable and
 falsifiable**, not to predict well (`CLAUDE.md` §2). Read that before reading any
 result as a performance number.
 
-## The ledger: `docs/V1.4-EDITS.md` (54 entries, grouped by root cause)
+## The ledger: `docs/V1.4-EDITS.md` (57 entries, grouped by root cause)
 
 Entry IDs are permanent (E-34 was withdrawn into E-29 and its number retired, never
 reused). §1 holds the authoritative counts and the entry locator. The groups:
@@ -30,12 +30,16 @@ reused). §1 holds the authoritative counts and the entry locator. The groups:
   (E-29–E-32, E-40, E-44, E-46, E-52). Four of the five domain-assessment entries live here.
   Six missing categories, and the count is now the argument.
 - **§6 — diagnostics blind to their own dominant error source** (E-03, E-04, E-18,
-  E-05, E-06, E-15, E-19, E-33, E-45, E-47, E-48, E-49, E-51, E-53, E-54). Fifteen entries — the
-  largest group. E-45 alone carries an argument rather than a measurement and says so;
+  E-05, E-06, E-15, E-19, E-33, E-45, E-47, E-48, E-49, E-51, E-53, E-54, E-56). Sixteen entries — the
+  largest group. E-56 is the newest: an erasure that collapses six of seven state directions while
+  *amplifying* the seventh, which Core §3.4's definition has no term for. E-45 alone carries an argument rather than a measurement and says so;
   E-47 was argued, then measured, then **narrowed by the measurement**.
 - **§7 — status markers over/understating completeness** (E-01, E-02, E-08, E-09, E-10).
-- **§8 — defects between individually sound prescriptions** (E-28, E-36).
-- **§9 — a principle the framework never states** (E-37, E-39, E-41, E-42, E-50, E-55) —
+- **§8 — defects between individually sound prescriptions** (E-28, E-36, E-57).
+  **E-57 is the one that reaches Core §3.9's own first branch**: a state-space erasure cannot
+  bound error from a variable outside the state space, so condition (a) presupposes exactly the
+  sufficiency Core §1 exists to measure.
+- **§9 — a principle the framework never states** (E-37, E-39, E-41, E-42, E-50, E-55, E-58) —
   enlarged by the M11 extrapolation track and again by v1.5 planning. **E-55 is the one with a
   publication consequence**: the framework's differentiator against a tabular baseline must be
   cited as a per-direction dominance ratio, never as a count of inferred directions.
@@ -45,7 +49,7 @@ reused). §1 holds the authoritative counts and the entry locator. The groups:
   scope), and finds the framework prices only one of six.
 - **§12** states what the build never attempted.
 
-**Provenance matters and is not flattened:** 49 entries were found by *attempting to
+**Provenance matters and is not flattened:** 52 entries were found by *attempting to
 build* the framework; 5 (E-29–E-33, marked `[domain-assessment]`) by *reading it
 against physics* (`docs/PHYSICS-ADEQUACY.md`).
 
@@ -69,6 +73,7 @@ against physics* (`docs/PHYSICS-ADEQUACY.md`).
 | v1.5 planning, Part 5(2) | the E-48 triage, and the SDL domain's **declaration** (no operators) | E-53; ADR-059–ADR-060, `docs/V1.5-PART5-2.md` |
 | v1.5 planning, E-53 milestone | the observed/inferred blast radius, and the criterion **chosen but not implemented** | E-54; ADR-061, `docs/V1.5-E53-DECISION.md` |
 | v1.5 planning, E-53 **fix** | the criterion **implemented**; `Triage.UNRESOLVED`; E-54 settled by a constructed intermediate chain | E-55; ADR-061 amended, ADR-062, `docs/V1.5-E53-FIX.md` |
+| v1.5 planning, Part 6 | the campaign experiment **designed and pre-registered, not run**: the discovery domain's operators, a GP acquisition comparator, a three-arm planted-insufficiency construction, the vacuity precondition re-verified on that domain | E-56, E-57, E-58; ADR-063–ADR-066, `docs/V1.5-PART6.md`, `docs/V1.5-PART6-PREREGISTRATION.md` |
 
 Parts 1–4 produced no implementation: five ledger entries found by *designing against*
 the framework rather than building on it, E-45 marked derived-not-measured. Part 5(1) kept

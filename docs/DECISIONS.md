@@ -5492,6 +5492,427 @@ a versioned baseline per criterion rather than an accumulating exception list.
 
 ---
 
+## ADR-063 — The **standardised signed innovation mean** is declared as a *second* monitor on Spec §10's sufficient statistic; ADR-026 is extended, not superseded
+
+**Status.** Accepted **Gap.** S-10 (Spec §10's procedure is `[Pass C]`; the *proposition* is SPEC) **Track.** v1.5 planning, Part 6.
+**Pins.** `tests/oracles/test_discovery_campaign.py`; ADR-026's own pin (`tests/oracles/test_known_drift.py`) is unchanged and still passes.
+
+### The question this ADR exists to answer
+
+Part 5(1)'s dry-run selected `innovation_bias` — the **signed** mean innovation over a
+window, normalised by its own predicted standard error — as the only one of three candidates
+that both diverged along the axis and beat the Spec §9.3 baseline
+(`docs/V1.5-PART5-1.md` §3). ADR-026 chose the **NIS chi-squared consistency test** as the
+drift monitor and, under *Alternatives rejected*, turned down "CUSUM on the innovation mean".
+A signed statistic on the innovation mean therefore looks like the thing ADR-026 refused, and
+Part 6's brief is explicit that if ADR-026's reasoning still holds this needs a superseding
+ADR rather than a footnote.
+
+**It does not need one, and the reason is in ADR-026's own text.** Two separate points, and
+both have to hold:
+
+**1. ADR-026 pre-authorised exactly this.** Its rejection paragraph ends: *"A CUSUM variant is
+not precluded and could be added as a second declared monitor later."* The rejection is scoped
+to *the default* — which statistic the framework's one drift monitor should be — and not to the
+class of sign-sensitive statistics. So the instrument is a new ADR declaring a **second**
+monitor. Nothing in ADR-026 is withdrawn: `innovation_drift_monitor` keeps the chi-squared
+convention, keeps its window and confidence defaults, and remains what
+`docs/ROADMAP.md` M5's exit gate is satisfied by.
+
+**2. ADR-026's specific objection does not transfer, because the selected statistic is not a
+CUSUM.** The objection was mechanical and narrow: CUSUM *"needs a reference/slack parameter
+Spec gives no basis for either"*. A CUSUM accumulates `max(0, C_{i-1} + d_i − k)` against a
+decision interval `h`, so it carries two invented numbers. The selected statistic is
+
+> `z_n = |mean(d_1..d_n)| / sqrt(mean(S_1..S_n) / n)`
+
+— a standardised mean, with **no slack, no reset and no accumulator**. Its scale comes from
+`S_j`, the innovation covariance the filter already computes and the same quantity ADR-026's
+own statistic divides by; its reference is zero, which is what Spec §10's proposition asserts
+the innovation sequence has as its mean under a correctly specified model. So it introduces
+**no parameter ADR-026 does not already accept.** What it shares with CUSUM is only the
+*motivation* ADR-026 credited — "better at detecting small sustained biases". The motivation
+transfers; the objection does not.
+
+Stated plainly because the distinction is the whole disposition: **ADR-026's reasoning still
+holds, and the statistic it holds against is a different statistic.**
+
+### Decision
+
+Declare the standardised signed innovation mean as a second monitor, with these conventions:
+
+1. **Statistic.** `z_n` above, over the innovations pooled across the declared campaign — not
+   over a sliding window. The window is ADR-026's convention for a *drift* question ("has the
+   model changed since interval `k`"); this monitor answers a *campaign* question ("is the
+   model biased over the campaign so far"), and a sliding window would discard the accumulation
+   that makes `n` the axis.
+2. **Reference distribution.** Standard normal, so a control limit is a normal quantile — as
+   textbook and as citable as ADR-026's chi-squared limit, and for the same reason: this
+   repository must not invent a distribution for a statistic it invented a use for.
+3. **Reported together, never alone.** The signed mean, the pooled predicted variance, `n`, and
+   the resulting `z_n` are all returned. ADR-026's reporting discipline verbatim; and the
+   *sign* is retained in the report even though the statistic takes an absolute value, because
+   E-49's finding is precisely that a monitor which records no direction cannot say which
+   response is indicated.
+4. **No threshold here.** The control limit is a pre-registered quantity and belongs to Part
+   6's pre-registration, in its own earlier commit.
+
+### Why the two monitors are not redundant, measured rather than argued
+
+NIS is `d^T S^{-1} d`, squared and therefore sign-blind. A sequence whose innovations are
+biased by *exactly* the amount the model's own covariance predicts has `E[NIS] ≈ 1 + bias²/S`
+and passes a two-sided chi-squared window test at any ordinary confidence level, while `z_n`
+grows as `√n`. That asymmetry is the reason the dry-run rejected the existing monitor as a
+candidate and it is what this ADR buys: **the two monitors have different null hypotheses.**
+NIS asks whether the innovations have the predicted *magnitude*; `z_n` asks whether they have
+the predicted *mean*. A framework whose stated proposition is that the innovation sequence is a
+sufficient statistic for drift needs both, and Spec §10 names neither.
+
+### Alternatives rejected
+
+*Supersede ADR-026 and make the signed statistic the default.* Rejected. The default monitor is
+answering the question `docs/ROADMAP.md` M5 asked and answers it correctly; replacing it would
+retire a passing oracle to make room for a statistic selected for a different question. Two
+declared monitors with stated scopes is the honest structure, and it is the one ADR-026
+anticipated.
+
+*Add it as a field on `DriftReport`.* Rejected for this gate, and the reason is E-49: that
+report already conflates a per-window statistic with a per-campaign aggregate, and bolting a
+third statistic onto it would deepen the conflation this repository has filed as a framework
+defect. The monitor lives beside it until E-49 has a disposition.
+
+*Implement it as a CUSUM after all, to test ADR-026's rejection directly.* Rejected as out of
+scope rather than as wrong. It would need the slack parameter ADR-026 refused to invent, and
+Part 6 does not need it — but it remains the honest way to settle whether the *stronger*
+sequential test would do better, and it is recorded as an open alternative rather than as a
+closed one.
+
+### What would change this decision
+
+A Spec revision naming a functional of the innovation sequence would supersede both this ADR
+and ADR-026 together. And a measurement showing `z_n` fires on correctly specified campaigns at
+a rate materially above its declared limit would put it where E-49 puts `any_drift`: a sound
+statistic with an unsound aggregate. Part 6's null arm is where that becomes visible, and it is
+pre-registered as a reported quantity rather than as a check that may be skipped.
+
+---
+
+## ADR-064 — The discovery domain's three operators, with calcination as a **measured** erasure
+
+**Status.** Accepted **Gap.** none for the operators themselves (Core §3.2/§3.3 are SPEC); ADR-060's deferral is what is being discharged **Track.** v1.5 planning, Part 6.
+**Pins.** `tests/test_sdl_operators.py`.
+
+### Why they are built now, having been deliberately absent
+
+ADR-060 declared the discovery domain with **no** evolution operator and said the operator was
+"Part 6's work". Part 6's gate requires the vacuity precondition to be re-verified *on the
+domain the claim will be made on*, because a statistic that discriminates on one chain and is
+inert on another is M11.4's failure exactly. That check cannot be run against a declaration.
+So the operators are built, and nothing else about ADR-060's deliberate absences changes:
+ADR-054's out-of-interval **refusal** is still not implemented, and the Tier II anti-goals are
+untouched.
+
+### The three operators
+
+| operator | what it does | `is_erasure` |
+|---|---|---|
+| `Preparation` | impregnation and drying: the recipe becomes a dried precursor state | `False` |
+| `Calcination` | thermal treatment: the oxide's dispersion is set by composition and temperature | **`True`** |
+| `Evaluation` | reaction at a declared condition, with time-on-stream deactivation | `False` |
+
+**Composition is a field of the operator, not a component of the state.** This is ADR-051's
+Parameter role and ADR-046's separation realised in code: the operator *family* is indexed by
+composition, and a campaign chooses which member to instantiate. Putting composition in
+`SDL_SCHEMA` would type a fixed index as a state, which is the mis-typing E-46 separates; and
+it is what makes ADR-053's composition inverse a third inverse problem rather than a relabelled
+structure inverse — the decision variable is an operator index, not a state.
+
+**Calcination's erasure is measured, not asserted.** The mechanism is that the calcined
+dispersion is thermodynamically set: every post-calcination component is a function of
+composition and the calcination programme, plus a small feed-through of the incoming precursor
+state. The exception is `dispersed_phase_loading`, which is conserved exactly — the domain's own
+declared invariant `metal_mass_conservation_across_calcination`. So the Jacobian has one
+singular value near unity and the rest near the feed-through coefficient, and the erasure
+measurement must recover an effective rank of **one out of seven**. That is asserted by the
+oracle rather than by this ADR's prose.
+
+### The one design choice that is not physics, and is declared as such
+
+The feed-through coefficient (`PRECURSOR_FEEDTHROUGH`) is a declared number with no Spec basis.
+It sets *how complete* the erasure is, and therefore what `measure_erasure` reports. It is
+declared at the module level with its consequence stated, not buried in an expression, and the
+oracle asserts the qualitative claim (rank one, `L ≪ 1`) rather than the value — CLAUDE.md §7's
+rule about not freezing tuning constants.
+
+### Alternatives rejected
+
+*Make calcination erase every component including loading.* Rejected: it would contradict the
+domain's own declared invariant. An erasure that violates a declared conservation law is not a
+more complete erasure, it is a wrong operator.
+
+*Put composition in the state schema so the chain is a single closed system.* Rejected — see
+above; it would also make the attainable region a constraint on a state, which would collapse
+the composition inverse into the structure inverse and remove the domain's reason to exist
+(ADR-060).
+
+*Use the declared constitutive forms as the operators.* Rejected as a category error, on
+ADR-060's own wording: a declared form is a functional relationship, not an operator that
+advances a state. The forms are *consumed* by `Evaluation` — `PARTICLE_COARSENING` sets the
+size increment and `LANGMUIR_HINSHELWOOD` is what the turnover readout evaluates — which is
+what makes the validity report live on a real trajectory rather than on a hypothetical query.
+
+### What would change this decision
+
+A domain that needed composition to *evolve* — reactive loss of a volatile promoter, say —
+would need it in the state, and the Parameter/State distinction would then have to be declared
+per species per region rather than per species. ADR-051 already provides that shape, and this
+domain's own `promoter` is `CONTROL` in the bulk and `STATE` in the surface layer, so the
+structure is exercised; what is not exercised is a species that changes role *along* the chain.
+
+---
+
+## ADR-065 — A **Gaussian-process acquisition comparator**, built in numpy, with Expected Improvement; ADR-057's refusal is scoped rather than overturned
+
+**Status.** Accepted **Gap.** S-9.3 (Spec §9.3 names baselines and does not name an acquisition comparator) **Track.** v1.5 planning, Part 6.
+**Pins.** `tests/oracles/test_discovery_campaign.py`.
+
+### What ADR-057 refused, and why this is not that
+
+ADR-057 declined to add a Gaussian process and the reason was specific: Spec §9.3 *requires*
+gradient-boosted trees and tabular regression, ADR-039 built both in numpy, and substituting a
+GP into the **baseline arm** would make the dry-run's baseline numbers incomparable with
+M10.2's and M11.5's — the only baseline numbers in the repository.
+
+Part 6's claim names a GP-based acquisition as the thing that cannot attribute a failing
+campaign to model insufficiency. A comparative claim cannot be evaluated without its
+comparator. But the role is different, and the difference is what preserves ADR-057:
+
+| role | instrument | unchanged? |
+|---|---|---|
+| Spec §9.3 **regression baseline** | `GradientBoostedTreeRegressor`, `RidgeRegressor` | **yes** — still the only §9.3 baselines, still comparable with M10.2 and M11.5 |
+| Part 6 **acquisition comparator** | `GaussianProcessRegressor` + Expected Improvement | new, and named for what it is |
+
+So ADR-057's refusal is **scoped, not overturned**: no §9.3 baseline number changes, and no
+existing comparison is re-based. And no new dependency arrives — the GP is written in numpy
+exactly as ADR-039's baselines were, for exactly ADR-039's reason.
+
+### The design, and why each choice is the fair one
+
+**Kernel.** Anisotropic squared-exponential (ARD) plus a fitted white-noise term, on
+standardised inputs. ARD rather than isotropic because the composition coordinates have
+genuinely different scales — the promoter is bounded at 0.08 and the support at 1.0 — and an
+isotropic kernel on unequal ranges is a weakened opponent for a reason that has nothing to do
+with the claim. Spec §9.3's own requirement is a fair baseline, and M11 established that a
+weakened one produces an uninterpretable result.
+
+**Hyperparameters by marginal likelihood**, refitted at every campaign step over a declared
+grid of length scales and noise levels. This is the standard practice and it matters *more*
+than usual here: the fitted noise level is the GP's own best insufficiency signal, so fixing it
+would hand the framework the comparison by construction.
+
+**Acquisition: Expected Improvement**, in closed form against the incumbent best. Chosen over
+UCB because UCB needs an exploration weight `β` and there is no basis for a value — which is
+ADR-026's slack-parameter objection applied to the comparator, and applying this repository's
+own standard to the opponent is the point. EI needs only the incumbent, which the campaign
+already has. Thompson sampling was the other candidate and is rejected below.
+
+### What the GP is expected to do well — stated in advance, as the brief requires
+
+The GP will handle in-distribution predictive uncertainty **better than the framework chain
+does**. It is fitted to the observed objective directly, so it is calibrated on exactly the
+quantity the campaign optimises, while the chain predicts through a declared state and inherits
+every error in that declaration. It will also find good compositions faster early on, because
+EI on a smooth response surface is very effective and the chain contributes nothing to the
+*search*. The claim is **not** that the GP predicts worse.
+
+**The claim is about attribution, and the mechanism is stated now so the experiment cannot be
+read as having discovered it afterwards.** A GP that meets unexplained variance absorbs it into
+its fitted noise term `σ̂_n`. That term rises whether the variance comes from a missing state
+variable or from noisier measurements, and it **converges** as the campaign lengthens in both
+cases. The framework's statistic divides a signed mean by a *model-predicted* standard error, so
+a persistent bias makes it grow as `√n` while zero-mean measurement scatter leaves it `O(1)`
+however large the scatter is. That is the whole difference: the GP has no predicted covariance
+to be inconsistent with, because it fits its own.
+
+### Can the experiment distinguish "worse" from "cannot attribute"? Yes — and only because of a third arm
+
+**Stated plainly, because the brief asks for it now rather than later: a two-arm experiment
+cannot evaluate this claim.** With a null arm and an insufficiency arm, `σ̂_n` separates the
+arms perfectly well, so a two-arm design would either show both instruments working or show the
+GP working better, and neither reading bears on attribution.
+
+The claim's contrast is *insufficiency versus exploration noise*, so the experiment needs an arm
+that **is** exploration noise: a third arm with no hidden variable and inflated observation
+noise, calibrated so the GP's `σ̂_n` reads the same as in the insufficiency arm. The registered
+comparison is then arm I against arm X, and:
+
+- if the framework statistic separates I from X and `σ̂_n` does not, the claim stands;
+- if neither separates them, the claim fails and the framework's diagnostic is no better than
+  the GP's on the one contrast it was built for;
+- if both separate them, the claim fails in the more interesting way — the GP could attribute
+  after all.
+
+All three are publishable and the second and third are pre-committed as such in the
+pre-registration.
+
+### One consequence for E-41's precondition, recorded rather than worked around
+
+E-41's third criterion is `separation_candidate(far)` against `separation_baseline(far)` — a
+**baseline comparison**. On this experiment the baseline comparison *is* the registered claim.
+So criterion 3 cannot be evaluated at gate time without looking at the pre-registered quantity,
+and the gate therefore reports criteria 1 and 2 (axis signal, divergence) on the I-versus-N
+axis and defers criterion 3 to the sweep. This is a property of E-41's wording meeting a
+pre-registered comparative experiment, not a licence taken here, and it is filed as a framework
+finding rather than resolved by relaxing the criterion.
+
+### Alternatives rejected
+
+*Thompson sampling instead of EI.* Rejected: it makes the campaign's sample sequence a random
+draw from the posterior, so two arms sharing a seed no longer share a trajectory and the
+"one generator, one switch" property that makes the arms comparable is lost.
+
+*Give the GP the declared state as features.* Rejected as unfair in the *other* direction — it
+would be a hybrid, not the GP-based acquisition the claim names, and a comparator built partly
+out of the thing it is being compared against cannot separate the two.
+
+*Let the framework chain drive the campaign too, as a second policy.* Rejected for this gate.
+It is a different and larger experiment (which *policy* finds better materials), it would need
+the composition inverse wired to the acquisition, and the registered claim is about diagnosis
+rather than about search. The GP drives both arms; the framework watches. That also removes any
+suspicion that the framework's diagnostic looks good because it chose favourable samples.
+
+### What would change this decision
+
+A measurement showing `σ̂_n` *does* grow with campaign length under insufficiency and not under
+noise would refute the mechanism above and the claim with it, before any threshold is applied.
+It is a reported quantity for that reason.
+
+---
+
+## ADR-066 — The planted insufficiency is a **hidden state component set at a known step**, and the campaign axis is the number of samples
+
+**Status.** Accepted **Gap.** S-1.2 / S-8 (Spec §8 sizes a campaign; nothing specifies how a campaign-level diagnostic is validated) **Track.** v1.5 planning, Part 6.
+**Pins.** `tests/oracles/test_discovery_campaign.py`.
+
+### The construction
+
+A scalar `precursor_texture` per sample, drawn at **preparation** and **absent from
+`SDL_SCHEMA`**. It scales the coarsening rate that `Evaluation` applies, multiplicatively as
+`exp(τ)`. Arm N draws it with zero variance, so the three arms are one generator with two
+switches.
+
+**It is a state insufficiency and not an operator error, and Part 5(1)'s lesson is why that
+sentence is here.** The dry-run's first construction planted a porosity-dependent rate — an
+operator error over a *declared* component — so matching on the full declared state still
+determined the future, Axiom S still held, and the sufficiency deficit was correctly zero. The
+statistic would have been measured against the wrong object. Here the added quantity is outside
+the declared schema by construction: two samples with identical declared post-calcination state
+and identical evaluation control have different futures, which is Axiom S failing with respect
+to the declared state (Core §2.1).
+
+**Introduced at a known step**, so the ground truth of *where* is known and not inferred:
+`Preparation` sets it, `Calcination` passes it through, `Evaluation` consumes it.
+
+### Why `exp(τ)` and not `1 + τ`
+
+`τ` has mean zero, so a linear effect would cancel in the campaign mean and the signed statistic
+would be reading a zero-mean quantity — the statistic would fail for an arithmetic reason rather
+than a physical one. A multiplicative-exponential rate is the ordinary way an unobserved
+texture enters a thermally activated process, and `E[exp(τ)] = e^{σ²/2} > 1`, so the population
+coarsens *faster on average* than the declared model predicts. The declared model is therefore
+biased in a fixed direction, which is what the monitor is for.
+
+Recorded because it is a real constraint on the class of insufficiencies this statistic can
+see: **a signed monitor detects insufficiencies with a non-zero mean effect, and is blind to
+symmetric ones.** That is a limitation of the selected statistic, it is stated in the
+pre-registration as a scope limit, and it is not a defect of the construction.
+
+### The axis is the number of samples, and the growth mechanism is arithmetic
+
+`z_n = |mean(d)| / sqrt(mean(S)/n)`. Under a persistent bias `b`, `z_n ≈ |b|√n / sd`, so the
+statistic **grows as `√n`**. Under zero-mean scatter of any size, it stays `O(1)`. So the
+divergence E-41 requires is not an empirical hope here — it is the statistic's own scaling, and
+the growth ratio between a near and a far campaign length is predicted in closed form as
+`√(n_far / n_near)` before anything is run. Measured against that prediction, the way
+`tests/oracles/known_decaying_sensitivity.py` measures the dominance ratio against
+`λ^{−2(w+1)}`.
+
+**Near and far are prefixes of one campaign, not two campaigns.** A campaign of 32 samples
+contains the campaign of 8 samples that produced it, so reading the statistic at both depths
+costs one run and removes the seed-to-seed difference between the two depths — which would
+otherwise be a confound on exactly the quantity being measured.
+
+### Arm X and its calibration — **amended before the thresholds were committed**
+
+Arm X inflates the observation noise and plants nothing. It is matched to arm I on the
+**variance of the declared model's innovations** — the unexplained scatter a practitioner would
+actually see — with the inflation factor solved in closed form (innovation variance is affine in
+the squared inflation, so two grid points determine it exactly) at a declared seed set disjoint
+from the sweep's, and then **held fixed**. The solved value and the two matched variances are
+recorded in `tests/oracles/part6_thresholds.py`, which is committed with the pre-registration
+rather than with this ADR: the rule belongs to the design and the numbers belong to the
+registered commit.
+
+The two arms therefore have **equal unexplained scatter, and only one has a biased mean.** That
+is the decomposition the whole claim turns on, stated as a property of the construction.
+
+**This ADR's first version calibrated arm X on the comparator's own fitted noise, and that was
+circular.** Matching the GP's reading between arms I and X *sets* the numerator of the GP's
+separation to approximately zero — so "the GP cannot attribute" would have been true by
+construction rather than measured, and the experiment would have had only one real criterion
+while reporting three. Caught while drafting the pre-registration, and recorded here rather than
+quietly fixed, because a reader of the earlier text would otherwise draw a stronger conclusion
+from the result than it supports.
+
+Matching on the innovation variance keeps **both** instruments' readings as outcomes:
+
+- it does not fix the framework statistic, which is a function of the innovation *mean*;
+- it does not fix the comparator's statistic, which is a fitted noise level on a surface over
+  composition, not a moment of the declared model's residual.
+
+It is also design information of the kind M11.5's pre-registration §5 established as admissible:
+a property of the *generator*, computed by running it and differencing, with no contestant
+scored and no registered comparison evaluated. The calibration is performed in the
+pre-registration commit and disclosed there.
+
+**A consequence worth stating in advance, because it is favourable and therefore suspect.** The
+solved inflation is small, because the latent's contribution to innovation *variance* is modest
+while its contribution to the innovation *mean* is not. So arm X will look much like arm N to any
+variance-based diagnostic. That is the honest content of the claim — a bias and a
+scatter are different things, and only an instrument with a predicted covariance can tell them
+apart — but it also means the experiment is measuring a construction in which the discriminable
+signal is a mean shift. A different insufficiency, contributing mostly variance, would not be
+detected by this statistic at all. Already recorded above as the scope limit; repeated here
+because the calibration is where it becomes quantitative.
+
+### Alternatives rejected
+
+*Make the latent a function of composition.* Rejected, and it is the trap Part 5(1) fell into
+in a different disguise: a latent determined by the recipe is a mis-specified operator, since
+composition is a declared operator index. It would also make the insufficiency detectable by
+the GP, which fits the objective as a function of composition — so the experiment would be
+measuring whether the GP's feature set covers the defect, not whether it can attribute one.
+
+*Plant the insufficiency in the erasure's own destroyed subspace.* Rejected as uninformative:
+calcination erases the declared precursor state, so a latent it also erased could not reach the
+readout and no statistic could see it. What is *interesting* — and is reported as a finding
+rather than designed around — is that the declared erasure does not erase this latent at all,
+because the latent templates the dispersion. An erasure declared over the declared state says
+nothing about a variable that is not in it.
+
+*Use campaign depth in evaluation intervals instead of samples.* Rejected: the claim is about a
+campaign, and a campaign's length is how many things were made. Time on stream is a within-sample
+axis and is held fixed so the sample count is the only thing that moves.
+
+### What would change this decision
+
+A measured `z_n` that does **not** track `√n` under arm I would mean the bias is not persistent
+— most likely because the filter absorbs it — and the construction would need the bias made
+structural rather than the threshold made loose. That comparison against the closed form is a
+gate quantity for that reason, not a post-hoc check.
+
+---
+
 ## Open questions
 
 Not decisions — hypotheses the code should settle. Full statements in
