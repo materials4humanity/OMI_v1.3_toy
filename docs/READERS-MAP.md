@@ -84,6 +84,11 @@ degeneracy is a property of the *statistic*, and both implemented domains are de
 opposite extremes) and declared a **third domain** — `src/omi_domains/sdl/`, a third decision
 kind, with no operator and no campaign.
 
+**v1.5 planning is closed and has its own track record: `docs/V15-PLANNING-RECORD.md`** — the
+purpose extension, composition in five parts, the decision loop's two dark diagnostics, the E-53/E-55
+interruption, the discovery domain, and Part 6's pre-registered result with both comparator
+separations. Read it before the individual part documents.
+
 M11 is the headline. Its account is `docs/M11-RECORD.md`; the two sweeps are
 `docs/M11.4-EXTRAPOLATION.md` and `docs/M11.5-EXTRAPOLATION.md`, each preceded by a
 pre-registration committed before its sweep existed.
@@ -95,6 +100,7 @@ pre-registration committed before its sweep existed.
   `docs/PHYSICS-ADEQUACY.md`, `docs/M11-RECORD.md`, `docs/FIGURE-SOURCES.md`, this file.
 - **Snapshots** (commit-stamped, corrected only by dated addendum): `docs/REVIEW_PACK.md`
   (`e43d858`, M0–M9 — predates M10/M11, see its addendum), `build/REVIEW-EXTRACT.md`,
+  `docs/V15-PLANNING-RECORD.md`, `docs/V1.5-PART6-SWEEP.md`,
   `docs/M11.4-EXTRAPOLATION.md` and both `*-PREREGISTRATION.md` (each stamps its commit).
 
 Two live documents were corrected *against M11's result*: `docs/PHYSICS-ADEQUACY.md`
