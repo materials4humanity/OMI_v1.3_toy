@@ -73,7 +73,8 @@ against physics* (`docs/PHYSICS-ADEQUACY.md`).
 | v1.5 planning, Part 5(2) | the E-48 triage, and the SDL domain's **declaration** (no operators) | E-53; ADR-059–ADR-060, `docs/V1.5-PART5-2.md` |
 | v1.5 planning, E-53 milestone | the observed/inferred blast radius, and the criterion **chosen but not implemented** | E-54; ADR-061, `docs/V1.5-E53-DECISION.md` |
 | v1.5 planning, E-53 **fix** | the criterion **implemented**; `Triage.UNRESOLVED`; E-54 settled by a constructed intermediate chain | E-55; ADR-061 amended, ADR-062, `docs/V1.5-E53-FIX.md` |
-| v1.5 planning, Part 6 | the campaign experiment **designed and pre-registered, not run**: the discovery domain's operators, a GP acquisition comparator, a three-arm planted-insufficiency construction, the vacuity precondition re-verified on that domain | E-56, E-57, E-58; ADR-063–ADR-066, `docs/V1.5-PART6.md`, `docs/V1.5-PART6-PREREGISTRATION.md` |
+| v1.5 planning, Part 6 | the campaign experiment **designed and pre-registered**: the discovery domain's operators, a GP acquisition comparator, a three-arm planted-insufficiency construction, the vacuity precondition re-verified on that domain | E-56, E-57, E-58; ADR-063–ADR-066, `docs/V1.5-PART6.md`, `docs/V1.5-PART6-PREREGISTRATION.md` |
+| v1.5 planning, Part 6 **sweep** | the registered contrast run: all three criteria met (`3.16` σ, growth `3.21×`, comparator `0.23` σ), with the comparator's weak absolute discrimination reported as a limit on the claim's strength | — | `docs/V1.5-PART6-SWEEP.md` |
 
 Parts 1–4 produced no implementation: five ledger entries found by *designing against*
 the framework rather than building on it, E-45 marked derived-not-measured. Part 5(1) kept
