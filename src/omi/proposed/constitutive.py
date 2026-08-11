@@ -1,5 +1,5 @@
 """Declared constitutive forms: Core §4 item 6d and Spec §2.2's proposed sixth
-hard-constraint category (proposed-v1.4; ADR-043, docs/DECISIONS.md).
+hard-constraint category (proposed constitutive extension; ADR-043, docs/DECISIONS.md).
 
 Cites Spec §2.2 (the five existing hard-constraint categories, none of which is
 a domain constitutive form), Core §4 item 6 (role-scoped by
@@ -589,7 +589,7 @@ class ConstitutivelyConstrained(Protocol):
     composition-over-modification principle applied to behaviour rather than to
     data. Adding this method to the v1.3 ABC would give every v1.3 operator an
     attribute it does not implement, and would make a v1.3 base class carry a
-    proposed-v1.4 obligation — the modification the boundary exists to avoid. As a
+    constitutive-extension obligation — the modification the boundary exists to avoid. As a
     Protocol, an operator satisfies it by having the method, nothing in v1.3
     changes, and a caller can still ask the question in a type-safe way.
     """

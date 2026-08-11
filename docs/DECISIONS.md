@@ -2578,7 +2578,7 @@ the v1.3↔v1.4 comparison the deliverable rather than a hazard to be managed �
 two reports on one domain, differing in one declared field, is exactly what
 ADR-045 needs to measure.
 
-**3. Composition, not modification.** `ProposedV14Declaration` **wraps** an
+**3. Composition, not modification.** `ExtendedDeclaration` **wraps** an
 `InstantiationDeclaration` and adds the new items, exposing a `.v13_core`
 projection back to the seven-item object. Consequences, all of which are the
 reason for the choice:
@@ -2620,7 +2620,7 @@ and 6d is new. The moment a proposed edit changes an existing item's semantics,
 reopen this ADR.
 
 **What tests would pin it** (design; not written here). Comparing two reports
-whose `specification_version` differs raises. `ProposedV14Declaration(...)
+whose `specification_version` differs raises. `ExtendedDeclaration(...)
 .v13_core` diffs against `FLAGSHIP_DECLARATION` with exactly the same result
 flagship's own declaration produces. Every pre-existing conformance test passes
 with `specification_version` set to v1.3, and its recorded observations are
@@ -3307,7 +3307,7 @@ that question — it forces it to be answered, which is the more useful outcome 
 v1.4 and is what a decision is for.
 
 **And (b) is what this repository already built**, which is worth stating plainly
-rather than presenting the choice as free: `ProposedV14Declaration(v13_core,
+rather than presenting the choice as free: `ExtendedDeclaration(v13_core,
 constitutive_forms)` is structurally an eighth item already. So M11.3's "the cores
 are identical" finding is an artefact of the eighth item living *outside* the seven
 where v1.3's diff cannot see it — not of the content being inexpressible. The
@@ -3550,7 +3550,7 @@ Three points make this more than an assurance.
    M10.4 for a smaller reason — that an archived level name is not
    self-describing once a second version exists. The purpose extension is a
    larger instance of exactly that shape, and it validates E-35's proposal rather
-   than needing new machinery. A v1.5 report will carry `PROPOSED_V1_5` and will
+   than needing new machinery. A v1.5 report will carry `PROPOSED_DECISION_EXTENSION` and will
    therefore be structurally incomparable with the archived v1.3 results.
 
 2. **But version-stamping is only sufficient if purpose is monotone with version,
@@ -5014,18 +5014,18 @@ would be withdrawn to a confirmation like E-07.
 
 **Status.** Accepted — declaration implemented; no operator, no campaign.
 **Track.** v1.5 planning, Part 5(2).
-**Pins.** `tests/test_sdl_declaration.py`, `tests/test_v14_boundary.py` (unchanged and still passing, which is the property this ADR exists to preserve).
+**Pins.** `tests/test_sdl_declaration.py`, `tests/test_extended_boundary.py` (unchanged and still passing, which is the property this ADR exists to preserve).
 
 ### The decision
 
-`omi.proposed.v15.ProposedV15Declaration` **holds** a `ProposedV14Declaration` whole, which
+`omi.proposed.decision.DecisionExtendedDeclaration` **holds** a `ExtendedDeclaration` whole, which
 holds a v1.3 `InstantiationDeclaration` whole. Three layers, each nesting the last, none
-modifying it. And `SpecificationVersion` gains a third value, `PROPOSED_V1_5`, exposed as a
+modifying it. And `SpecificationVersion` gains a third value, `PROPOSED_DECISION_EXTENSION`, exposed as a
 read-only property so a v1.5 declaration cannot be constructed claiming to be v1.4.
 
 ### Why nesting rather than fields with defaults
 
-Adding v1.5's fields to `ProposedV14Declaration` with defaults would compile, break nothing,
+Adding v1.5's fields to `ExtendedDeclaration` with defaults would compile, break nothing,
 and be wrong for the reason ADR-042 already gave once:
 
 - **`omi.interface.diff` must keep receiving a v1.3 object.** Core §4's comparability claim
@@ -5034,7 +5034,7 @@ and be wrong for the reason ADR-042 already gave once:
   it. Nesting preserves it *by construction* rather than by care.
 - **`specification_version` must stay unrepresentable-wrong.** ADR-042 made it a property
   rather than a field precisely so a v1.4 declaration could not be constructed as v1.3. A
-  v1.4 object carrying v1.5's fields would return `PROPOSED_V1_4` while making a v1.5 claim,
+  v1.4 object carrying v1.5's fields would return `PROPOSED_CONSTITUTIVE_EXTENSION` while making a v1.5 claim,
   which is E-35's defect reintroduced by the code that exists to fix it.
 - **A domain a version apart must differ only in what that version adds.** Three domains,
   one per layer, is a controlled measurement of each extension. Fields-with-defaults makes
@@ -5083,11 +5083,11 @@ unsourced-assertion shape ADR-043 rejects for constitutive forms.
 
 *Fields with defaults on the v1.4 carrier.* Rejected — three reasons above.
 
-*A flat `ProposedV15Declaration` reproducing all v1.3 and v1.4 fields.* Rejected: it makes
+*A flat `DecisionExtendedDeclaration` reproducing all v1.3 and v1.4 fields.* Rejected: it makes
 every existing test's `diff` call a special case and re-opens exactly the comparability
 question ADR-042 closed.
 
-*Reusing `PROPOSED_V1_4` for both extensions.* Rejected: E-35's argument is that a level
+*Reusing `PROPOSED_CONSTITUTIVE_EXTENSION` for both extensions.* Rejected: E-35's argument is that a level
 name needs its version, and two extensions sharing a version label make a v1.5 claim
 indistinguishable from a v1.4 one — the defect, one layer up.
 
@@ -5097,7 +5097,7 @@ in here would settle by convenience a question that was explicitly left open.
 
 ### What would change this decision
 
-A v1.4 document actually being published, at which point `PROPOSED_V1_4` becomes `V1_4` and
+A v1.4 document actually being published, at which point `PROPOSED_CONSTITUTIVE_EXTENSION` becomes `V1_4` and
 the nesting's middle layer stops being provisional. Or a demonstration that the indirection
 costs more in reader effort than the comparability guarantee is worth — which would be an
 argument for flattening at a *release* boundary, never mid-track.
@@ -5910,6 +5910,107 @@ A measured `z_n` that does **not** track `√n` under arm I would mean the bias 
 — most likely because the filter absorbs it — and the construction would need the bias made
 structural rather than the threshold made loose. That comparison against the closed form is a
 gate quantity for that reason, not a post-hoc check.
+
+---
+
+## ADR-067 — Version numbers name **issued** specifications only; a proposed change is named by what it proposes
+
+**Status.** Accepted **Gap.** none — this is a repository naming convention, not a framework gap **Track.** housekeeping, before the arity redesign.
+**Pins.** `tests/test_extended_boundary.py`; the citation lint (`tests/lint/test_citations.py`) catches any stale identifier.
+
+### The tangle
+
+Nothing beyond **OMI v1.3 has ever been issued.** Despite that, this repository had:
+
+- a class `ProposedV14Declaration` carrying the constitutive-form extension;
+- a class `ProposedV15Declaration` carrying the decision extension;
+- enum members `SpecificationVersion.PROPOSED_V1_4` and `PROPOSED_V1_5`;
+- a module `omi/proposed/v15.py` and a test `tests/test_v14_boundary.py`.
+
+Two things are wrong with that, and the second is the load-bearing one.
+
+**"v1.4" was attached to an unissued carrier.** If a v1.4 specification is issued and its
+contents differ from ADR-042 – ADR-045's extension — which is likely, since the extension is a
+*proposal* and this repository's own ledger argues for changes it does not contain — then every
+identifier above lies about what it carries, and the number is burnt.
+
+**And the numbering does not have to be spent.** No published artefact uses "v1.4" or "v1.5" as
+an issued version. So reserving both costs nothing and skips nothing.
+
+### Decision
+
+**Version numbers name issued specifications only. A proposed change is named by what it
+proposes.**
+
+| was | is |
+|---|---|
+| `ProposedV14Declaration` | `ExtendedDeclaration` |
+| `ProposedV15Declaration` | `DecisionExtendedDeclaration` |
+| `SpecificationVersion.PROPOSED_V1_4` | `PROPOSED_CONSTITUTIVE_EXTENSION` |
+| `SpecificationVersion.PROPOSED_V1_5` | `PROPOSED_DECISION_EXTENSION` |
+| `src/omi/proposed/v15.py` | `src/omi/proposed/decision.py` |
+| `tests/test_v14_boundary.py` | `tests/test_extended_boundary.py` |
+
+`SpecificationVersion.V1_3` keeps its number, because v1.3 **is** issued — which is the rule
+working rather than an exception to it. The enum's own docstring is reworded from "which version"
+to "which **claim target**".
+
+### Why the enum members were renamed too, and not carved out
+
+The narrower option was to rename only the carrier classes and leave the enum, with a stated
+carve-out ("a `PROPOSED_` prefix marks a target that is not an issued version"). Rejected,
+because it produces the **worst** of the three states: a version-free carrier stamping
+version-named claims. A reader of `ExtendedDeclaration` marked `PROPOSED_V1_4` learns that the
+repository knows the name is wrong and applied the knowledge in one place.
+
+**And renaming them implements `docs/V1.4-EDITS.md` E-43 rather than working around it.** E-43's
+finding is that a conformance level plus a framework *version* is still not self-describing,
+because the version does not carry the framework's **purpose** — two reports at the same level
+and version can be answering different questions. A target named
+`PROPOSED_DECISION_EXTENSION` carries its purpose in the name. So the rename is not cosmetic;
+it is the smallest available step toward what E-43 asks for.
+
+### What is deliberately **not** renamed
+
+**`docs/V1.4-EDITS.md` keeps its filename**, and this is a requirement rather than a
+convenience. The path is cited from **commit-stamped snapshots** — `docs/REVIEW_PACK.md`,
+`build/REVIEW-EXTRACT.md`, the M11.4 and M11.5 documents — which CLAUDE.md §10 forbids editing.
+Renaming the file would break citations in documents that cannot be repaired. Its header note
+already records that the target version moved. The same argument protects the eight
+`docs/V1.5-*.md` filenames.
+
+**ADR titles keep their version numbers** (ADR-042 "The v1.3/v1.4 boundary", ADR-048 "v1.5's
+purpose extension", ADR-059 "The v1.5 declaration carrier"). An ADR is a dated record of a
+decision as it was taken; retitling one falsifies the record and breaks every citation to it.
+Same for **track names** — "v1.5 planning" labels a body of work whose documents are named for
+it and cited from snapshots — and for **commit titles**, which `REPRODUCE.md`,
+`audit/README.md` and `scripts/check_audit_gate.sh` quote when they name the audit baseline's
+commit (`57f7db8`, "M10.4 Part B: plan the proposed-v1.4 constitutive track"). A quoted commit
+message is unchangeable by construction.
+
+**`docs/V15-PLANNING-RECORD.md` is a snapshot and was not touched**, so it still says
+`SpecificationVersion` gained `PROPOSED_V1_5`. That remains an accurate record of the name at
+that commit and needs no addendum; a reader following the snapshot rule expects exactly this.
+
+### Alternatives rejected
+
+*Rename the ledger file to something version-free.* Rejected — see above; the snapshot rule
+makes it impossible to do without breaking unrepairable citations.
+
+*Number the extensions `v1.4-draft`, `v1.5-draft`.* Rejected: it still spends the numbers, and a
+draft number invites the same confusion one indirection later.
+
+*Do nothing until a specification is actually issued.* Rejected because the cost only grows. The
+arity redesign will rename these carriers anyway, and doing both in one commit makes the diff
+unreadable — which is the ordinary argument for separating a mechanical rename from a
+substantive change.
+
+### What would change this decision
+
+An issued v1.4 whose contents *are* ADR-042 – ADR-045's extension would make
+`PROPOSED_CONSTITUTIVE_EXTENSION` the historical name of something that now has a number, at
+which point a `V1_4` member is added and the proposed one is retired with a pointer — the same
+retire-and-reissue discipline ADR-062 applies to observations.
 
 ---
 

@@ -5,7 +5,7 @@ declared to make live?
 **Declaration only.** No operator is implemented and no campaign is run, so nothing here
 advances a state. What is checked is that the declaration is comparable (Core §4: "it is
 comparative... which is what converts a collection of examples into evidence of
-generality"), that the v1.5 refinements are exercised rather than asserted, and that the
+generality"), that the decision-extension refinements are exercised rather than asserted, and that the
 one diagnostic Part 5(1) found dark on contrast is now available.
 """
 
@@ -15,7 +15,7 @@ import pytest
 
 from omi.interface import SpecificationVersion, diff
 from omi.proposed.constitutive import ConstitutivelyConstrained
-from omi.proposed.v15 import (
+from omi.proposed.decision import (
     AttainabilityVerdict,
     CoupledQuantityDeclaration,
     CouplingDirection,
@@ -61,13 +61,14 @@ def test_the_declaration_carries_its_own_specification_version(
 ) -> None:
     """E-35's finding does not stop applying at the second extension.
 
-    A level name is not self-describing without the version it is claimed against, so a
-    declaration carrying v1.5's refinements must not be representable as a v1.4 claim.
-    The version is a read-only property, so it cannot be constructed wrong.
+    A level name is not self-describing without the **claim target** it is stated against, so
+    a declaration carrying the decision-extension refinements must not be representable as a
+    constitutive-extension claim. The target is a read-only property, so it cannot be
+    constructed wrong. Named by purpose rather than by a version number per ADR-067.
     """
-    observe("sdl_specification_version", SDL_DECLARATION.specification_version.value, "proposed-v1.5")
+    observe("sdl_specification_version", SDL_DECLARATION.specification_version.value, "proposed-decision-extension")
     observe("sdl_decision_kind_declared", bool(SDL_DECLARATION.decision_kind.strip()), "True")
-    assert SDL_DECLARATION.specification_version is SpecificationVersion.PROPOSED_V1_5
+    assert SDL_DECLARATION.specification_version is SpecificationVersion.PROPOSED_DECISION_EXTENSION
     assert SDL_DECLARATION.decision_kind.strip(), (
         "E-43's finding is that a level plus a version is still not self-describing without "
         "the purpose the claim is made for; the field exists to carry it"

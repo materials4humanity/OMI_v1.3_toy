@@ -1,4 +1,4 @@
-"""Core §4 item 6, split by role (proposed-v1.4; ADR-043, docs/DECISIONS.md).
+"""Core §4 item 6, split by role (proposed constitutive extension; ADR-043, docs/DECISIONS.md).
 
 Cites Core §4 item 6 (invariants available as hard constraints and as
 reachability certificates), Spec §2.2 (the five hard-constraint categories) and
@@ -24,7 +24,7 @@ from, which is why E-32 proposes role-scoping instead of extension.
 **v1.3's classifier is untouched.** `omi.interface.classify_invariant` continues
 to refuse anything that is neither a conservation law nor a monotone functional,
 which is correct under v1.3 and is the evidence E-32 rests on. This module is
-the proposed-v1.4 replacement, not a relaxation of it.
+the proposed replacement, not a relaxation of it.
 """
 
 from __future__ import annotations

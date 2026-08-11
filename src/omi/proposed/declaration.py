@@ -1,4 +1,4 @@
-"""The proposed-v1.4 declaration: a wrapper around Core §4's seven items.
+"""The proposed constitutive-extension declaration: a wrapper around Core §4's seven items.
 
 Cites Core §4 (the seven-item instantiation interface) and Spec §9.1 (the
 conformance level table whose version a claim must state). ADR-042
@@ -16,8 +16,8 @@ from omi.proposed.constitutive import ConstitutiveForm
 
 
 @dataclass(frozen=True)
-class ProposedV14Declaration:
-    """A proposed-v1.4 instantiation declaration, expressed as a v1.3
+class ExtendedDeclaration:
+    """A constitutive-extension instantiation declaration, expressed as a v1.3
     declaration (Core §4's seven items) **plus** whatever the extension adds.
 
     **Composition, not modification** (ADR-042). The v1.3 declaration is held
@@ -32,7 +32,7 @@ class ProposedV14Declaration:
     - No v1.3 field changes meaning, which is the property that keeps this
       repository's Spec §9.1 conformance results citable while a second version
       of the interface exists in the same tree.
-    - Two domains declared in this shape — one v1.3, one proposed-v1.4 — differ
+    - Two domains declared in this shape — one v1.3, one constitutive-extension — differ
       *only* in what the extension adds, which is what makes a diff between them
       a controlled measurement of the extension itself rather than of two
       unrelated declarations (ADR-044's variant domain relies on this).
@@ -67,11 +67,11 @@ class ProposedV14Declaration:
 
     @property
     def specification_version(self) -> SpecificationVersion:
-        """Always :attr:`~omi.interface.SpecificationVersion.PROPOSED_V1_4`
+        """Always :attr:`~omi.interface.SpecificationVersion.PROPOSED_CONSTITUTIVE_EXTENSION`
         (Spec §9.1's level claim needs a version — `docs/V1.4-EDITS.md` E-35).
 
         A read-only property rather than a field, so it cannot be constructed as
         `V1_3`: a declaration carrying the extension is not a v1.3 declaration,
         and making that unrepresentable is cheaper than checking for it.
         """
-        return SpecificationVersion.PROPOSED_V1_4
+        return SpecificationVersion.PROPOSED_CONSTITUTIVE_EXTENSION

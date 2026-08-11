@@ -247,7 +247,7 @@ def test_v13_classifier_is_unchanged_and_still_refuses_both_new_kinds() -> None:
     """ADR-043: v1.3's `classify_invariant` refusal is **preserved, not
     relaxed**. It refuses a constitutive form and an equilibrium-limited
     fraction alike, which is correct under v1.3's two categories and is the
-    evidence E-32 rests on — the proposed-v1.4 split is a replacement, not a
+    evidence E-32 rests on — the proposed split is a replacement, not a
     loosening.
     """
     for name in ("some_transformation_kinetics_form", "equilibrium_limited_phase_fraction"):

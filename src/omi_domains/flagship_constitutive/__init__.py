@@ -7,8 +7,8 @@ machine-diffable and the diff comes out near-identical except for item 6 and the
 constitutive declaration — which is what makes the comparison a controlled
 measurement of what the extension adds rather than of two unrelated declarations.
 
-**Everything here is proposed-v1.4** (Spec §9.1's level claim needs a version —
+**Everything here is the proposed constitutive extension** (Spec §9.1's level claim needs a version —
 `docs/V1.4-EDITS.md` E-35): conformance reports built from this domain carry
-`SpecificationVersion.PROPOSED_V1_4`, so its level claims can never be mixed with
+`SpecificationVersion.PROPOSED_CONSTITUTIVE_EXTENSION`, so its level claims can never be mixed with
 flagship's v1.3 ones.
 """

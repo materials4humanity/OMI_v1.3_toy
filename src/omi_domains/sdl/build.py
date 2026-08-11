@@ -14,7 +14,7 @@ import numpy as np
 
 from omi.chain import Chain, Segment
 from omi.operators import Control
-from omi.proposed.v15 import AttainabilityVerdict, AttainableRegion
+from omi.proposed.decision import AttainabilityVerdict, AttainableRegion
 from omi.state import Ensemble, FloatArray
 
 from omi_domains.sdl.interface import SDL_DECLARATION

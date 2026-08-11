@@ -1,4 +1,4 @@
-"""M11.1's gate: the v1.3/proposed-v1.4 boundary holds, and the v1.3 audit
+"""M11.1's gate: the v1.3 / constitutive-extension boundary holds, and the v1.3 audit
 survives it (ADR-042, docs/DECISIONS.md; `docs/V1.4-EDITS.md` E-35).
 
 The boundary is **not** a directory. It is two structural mechanisms, and this
@@ -7,7 +7,7 @@ module tests both:
 1. **Versioned claims** — every `ConformanceReport` states the version of Core
    and Spec its level is claimed against (Spec §9.1 requires the level and not
    the version, which is E-35), and comparison across versions is refused.
-2. **Composition, not modification** — `ProposedV14Declaration` wraps a v1.3
+2. **Composition, not modification** — `ExtendedDeclaration` wraps a v1.3
    declaration rather than replacing or forking it, so Core §4's comparative
    machinery is untouched *by construction*.
 
@@ -34,7 +34,7 @@ from omi.conformance import (
     generate_report,
 )
 from omi.interface import SpecificationVersion, diff
-from omi.proposed import ProposedV14Declaration
+from omi.proposed import ExtendedDeclaration
 from omi.state import Metric
 
 from omi_domains.contrast.interface import CONTRAST_DECLARATION
@@ -67,7 +67,7 @@ def test_the_specification_version_is_required_not_defaulted() -> None:
 
     Spec §9.1's own instruction is to "state its level"; E-35's finding is that
     nothing requires the version alongside it. A default here would reintroduce
-    exactly that ambiguity through the back door: a proposed-v1.4 caller who
+    exactly that ambiguity through the back door: a constitutive-extension caller who
     forgot the argument would silently emit a report labelled v1.3, which is the
     misreading E-35 says becomes possible the moment two versions coexist.
     """
@@ -98,13 +98,13 @@ def test_comparison_across_versions_is_refused_not_silently_permitted() -> None:
     ADR-042 records that there is deliberately no flag to suppress it.
     """
     v13 = generate_report(_inputs(SpecificationVersion.V1_3))
-    v14 = generate_report(_inputs(SpecificationVersion.PROPOSED_V1_4))
+    v14 = generate_report(_inputs(SpecificationVersion.PROPOSED_CONSTITUTIVE_EXTENSION))
 
     with pytest.raises(ConformanceVersionMismatch) as excinfo:
         compare_reports(v13, v14)
 
     assert excinfo.value.left is SpecificationVersion.V1_3
-    assert excinfo.value.right is SpecificationVersion.PROPOSED_V1_4
+    assert excinfo.value.right is SpecificationVersion.PROPOSED_CONSTITUTIVE_EXTENSION
     # Refusal is symmetric: neither direction is the privileged one.
     with pytest.raises(ConformanceVersionMismatch):
         compare_reports(v14, v13)
@@ -132,7 +132,7 @@ def test_same_version_comparison_returns_the_requirement_level_diff(
     assert differences["rollout_length_error_curve_reported"] == (False, True)
 
 
-def test_a_v13_claim_and_a_v14_claim_are_different_objects_on_one_domain(
+def test_a_v13_claim_and_an_extension_claim_are_different_objects_on_one_domain(
     observe: ObservationRecorder,
 ) -> None:
     """The case a directory boundary cannot express, and the reason ADR-042
@@ -141,7 +141,7 @@ def test_a_v13_claim_and_a_v14_claim_are_different_objects_on_one_domain(
     copies of a domain to say.
     """
     v13 = generate_report(_inputs(SpecificationVersion.V1_3, curve=True))
-    v14 = generate_report(_inputs(SpecificationVersion.PROPOSED_V1_4, curve=True))
+    v14 = generate_report(_inputs(SpecificationVersion.PROPOSED_CONSTITUTIVE_EXTENSION, curve=True))
 
     assert v13.declaration is v14.declaration
     assert v13.specification_version is not v14.specification_version
@@ -170,7 +170,7 @@ def test_v13_core_projection_diffs_exactly_as_the_v13_declaration_does(
     variant domain re-runs the same check after M11.2 adds a category, and any
     disturbance is then attributable to that addition alone.
     """
-    wrapped = ProposedV14Declaration(v13_core=FLAGSHIP_DECLARATION)
+    wrapped = ExtendedDeclaration(v13_core=FLAGSHIP_DECLARATION)
 
     direct = diff(FLAGSHIP_DECLARATION, CONTRAST_DECLARATION)
     projected = diff(wrapped.v13_core, CONTRAST_DECLARATION)
@@ -198,11 +198,11 @@ def test_the_projection_still_holds_with_the_m11_2_extension_populated(
     on, since that comparison reads the diff as a measurement of the extension
     itself.
     """
-    populated = ProposedV14Declaration(
+    populated = ExtendedDeclaration(
         v13_core=FLAGSHIP_DECLARATION,
         constitutive_forms=(known_envelope_form(),),
     )
-    empty = ProposedV14Declaration(v13_core=FLAGSHIP_DECLARATION)
+    empty = ExtendedDeclaration(v13_core=FLAGSHIP_DECLARATION)
 
     direct = diff(FLAGSHIP_DECLARATION, CONTRAST_DECLARATION)
     with_forms = diff(populated.v13_core, CONTRAST_DECLARATION)
@@ -223,8 +223,8 @@ def test_wrapped_declaration_cannot_claim_to_be_v13() -> None:
     `specification_version` is a read-only property rather than a field so that
     saying otherwise is unrepresentable rather than merely checked (Spec §9.1;
     ADR-042)."""
-    wrapped = ProposedV14Declaration(v13_core=FLAGSHIP_DECLARATION)
-    assert wrapped.specification_version is SpecificationVersion.PROPOSED_V1_4
+    wrapped = ExtendedDeclaration(v13_core=FLAGSHIP_DECLARATION)
+    assert wrapped.specification_version is SpecificationVersion.PROPOSED_CONSTITUTIVE_EXTENSION
     with pytest.raises(AttributeError):
         wrapped.specification_version = SpecificationVersion.V1_3  # type: ignore[misc]
 
@@ -243,7 +243,7 @@ def test_the_extension_declares_exactly_the_fields_the_adrs_authorise() -> None:
     """
     from dataclasses import fields
 
-    assert [f.name for f in fields(ProposedV14Declaration)] == ["v13_core", "constitutive_forms"]
+    assert [f.name for f in fields(ExtendedDeclaration)] == ["v13_core", "constitutive_forms"]
 
 
 def test_report_is_frozen_so_a_version_cannot_be_restamped_after_the_fact() -> None:
@@ -255,4 +255,4 @@ def test_report_is_frozen_so_a_version_cannot_be_restamped_after_the_fact() -> N
     report = generate_report(_inputs(SpecificationVersion.V1_3))
     assert isinstance(report, ConformanceReport)
     with pytest.raises(Exception):
-        report.specification_version = SpecificationVersion.PROPOSED_V1_4  # type: ignore[misc]
+        report.specification_version = SpecificationVersion.PROPOSED_CONSTITUTIVE_EXTENSION  # type: ignore[misc]

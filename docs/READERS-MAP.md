@@ -137,7 +137,7 @@ By declared scope (CLAUDE.md §9 anti-goals), never attempted, so the build has
 And two limits of what *was* built: **two domains with operators** — flagship plus a thin
 contrast (the generality claim rests on those two, on M10's interface-fillability sketches,
 and now on a **third domain declared but not built**: `src/omi_domains/sdl/` fills all seven
-items and the v1.5 refinements with no operator behind them, which is evidence for
+items and the decision-extension refinements with no operator behind them, which is evidence for
 fillability and not for prediction) — and **no real neural-operator training at scale**:
 analytic operators are ground truth throughout (CLAUDE.md §2: the operators are not the
 point).

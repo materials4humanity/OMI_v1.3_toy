@@ -1,22 +1,22 @@
-"""The discovery domain's declaration: Core §4's seven items, plus v1.5's refinements
+"""The discovery domain's declaration: Core §4's seven items, plus the decision extension's refinements
 (ADR-059, ADR-060).
 
 Machine-diffable against flagship and contrast through `omi.interface.diff`, because the
-v1.3 seven items are held whole inside the v1.4 carrier, which is held whole inside the
-v1.5 carrier (ADR-042 applied twice). Nothing here implements an operator or runs a
+v1.3 seven items are held whole inside the constitutive-extension carrier, which is held whole inside the
+decision-extension carrier (ADR-042 applied twice). Nothing here implements an operator or runs a
 campaign.
 """
 
 from __future__ import annotations
 
 from omi.interface import InstantiationDeclaration
-from omi.proposed.declaration import ProposedV14Declaration
-from omi.proposed.v15 import (
+from omi.proposed.declaration import ExtendedDeclaration
+from omi.proposed.decision import (
     AttainableRegion,
     CouplingDirection,
     CoupledQuantityDeclaration,
     DeclaredDomainKind,
-    ProposedV15Declaration,
+    DecisionExtendedDeclaration,
     SpeciesRole,
     SpeciesRoleDeclaration,
     TrackedDimensions,
@@ -65,8 +65,8 @@ SDL_V13_CORE = InstantiationDeclaration(
 `omi.interface.diff` compares three declarations rather than two plus a special case."""
 
 
-SDL_V14 = ProposedV14Declaration(v13_core=SDL_V13_CORE, constitutive_forms=SDL_FORMS)
-"""The v1.4 layer: two declared constitutive forms (Spec §2.2's proposed category).
+SDL_EXTENDED = ExtendedDeclaration(v13_core=SDL_V13_CORE, constitutive_forms=SDL_FORMS)
+"""The constitutive-extension layer: two declared constitutive forms (Spec §2.2's proposed category).
 
 **This is what makes the validity report live**, and it is the one diagnostic Part 5(1)
 found structurally unavailable on contrast."""
@@ -77,8 +77,8 @@ MEAN_COMPOSITION = CouplingDirection.INVARIANT
 at the point of declaration rather than only in prose."""
 
 
-SDL_DECLARATION = ProposedV15Declaration(
-    v14_core=SDL_V14,
+SDL_DECLARATION = DecisionExtendedDeclaration(
+    extended_core=SDL_EXTENDED,
     decision_kind=(
         "campaign / discovery: deciding WHAT TO MAKE. The third of Core §5's decisions once "
         "ADR-053's composition inverse is admitted — flagship decides a route for a given "
@@ -215,7 +215,7 @@ SDL_DECLARATION = ProposedV15Declaration(
         ),
     ),
 )
-"""The full v1.5 declaration.
+"""The full decision-extension declaration.
 
 Three things this domain declares that neither existing domain does: **constitutive forms
 with composition-dependent validity** (making the validity report live), **species roles

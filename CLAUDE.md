@@ -48,9 +48,11 @@ therefore scheduled late (see `docs/ROADMAP.md`), and analytic operators serve
 as stand-ins throughout — they are faster, exactly differentiable, and they
 supply ground truth.
 
-This repository is **evidence for a v1.4 framework paper** — a general
-framework from which tools can be architected — not a deployable prediction
-tool in itself. That reframes what its outputs are for.
+This repository is **evidence for the next issued framework specification and
+its paper** — a general framework from which tools can be architected — not a
+deployable prediction tool in itself. That reframes what its outputs are for.
+The number that specification will carry is not assigned; see §8's naming rule
+and ADR-067 for why nothing here claims it.
 
 > **The codebase's primary outputs are evidence and *corrections*.** Where an
 > implementation attempt shows a Specification section to be wrong,
@@ -253,6 +255,20 @@ Two further rules:
   must be computed.
 - Cite the source section in the docstring: `Core §3.8` or `Spec §3.3`. A
   module with no citations is either inventing or restating.
+- **Version numbers name issued specifications only** (ADR-067). OMI v1.3 is
+  issued; nothing beyond it is. `SpecificationVersion` therefore names a
+  **claim target**, and a target that is not an issued specification is named
+  by *what it proposes* — `PROPOSED_CONSTITUTIVE_EXTENSION`,
+  `PROPOSED_DECISION_EXTENSION` — never by a number that has not been
+  assigned. The same holds for the carriers behind them
+  (`ExtendedDeclaration`, `DecisionExtendedDeclaration`).
+
+  Three things are outside the rule because they are **historical record**, and
+  editing them would falsify it: **ADR titles**, **track names** (a body of
+  work whose documents are named for it and cited from commit-stamped
+  snapshots), and **quoted commit messages**. `docs/V1.4-EDITS.md` keeps its
+  filename for the stronger reason that snapshots cite the path and §10 forbids
+  editing them — its header note records that the target version moved.
 
 ## 9. Anti-goals
 

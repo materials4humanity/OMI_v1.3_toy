@@ -237,7 +237,7 @@ identified. OQ-4 answered.
 **Deliverable.** The evidence a framework paper needs and this repository
 does not yet have. Every milestone through M9 is inward-facing (does the
 implementation work); M10 is outward-facing (does the implementation supply
-what a v1.4 paper needs to argue generality, competitiveness, and
+what the next issued specification's paper needs to argue generality, competitiveness, and
 falsifiability). Runs after Phase 3 of the post-M9 remediation work; do not
 begin it before then.
 
@@ -305,7 +305,7 @@ worked values. `docs/V1.4-EDITS.md` complete and self-contained.
 
 ---
 
-## M11 — The proposed-v1.4 constitutive track
+## M11 — The proposed constitutive-form track
 
 **Planned at M10.4; designed in ADR-042 – ADR-045 (docs/DECISIONS.md); not
 implemented.** This is the first milestone whose subject is an *extension to the
@@ -320,10 +320,10 @@ envelope?** That is the claim behind `docs/V1.4-EDITS.md` E-32, and it is the on
 thing in the ledger whose resolution would give §10's *buy physics* row a
 mechanism for the first time.
 
-### M11.1 — The v1.3/v1.4 boundary (ADR-042)
+### M11.1 — The v1.3/extension boundary (ADR-042, retitled by ADR-067)
 
 `specification_version` as a required field on `ConformanceReport`, with
-cross-version comparison refused; `ProposedV14Declaration` wrapping the
+cross-version comparison refused; `ExtendedDeclaration` wrapping the
 seven-item declaration with a `.v13_core` projection. The boundary is a declared
 field of every result, not a directory.
 

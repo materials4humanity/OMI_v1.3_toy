@@ -5,7 +5,7 @@ Two objects, and the relationship between them is the finding:
 - :data:`CONSTITUTIVE_V13_CORE` — the Core §4 seven items. **Byte-identical to
   `omi_domains.flagship`'s declaration**, and that is not laziness — see below.
 - :data:`CONSTITUTIVE_DECLARATION` — that core wrapped in
-  `omi.proposed.ProposedV14Declaration` with the five declared forms
+  `omi.proposed.ExtendedDeclaration` with the five declared forms
   (`forms.py`) filling proposed item 6d.
 
 **ADR-044 predicted the v1.3 diff would isolate item 6. Measured, the diff is
@@ -43,7 +43,7 @@ from __future__ import annotations
 from dataclasses import fields
 
 from omi.interface import InstantiationDeclaration
-from omi.proposed import ProposedV14Declaration
+from omi.proposed import ExtendedDeclaration
 
 from omi_domains.flagship.interface import FLAGSHIP_DECLARATION
 from omi_domains.flagship_constitutive.forms import DECLARED_FORMS
@@ -61,10 +61,10 @@ happening to agree. Every difference between the two domains lives in
 :data:`CONSTITUTIVE_DECLARATION`'s extension, which is exactly where v1.3 has no
 vocabulary — see the module docstring."""
 
-CONSTITUTIVE_DECLARATION = ProposedV14Declaration(
+CONSTITUTIVE_DECLARATION = ExtendedDeclaration(
     v13_core=CONSTITUTIVE_V13_CORE,
     constitutive_forms=DECLARED_FORMS,
 )
-"""The proposed-v1.4 declaration: the seven items plus item 6d (Core §4; ADR-043).
+"""The proposed constitutive-extension declaration: the seven items plus item 6d (Core §4; ADR-043).
 `.v13_core` projects back to the object above, so v1.3's `omi.interface.diff`
 operates on it unchanged — and returns "no differences", which is the finding."""

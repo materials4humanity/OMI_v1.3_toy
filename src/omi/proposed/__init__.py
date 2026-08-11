@@ -1,4 +1,4 @@
-"""The proposed-v1.4 interface extension, built alongside v1.3 rather than
+"""The proposed constitutive-form interface extension, built alongside v1.3 rather than
 replacing it (Core §4's seven items; ADR-042, docs/DECISIONS.md).
 
 **Nothing in this package is part of OMI v1.3.** Every conformance result,
@@ -10,7 +10,7 @@ which is this directory:
 1. **Versioned claims** — `omi.conformance.ConformanceReport` carries a required
    `omi.interface.SpecificationVersion`, and `omi.conformance.compare_reports`
    refuses to compare across versions (`docs/V1.4-EDITS.md` E-35).
-2. **Composition, not modification** — :class:`~omi.proposed.declaration.ProposedV14Declaration`
+2. **Composition, not modification** — :class:`~omi.proposed.declaration.ExtendedDeclaration`
    *wraps* a v1.3 `omi.interface.InstantiationDeclaration` and projects back to
    it, so v1.3's `omi.interface.diff` and every test calling it are untouched by
    construction.
@@ -39,7 +39,7 @@ from omi.proposed.constitutive import (
     ValiditySpace,
     worst_extrapolation,
 )
-from omi.proposed.declaration import ProposedV14Declaration
+from omi.proposed.declaration import ExtendedDeclaration
 from omi.proposed.holdout import (
     HoldOutDiscriminationReport,
     HoldOutVerdict,
@@ -68,7 +68,7 @@ __all__ = [
     "HoldOutVerdict",
     "InvariantRole",
     "InvariantSubItem",
-    "ProposedV14Declaration",
+    "ExtendedDeclaration",
     "Unbounded",
     "ValidityAction",
     "ValidityBound",

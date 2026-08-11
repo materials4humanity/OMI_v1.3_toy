@@ -198,7 +198,7 @@ class ConformanceInputs:
     specification_version: SpecificationVersion
     """Which version of Core and Spec the resulting claim is made against
     (Spec §9.1; `docs/V1.4-EDITS.md` E-35; ADR-042). Required with no default,
-    deliberately: a default would let a proposed-v1.4 caller silently produce a
+    deliberately: a default would let a constitutive-extension caller silently produce a
     report labelled v1.3, which is precisely the ambiguity E-35 names."""
 
     rollout_error_curve: FloatArray | None = None

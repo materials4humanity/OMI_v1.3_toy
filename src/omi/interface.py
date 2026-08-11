@@ -55,8 +55,16 @@ class InstantiationDeclaration:
 
 
 class SpecificationVersion(Enum):
-    """Which version of Core and of the Specification a claim is made against
-    (Spec §9.1; ADR-042, docs/DECISIONS.md).
+    """Which **claim target** a conformance result is stated against — an issued
+    specification, or a named proposed extension (Spec §9.1; ADR-042, ADR-067).
+
+    **A member is named by a version number only when that version is issued.** OMI
+    v1.3 is issued, so `V1_3` carries one. Nothing beyond it has been issued, so the
+    two extensions this repository proposes are named by *what they propose* rather
+    than by a number that has not been assigned — see ADR-067 and CLAUDE.md §8. That
+    is `docs/V1.4-EDITS.md` E-43 applied to this enum: E-43's finding is that a level
+    plus a version is still not self-describing because the version does not carry
+    the framework's *purpose*, and a target named for its purpose does.
 
     Spec §9.1 requires that "an implementation MUST state its level" and does
     not require it to state the version that level is claimed against. That is
@@ -74,22 +82,30 @@ class SpecificationVersion(Enum):
     `docs/OMI-v1_3-Implementation-Spec.md`. Every conformance result, oracle and
     audit finding this repository produced through M10 is a v1.3 result."""
 
-    PROPOSED_V1_4 = "proposed-v1.4"
-    """The proposed v1.4 interface extension (ADR-042 – ADR-045), built
-    *alongside* v1.3 rather than replacing it. Marked "proposed" because no
-    v1.4 document exists: this is a candidate extension carrying evidence, not
-    a released specification."""
+    PROPOSED_CONSTITUTIVE_EXTENSION = "proposed-constitutive-extension"
+    """The proposed **constitutive-form** extension (ADR-042 – ADR-045): a domain may
+    declare that an operator follows a named constitutive form, valid over a declared
+    range. Built *alongside* v1.3 rather than replacing it, and carried by
+    :class:`omi.proposed.declaration.ExtendedDeclaration`.
 
-    PROPOSED_V1_5 = "proposed-v1.5"
-    """The proposed v1.5 extension (ADR-048 – ADR-060): the coupled-quantity,
-    role and attainability declarations, built *alongside* v1.4 by the same
-    composition discipline (`omi.proposed.v15`; ADR-059).
+    Marked "proposed" because **no specification issues it**. It was called
+    `PROPOSED_V1_4` until ADR-067; that name attached a version number to an unissued
+    carrier, and the number it borrowed is reserved for whatever specification is
+    actually issued next."""
 
-    A third value rather than a re-use of :attr:`PROPOSED_V1_4`, because
-    `docs/V1.4-EDITS.md` E-35's finding is that a level name is not
-    self-describing without the version it is claimed against — and that
-    argument does not stop applying at the second extension. A domain declaring
-    v1.5's refinements is not making a v1.4 claim."""
+    PROPOSED_DECISION_EXTENSION = "proposed-decision-extension"
+    """The proposed **decision** extension (ADR-048 – ADR-060): the coupled-quantity,
+    role and attainability declarations, plus the statement of which decision the chain
+    supports. Built *alongside* the constitutive extension by the same composition
+    discipline (:class:`omi.proposed.decision.DecisionExtendedDeclaration`; ADR-059).
+
+    A third member rather than a re-use of
+    :attr:`PROPOSED_CONSTITUTIVE_EXTENSION`, because `docs/V1.4-EDITS.md` E-35's
+    finding is that a level name is not self-describing without the target it is
+    claimed against — and that argument does not stop applying at the second
+    extension. A domain declaring the decision refinements is not making a
+    constitutive-extension claim. Named for its purpose rather than `PROPOSED_V1_5`
+    per ADR-067."""
 
 
 class InvariantKind(Enum):

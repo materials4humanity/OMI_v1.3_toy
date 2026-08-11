@@ -1,4 +1,4 @@
-"""The proposed-v1.5 declaration: v1.4's declaration plus the coupled-quantity,
+"""The proposed decision-extension declaration: the constitutive-extension declaration plus the coupled-quantity,
 role and attainability declarations Parts 2–4 designed.
 
 Cites Core §4 (the seven-item interface these refine rather than extend), Core §3.1
@@ -7,8 +7,8 @@ Cites Core §4 (the seven-item interface these refine rather than extend), Core 
 forms, whose validity region becomes a function over this space) and Spec §9.1 (the
 level claim that needs a version).
 
-**Composition, not modification, applied a second time** (ADR-042, ADR-059): a v1.5
-declaration *holds* a v1.4 declaration whole, which itself holds the v1.3 seven items
+**Composition, not modification, applied a second time** (ADR-042, ADR-059): a decision-extension
+declaration *holds* a constitutive-extension declaration whole, which itself holds the v1.3 seven items
 whole. So `omi.interface.diff` keeps operating on the v1.3 object unchanged, M11's
 comparability evidence survives by construction, and two domains a version apart differ
 only in what the later version adds.
@@ -25,7 +25,7 @@ from enum import Enum
 from typing import Mapping
 
 from omi.interface import SpecificationVersion
-from omi.proposed.declaration import ProposedV14Declaration
+from omi.proposed.declaration import ExtendedDeclaration
 
 __all__ = [
     "SpeciesRole",
@@ -37,7 +37,7 @@ __all__ = [
     "AttainabilityVerdict",
     "AttainabilityReport",
     "AttainableRegion",
-    "ProposedV15Declaration",
+    "DecisionExtendedDeclaration",
 ]
 
 
@@ -410,17 +410,17 @@ def _interval_factor(value: float, low: float, high: float) -> float:
 
 
 @dataclass(frozen=True)
-class ProposedV15Declaration:
-    """A proposed-v1.5 instantiation declaration: v1.4's, plus the coupled-quantity, role
+class DecisionExtendedDeclaration:
+    """A decision-extension instantiation declaration: the constitutive extension's, plus the coupled-quantity, role
     and attainability declarations (Core §4; ADR-059).
 
     **The nesting is the point** (ADR-042 applied a second time). `omi.interface.diff`
     still receives a v1.3 :class:`~omi.interface.InstantiationDeclaration`, so every
     comparability result this repository has published survives unchanged, and a v1.3
-    domain, a v1.4 domain and a v1.5 domain differ *only* in what each version adds.
+    domain, a constitutive-extension domain and a decision-extension domain differ *only* in what each extension adds.
     """
 
-    v14_core: ProposedV14Declaration
+    extended_core: ExtendedDeclaration
     coupled_quantities: tuple[CoupledQuantityDeclaration, ...] = ()
     species_roles: tuple[SpeciesRoleDeclaration, ...] = ()
     attainable_region: AttainableRegion | None = None
@@ -434,14 +434,14 @@ class ProposedV15Declaration:
 
     @property
     def specification_version(self) -> SpecificationVersion:
-        """Always :attr:`~omi.interface.SpecificationVersion.PROPOSED_V1_5` (Spec §9.1's
+        """Always :attr:`~omi.interface.SpecificationVersion.PROPOSED_DECISION_EXTENSION` (Spec §9.1's
         level claim needs a version — `docs/V1.4-EDITS.md` E-35).
 
         A read-only property rather than a field, for the reason ADR-042 gives about the
-        v1.4 carrier: a declaration carrying v1.5's extension is not a v1.4 declaration,
+        constitutive-extension carrier: a declaration carrying the decision extension is not a constitutive-extension declaration,
         and making that unrepresentable is cheaper than checking for it.
         """
-        return SpecificationVersion.PROPOSED_V1_5
+        return SpecificationVersion.PROPOSED_DECISION_EXTENSION
 
     def roles_for(self, species: str) -> Mapping[str, SpeciesRole]:
         """Every declared region's role for one species (ADR-051; Core §4 item 1).
