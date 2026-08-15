@@ -1,4 +1,5 @@
-"""The flagship's seven-item instantiation declaration (Core §4, §7.1)."""
+"""The flagship's instantiation declaration (Core §4, §7.1) — eight items since
+ADR-071 split item 1, and **the one domain here that declares item 1b empty**."""
 
 from __future__ import annotations
 
@@ -9,6 +10,26 @@ from omi.observability import ObservedInferredConvention
 
 FLAGSHIP_DECLARATION = InstantiationDeclaration(
     state_schema=FLAGSHIP_SCHEMA,
+    declared_parameters=(),
+    # Item 1b, declared EMPTY, and the emptiness is a finding rather than an omission
+    # (docs/V1.4-EDITS.md E-29, E-46; ADR-071).
+    #
+    # This domain is the one E-29 was written about -- flat-rolled steel, where
+    # hardenability, carbon and microalloying are the paradigm operator-family indices --
+    # and it is the only domain or sketch in this repository whose item 1b is empty. The
+    # reason is not that the physics has no parameters. It is that this build's three
+    # de-facto-static components (inclusion_content, prior_grain_size,
+    # accumulated_hardening: relaxation rate exactly 0.0 and control-coupling gain
+    # exactly 0.0 in both evolution operators, measured in E-29) are declared as SLOT
+    # OCCUPANTS in item 1a, where the constitutive operator reads them as state.
+    #
+    # Moving them to 1b would be a physics change -- E-29 records that repair as out of
+    # scope and needing its own decision record -- so the honest declaration is: no
+    # operator-family index is declared here, and three quantities that behave like one
+    # sit in item 1a instead. The split supplies the destination those three should have;
+    # it does NOT detect that they belong there. Detection still takes the measurement
+    # E-29 already performed, because nothing here flags a 1a occupant whose rate and
+    # gain are both zero.
     control_space=(
         "Apparatus-controlled: heating intensity and transfer speed set by the "
         "processing line. U_adm bounded by furnace and mill capacity. A control "

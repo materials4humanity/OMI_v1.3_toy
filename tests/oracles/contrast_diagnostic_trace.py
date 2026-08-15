@@ -351,8 +351,15 @@ def terminal_voltage_trajectory(depth: int = 40, *, seed: int = 0) -> FloatArray
     contrast declares no constitutive form and therefore no validity range, item 4's
     readout catalogue carries no specification limits, item 2's admissible set is declared
     in words rather than numbers, and neither declared invariant is violated. Nothing in
-    the seven items distinguishes a cell still in its modelled regime from one whose model
+    the declared items distinguishes a cell still in its modelled regime from one whose model
     has left physical validity.
+
+    **Unchanged by ADR-071's item-1 split, and that is worth recording.** Stage 2 took the
+    interface from seven items to eight, and the new item (1b, declared parameters) is not a
+    bound on anything: contrast now declares its cell design there, which says WHICH operator
+    family applies and nothing about when the model stops applying. E-52's scope-exit
+    criterion is hosted by the decision extension's `ScopeDeclaration` (ADR-070), which this
+    domain does not yet carry — so this finding stands exactly as measured.
     """
     rng = np.random.default_rng(seed)
     ensemble = build_incoming_ensemble(N_CELLS, rng)

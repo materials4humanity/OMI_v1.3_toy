@@ -281,8 +281,8 @@ indistinguishable — which is precisely the failure ADR-042's gate exists to pr
 | stage | contents | gate posture |
 |---|---|---|
 | **1 — additive** | Decisions **C, D, E**: new items, no charter changes | passed against a versioned baseline (`audit/baselines/v13-items7.json`, ADR-069) — the baseline moved for the unrelated E-60 keying repair that preceded this stage, **not** because Stage 1 disturbed `diff`; see the correction below |
-| **2 — restructure** | Decisions **A and B**: item 1 re-chartered, item 6 split. `test_interface_diff.py` rebuilt (§3) | passes against the **stage-1 baseline**, which is the new generation's first freeze |
-| **3 — evidence** | The four sketches re-derived (§4), the `observe()` lint switched on (§5) | passes against the stage-2 baseline; the lint's first-run failures are triaged in this stage, not suppressed |
+| **2 — restructure** | **Executed (ADR-071), narrower than this row says**: item 1 split into 1a/1b with the parameter role under 1b; `test_interface_diff.py` rebuilt (§3); the four sketch verdicts re-derived (§4). **Item 6 was NOT split** — ADR-046 already settled where constitutive forms live, so E-32's role-scoping is not part of it | FAILs against `v13-items7` by construction (the `diff` dicts move), so the second generation `audit/baselines/redesign-items8.json` was frozen here and PASSes against it |
+| **3 — evidence** | **Not executed.** The `observe()` lint (§5) only — the four sketch re-derivations moved into Stage 2, because a re-charter that lands without them leaves four verdicts stale for the length of a stage | passes against the stage-2 baseline; the lint's first-run failures are triaged in this stage, not suppressed |
 
 Staging this way also means **the versioned baseline is created before the restructuring**, so the
 restructuring is audited against a generation that already has the new keying — E-60's repair lands
@@ -300,6 +300,23 @@ in stage 1 and pays off in stage 2.
 > column "unless [Stage 1] adds an item to the OMI level table" also did not fire: the
 > `error_control_claim` wiring is carried, not gated, so those 9 tests stayed mechanical. Both
 > corrections reduce Stage 1's realised cost below what this section priced.
+
+> **Second correction, filed after Stage 2 executed (ADR-071).** §0's table asks which decisions
+> "restructure", and my pre-execution reading — reported before Stage 2 was authorised — was that
+> *neither* the item-1 split nor the item-6 split needed to touch `InstantiationDeclaration`,
+> because Stage 1 had just shown three additive decisions landing cleanly on wrappers. **That
+> reading was overruled and the override was right.** A wrapper would have left a parameter
+> declarable in two places at once — as a slot occupant or on the wrapper — which is precisely the
+> ambiguity E-46 reports item 1 as having, so the "cheaper" option would have preserved the defect
+> it was meant to repair. ADR-071 records the argument in full. The lesson for Stage 3: a placement
+> that avoids moving the audit baseline is not thereby the correct placement, and Stage 1's wrapper
+> precedent generalises less far than it appeared to.
+>
+> Two of this brief's other Stage-2 prices were also wrong, both **upward** rather than downward:
+> §6 priced `test_flagship_constitutive.py`'s 12 tests and `test_known_envelope.py` as *logic*
+> changes on the strength of item 6's split, which did not happen — both were mechanical or
+> untouched. And §4's cost was paid in full, not reduced: the four sketch verdicts genuinely were
+> re-derived rather than reformatted, and all four fill item 1b.
 
 ## 8. Sequencing, updated for what commits 1, 2 and Stage 1 closed
 

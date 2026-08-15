@@ -1,14 +1,37 @@
-"""The contrast's seven-item instantiation declaration (Core §4, §7.2)."""
+"""The contrast's instantiation declaration (Core §4, §7.2) — eight items since ADR-071
+split item 1."""
 
 from __future__ import annotations
 
-from omi.interface import InstantiationDeclaration
+from omi.interface import InstantiationDeclaration, ParameterRole
 
 from omi_domains.contrast.state import CONTRAST_SCHEMA
 from omi.observability import ObservedInferredConvention
 
 CONTRAST_DECLARATION = InstantiationDeclaration(
     state_schema=CONTRAST_SCHEMA,
+    declared_parameters=(
+        ParameterRole(
+            name="cell_design",
+            indexes=("CyclingStep", "DendriteRisk"),
+            justification=(
+                "Fails all three of E-46's state properties and answers its parameter question. "
+                "The cell's chemistry and build -- electrode couple, electrolyte formulation, "
+                "separator, format -- is fixed when the artefact is manufactured: no operator "
+                "transports it, no observation in item 5 (terminal current, voltage, surface "
+                "temperature) assimilates it, and it carries no per-particle value in an ensemble "
+                "over cells of one design. What it does is decide WHICH cycling and dendrite "
+                "operator applies: the same duty cycle imposed on a different couple is a "
+                "different map, not the same map at a different state. Before ADR-071 this domain "
+                "had nowhere to declare it, so a graphite cell and a lithium-metal cell under one "
+                "usage programme were structurally indistinguishable declarations."
+            ),
+        ),
+    ),
+    # constant_over is left empty: a cell's design is constant over the whole service
+    # chain, which is item 1b's ordinary case rather than a region-scoped one. No
+    # descriptor basis is declared, because this domain has no descriptor functionals --
+    # unlike the discovery domain, whose composition parameter carries one (ADR-052).
     control_space=(
         "Usage-determined: the charge/discharge duty cycle is set by the "
         "service application, not an apparatus operator. U_adm is bounded by "

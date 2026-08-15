@@ -20,7 +20,7 @@ finding.
 
 from __future__ import annotations
 
-from omi.interface import InstantiationDeclaration
+from omi.interface import InstantiationDeclaration, ParameterRole
 from omi.state import Slot, StateSchema
 
 LAYERWISE_ADDITIVE_SCHEMA = StateSchema(
@@ -43,6 +43,31 @@ recorded honestly as a forced approximation, not claimed as a clean fill.
 
 LAYERWISE_ADDITIVE_DECLARATION = InstantiationDeclaration(
     state_schema=LAYERWISE_ADDITIVE_SCHEMA,
+    declared_parameters=(
+        ParameterRole(
+            name="feedstock_powder_batch",
+            indexes=("melt_pool_constitutive", "porosity_induced_fatigue_life"),
+            justification=(
+                "Fills item 1b straightforwardly, which is the expected result for a process "
+                "domain (this sketch and device_yield were the predicted control cases). The "
+                "powder's alloy composition and particle-size distribution are fixed when the "
+                "batch is loaded: no operator transports them, no in-situ melt-pool monitor "
+                "assimilates them, and they carry no per-build-location value. They decide which "
+                "melt-pool constitutive operator applies -- absorptivity, solidification range "
+                "and lack-of-fusion susceptibility are all batch properties -- so a build on a "
+                "different powder lot is a different operator, not the same operator at a "
+                "different state."
+            ),
+        ),
+    ),
+    # A deliberate NON-declaration, recorded because it is the interesting half. The
+    # build's whole-part geometry is NOT declared here even though it is fixed per build
+    # and indexes the operator family, because this sketch's standing finding (E-21,
+    # docs/SKETCHES.md) is that the geometry is exactly what StateSchema cannot represent:
+    # the state is a field over a body under construction. Declaring the geometry as a 1b
+    # parameter would make that unrepresentable structure look declared, which is the
+    # forced-approximation failure this sketch exists to record. Item 1b's split does not
+    # help with E-21, and claiming otherwise here would hide that.
     control_space=(
         "Apparatus-controlled: laser/beam power, scan speed, hatch spacing, "
         "and layer thickness as a time-dependent recipe across the whole "

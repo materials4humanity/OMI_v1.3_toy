@@ -6337,6 +6337,203 @@ consequences, not a silent consequence of this ADR.
 
 ---
 
+## ADR-071 — Arity redesign Stage 2: Core §4 item 1 is **split** into 1a and 1b, and the parameter role is declared under 1b rather than on a wrapper
+
+**Status.** Accepted **Gap.** none — implements `docs/V1.4-EDITS.md` E-46's proposed wording,
+which is written out in full there. **Track.** arity-redesign Stage 2.
+**Pins.** `src/omi/interface.py` (`ParameterRole`, `InstantiationDeclaration.declared_parameters`
+and its `__post_init__`, `INTERFACE_ITEMS`, `CORE_7_2_ROWS`, the three derivation helpers);
+`tests/test_interface_diff.py` (rebuilt); `tests/test_sketches.py`; all three domain declarations
+and all four sketches.
+
+### A note on letters, so the record stays legible
+
+`docs/ARITY-REDESIGN-BRIEF.md` §0 labels the **item-1 split as Decision A** and **item 6's split
+as Decision B**. The authorisation for this stage used "B" for the item-1 split and "A" for the
+parameter role carried inside it. What was built is unambiguous and is what this ADR records:
+**item 1 split into 1a/1b, with the parameter role declared under 1b; item 6 untouched.** Item 6's
+split (E-32/ADR-046's role-scoping) is *not* part of Stage 2 — ADR-046 already records that the
+constitutive-form category is carried outside the item list by `ExtendedDeclaration`, and nothing
+here changes item 6's two roles or its two categories.
+
+### The decision, and why the parameter role is *inside* the split rather than beside it
+
+Two options were live, and Stage 1 had just established a precedent for the one not taken.
+
+**(a) `ParameterRole` under the split item 1b — chosen.** Item 1 becomes 1a (state schema) and 1b
+(declared parameters) on `InstantiationDeclaration` itself.
+
+**(b) `ParameterRole` on a wrapper**, the way ADR-070 placed `ScopeDeclaration`,
+`SymmetryGroupAction` and `ConstitutiveForm.refines` — leaving item 1 as issued. *Rejected.*
+
+**The argument that decides it is that (b) would leave a parameter declarable in two places at
+once, which is the ambiguity the split exists to remove.** E-46's finding is not "there is nowhere
+to declare a parameter" — a wrapper answers that. It is that item 1's charter covers two
+categorically different declarations and *distinguishes them nowhere*, so a domain could put its
+parameterisation in either place and `omi.interface.diff` would report two identical domains as
+different. A wrapper reproduces exactly that: item 1's charter would still stretch over both
+readings, and a domain could declare a parameter as a slot occupant or on the wrapper, with
+nothing preferring either. E-46's own text anticipates this — "appending cannot surface a
+mis-typing inside an existing item; only re-chartering can."
+
+E-46's four-property table is the authority for *which* side a quantity falls on, and it is a
+table about the quantity, not about the carrier: `c̄` answers **which member of the operator family
+this is**, not **what the state of this body is**. The split is that distinction made structural.
+
+**Stage 1's wrapper precedent does not extend here, and ADR-070 said so in advance.** ADR-070's
+"what this does and does not settle" section states that its precedent "does not extend to
+Decisions A and B... because the thing being changed is the wrapped object itself." That held.
+
+### What this costs, stated rather than discovered later
+
+**1. `InstantiationDeclaration` is no longer a literal v1.3 seven-item object.** ADR-042's
+composition-over-modification invariant is deliberately broken for item 1 — the first time in this
+repository. Consequences, all accepted:
+
+- `SpecificationVersion.V1_3` now names v1.3's **level table** (Spec §9.1's rows, unchanged) rather
+  than v1.3's item list. A `ConformanceReport` stamped `V1_3` is still a true claim about which
+  requirements were met; it is no longer a claim that the declaration behind it has v1.3's shape.
+  **No new enum member was added**, deliberately: the level table is what the version stamps, and
+  minting `PROPOSED_ITEM_SPLIT` would imply the extensions' composition discipline was preserved
+  here when it was not.
+- `ExtendedDeclaration.v13_core` and `DecisionExtendedDeclaration` still wrap whatever the item
+  declaration is, so their projection property is unaffected — but the field's *name* now overstates
+  what it holds, and its docstring says so rather than being renamed (renaming would churn three
+  domains and every test for a cosmetic gain).
+
+**2. Decision A ceases to be independently revertible**, which the authorisation accepted
+explicitly and which is correct on its own terms: a parameter role without a charter distinguishing
+state from index is the under-declaration E-29 reported, so the two were never separately useful.
+
+**3. The audit baseline moves to a new generation.** `diff()` gains a `declared_parameters` key, so
+the nine `diff`-dict observations move by construction. Under ADR-069's versioned scheme this needs
+no declared exception: `audit/baselines/v13-items7.json` stays valid and audited forever as the
+v1.3-criterion generation, and `audit/baselines/redesign-items8.json` is frozen at this commit.
+
+**4. `diff_result` is retired with no replacement**, and this is the retirement ADR-062's guard
+would have blocked. It recorded the raw `diff()` dict under two tests, one of which pinned ADR-034's
+seven-rows-onto-six mapping — a claim that is now *computed* from the item list rather than written
+down, so there is no hand-written assertion left for an observation to pin. The comparison ceased
+to exist rather than moved. `docs/ARITY-REDESIGN-BRIEF.md` §2 identified this in advance as the one
+claim that could not be honestly retired, and the versioned-baseline scheme dissolves it exactly as
+that section predicted: nothing is deleted, because the observation remains audited in the
+generation whose criterion it was true under.
+
+### What was built
+
+- **`ParameterRole`** — `name`, `indexes` (required non-empty: a parameter indexing nothing
+  parameterises nothing, and naming the operators is the declaration's falsifiable half),
+  `justification` (required, against E-46's four-property test), plus `constant_over`,
+  `descriptor_basis`/`underlying_space` (ADR-052's rule travels with the quantity) and
+  `also_state_in_regions`.
+- **The mutual-exclusion check** in `InstantiationDeclaration.__post_init__`, which is what makes
+  the split remove an ambiguity rather than relocate it: a name in both items 1a and 1b is refused
+  unless `also_state_in_regions` declares the dual role, per E-46's carbon-in-a-decarburising-layer
+  clause. Exercised on constructed declarations in `tests/`, not by contorting a domain.
+- **`INTERFACE_ITEMS`, `CORE_7_2_ROWS`** and three derivation helpers — the item list as data, so
+  the numbering, the charters and the §7.2 mapping have one authority. This is E-01 converted from a
+  presentation defect into a standing check, and it reported the new count on its first run without
+  being asked.
+- **`declared_parameters` required with no default**, on ADR-042's reasoning for
+  `specification_version`: a default would let a domain that *has* an index silently declare none,
+  which is the omission E-46 found item 1 unable to surface. `()` is a positive claim.
+
+### The domain declarations, and the finding in them
+
+| declaration | item 1b | note |
+|---|---|---|
+| `flagship` | **empty** | The domain E-29 was written about, and the only empty 1b anywhere. Its three de-facto-static components stay in 1a; repairing that is out of scope per E-29 itself |
+| `contrast` | `cell_design` | Newly declarable: a graphite cell and a lithium-metal cell under one usage programme were previously indistinguishable declarations |
+| `sdl` | `mean_composition` | **Relocated** from the decision extension's `INVARIANT`-coupled `CoupledQuantityDeclaration`, not duplicated — two homes is the ambiguity the split removes. `MEAN_COMPOSITION` removed for the same reason |
+| four sketches | all fill | Verdicts re-derived per CLAUDE.md invariant 11; see `docs/SKETCHES.md` |
+
+**The finding: item 1b's polarity inverts item 3's.** On erasure inventory the flagship is rich and
+the contrast empty — Core §7.2's headline inversion. On item 1b the contrast declares and the
+flagship does not. The domain with the strongest claim to needing the item is the one whose
+declaration leaves it empty, because its parameters are mis-typed into 1a. Pinned by
+`test_item_1b_inverts_the_two_domains_in_the_opposite_direction_to_item_3`.
+
+### What filling item 1b discovered: E-61
+
+Declaring `mean_composition` on the discovery domain produced a quantity that is **legitimately
+item-1b content per chain and item-2 content per campaign** — the acquisition policy's decision
+variable and the chain's fixed index are the same thing, and Core §4 states no scope at which a
+declaration is written. Filed as **E-61** in `docs/V1.4-EDITS.md` before deciding how the code
+would cope, per CLAUDE.md §10. The code copes by recording the scope in free text and nothing more:
+inventing a `scope` field would improvise across a framework gap (CLAUDE.md §4), and the ledger
+entry carries the proposed wording instead. **The mutual-exclusion check deliberately does not
+extend to 1b-versus-2**, because unlike 1a-versus-1b the dual membership there is legitimate.
+
+### Alternatives rejected
+
+*Wrapper placement (option b).* Above — it preserves the ambiguity the split exists to remove.
+
+*Append an item 8 "operator parameterisation", leaving item 1 whole.* Rejected on E-46's own
+argument: item 1's charter would still cover both things, so the mis-typing would remain
+undetectable and the new item would merely add a second legal home.
+
+*A fifth state slot.* Rejected by E-29's own reasoning, quoted in `ParameterRole`'s docstring: a
+slot subjects a parameter to pushforward, Axiom S, erasure and assimilation, all vacuous for a
+quantity nothing transports.
+
+*Add a `declared_parameters_structural` companion key to `diff()`,* mirroring
+`invariants_structural`. Rejected: ADR-034 added that key because it had a *measurement* — two
+domains declaring one invariant structure under different names. No equivalent measurement exists
+for parameters, so the key would assert which parameter declarations count as structurally alike on
+no evidence.
+
+*Split item 6 in the same commit.* Out of scope, and ADR-046 already settled where constitutive
+forms live. Bundling it would have produced one diff in which a real movement and a deliberate one
+are indistinguishable — the failure the audit gate exists to prevent.
+
+### Is eight stable? **No — and three pressures now sit on the wrong side of this decision**
+
+Stated because the question was asked directly before Stage 3, and the answer is a finding about
+this repository's own consistency rather than only a forecast.
+
+**The count does not move for E-31.** Its proposed wording *replaces item 1's parenthetical* — the
+characterisation method that fixes the `m`/`z` boundary is content **inside** item 1a, not a new
+item. Filling it would enrich 1a and leave the count at eight.
+
+**The count moves for three others, by their own proposed wording:**
+
+| pressure | its proposed wording asks for | where this repository puts it today |
+|---|---|---|
+| E-30 (symmetry group) | "Add a **new declaration item** — deliberately not a sub-item of item 6" | `DecisionExtendedDeclaration.symmetry_group_actions` (wrapper, ADR-070) |
+| E-32 / ADR-046 (constitutive form) | ADR-046 chose "(b) a **new interface item**", noting it "makes the interface eight items" | `ExtendedDeclaration.constitutive_forms` (wrapper, ADR-042/ADR-043) |
+| E-52 (scope-exit criterion) | "Add an **eighth item** to Core §4: 8. Scope-exit criterion" | `ScopeDeclaration.scope_exit_criterion` on the decision extension (wrapper, ADR-070) |
+
+If all three land as framework items on top of this split, the interface is **eleven** items, not
+eight. So eight is a waypoint, not a resting point, and any document or test that treats it as
+settled is wrong in the same way a hardcoded "seven" was — which is why `INTERFACE_ITEMS` exists and
+why CLAUDE.md §5 invariant 11 now forbids writing the count as a literal.
+
+**The inconsistency this exposes, stated plainly.** This repository now holds three declarations on
+wrapper classes whose own ledger entries propose them as *items*, and one declaration (the parameter
+role) as an item on the reasoning that a wrapper would leave it declarable in two places. Those two
+treatments cannot both be right in general. The distinguishing argument is available and is the one
+this ADR rests on: **a wrapper is safe where the content has no competing home in the item list, and
+unsafe where it does.** Item 1's charter already stretched over the parameter — that is E-46's whole
+finding — so a wrapper created a second legal home. Nothing in items 1a–7 stretches over a symmetry
+group, a constitutive form (item 6 *refuses* one by name, per E-32) or a scope-exit criterion (E-52
+checks all seven and finds no host), so no wrapper for those creates an ambiguity.
+
+That argument is coherent, but it is a *repository* argument and the framework does not make it. If
+the next issued specification adopts E-30, E-32 and E-52 as items while leaving item 1 whole, this
+repository will have split the one item the framework kept and wrapped the three it promoted —
+exactly inverted. **Flagged here rather than resolved, because resolving it means deciding what the
+next specification does, which is not this repository's call.**
+
+### What would change this decision
+
+If the next issued specification declines E-46's split and keeps seven items, this repository's
+carrier diverges from the issued interface on item 1, and the honest response is to move
+`ParameterRole` back onto a wrapper and re-open the ambiguity as a *stated* framework gap rather
+than a silently-repaired one. That reversal is what the `v13-items7` baseline generation exists to
+make checkable: the pre-split comparability results remain verifiable under their own criterion.
+
+---
+
 ## Open questions
 
 Not decisions — hypotheses the code should settle. Full statements in

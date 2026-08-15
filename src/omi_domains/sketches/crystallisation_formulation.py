@@ -15,7 +15,7 @@ E-22's addendum for the confirmed, three-domain finding.
 
 from __future__ import annotations
 
-from omi.interface import InstantiationDeclaration
+from omi.interface import InstantiationDeclaration, ParameterRole
 from omi.state import Slot, StateSchema
 
 CRYSTALLISATION_FORMULATION_SCHEMA = StateSchema(
@@ -39,6 +39,33 @@ E-22's addendum.
 
 CRYSTALLISATION_FORMULATION_DECLARATION = InstantiationDeclaration(
     state_schema=CRYSTALLISATION_FORMULATION_SCHEMA,
+    declared_parameters=(
+        ParameterRole(
+            name="compound_and_solvent_system",
+            indexes=(
+                "crystal_growth_constitutive",
+                "full_dissolution_recrystallization",
+                "dissolution_time_to_90pct",
+            ),
+            justification=(
+                "The predicted hard case, and it fills SUBSTANTIVELY rather than formally -- "
+                "docs/ARITY-REDESIGN-BRIEF.md §4 named this sketch as the one likely to force "
+                "either a real new declaration or a stated inability, on the grounds that a "
+                "formulation's composition is exactly the quantity E-46 separates. It is a real "
+                "declaration. The molecule's identity together with the solvent/antisolvent pair "
+                "is fixed per formulation and decides WHICH POLYMORPHS EXIST AT ALL, which is a "
+                "stronger form of operator-family indexing than a rate-constant shift: it fixes "
+                "the discrete outcome set the bifurcating selection operator chooses among. "
+                "Against E-46's four properties: nothing transports it, no in-line Raman/FBRM "
+                "channel assimilates it, no per-crystal value exists for it, and it answers which "
+                "member of the nucleation-and-growth family applies. "
+                "The distinction this makes available and item 1 alone could not: the polymorph "
+                "LANDSCAPE is a fixed index (1b) while the polymorph SELECTED on a given batch is "
+                "an outcome of the evolution (item 1a's state, via supersaturation in nu). Those "
+                "are different claims about the same word."
+            ),
+        ),
+    ),
     control_space=(
         "Apparatus-controlled: cooling-rate profile, antisolvent addition "
         "rate, and seeding schedule as a time-dependent recipe. U_adm "

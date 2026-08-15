@@ -189,6 +189,17 @@ Narrative: `docs/V1.4-EDITS.md` E-38 (a Confirmation, not a defect).
 today; M11 only *added* observations. This is what licenses calling the extension
 composition-over-modification (ADR-042).
 
+> **Scope correction (ADR-071).** That claim holds for M11's extensions and for the arity
+> redesign's Stage 1, all of which composed around the item declaration. It **stops holding at
+> Stage 2**, which split Core §4 item 1 into 1a/1b and so modified the carrier deliberately —
+> `omi.interface.diff` gained a key and ten baseline rows moved. That is a *criterion change*, not
+> drift, and it is handled by opening a second baseline generation rather than by declaring
+> exceptions: **gate against `audit/baselines/redesign-items8.json` (547 rows) for the current
+> code**, and against `v13-items7.json` only to check a claim stated under v1.3's seven-item
+> criterion. `audit/BASELINES.md` names both generations and itemises the ten moved rows. The
+> §7 recipe below is the historical generation's, kept because reproducing it is still the way to
+> verify a pre-split claim.
+
 The baseline — 267 observations from a full run at `57f7db8` (the last commit
 before `src/omi/` was touched by the proposed constitutive extension) — is committed at
 `audit/baselines/v13-items7.json`, so the check is one step from a clean clone. **267
@@ -204,13 +215,21 @@ scripts/check_audit_gate.sh audit/baselines/v13-items7.json \\
 Expected:
 
 ```
-baseline observations : 267
-current observations  : 306
-MISSING from current  : 0
-CHANGED vs baseline   : 0
-newly added (expected): 39
+baseline observations : 547
+current observations  : 547
+MISSING from current  : 0 (0 undeclared)
+CHANGED vs baseline   : 0 (0 undeclared)
+newly added (expected): 0
 AUDIT-PRESERVATION GATE: PASS
+(547 of 547 baseline observations compared -- every (test, name) pair, not a name-deduplicated subset)
 ```
+
+That is the expected output for the **current** generation
+(`scripts/check_audit_gate.sh audit/baselines/redesign-items8.json`, no exception file needed —
+the generation was frozen at the commit that closed Stage 2, so nothing has moved since). Against
+`v13-items7.json` the same run reports 267 baseline rows, 547 current, the four declared E-53 label
+changes, its two declared retirements, and the ten rows ADR-071's item-1 split moved — which is a
+FAIL by design, because a criterion change is supposed to be visible.
 
 The committed baseline is authentic: it was regenerated from a fresh checkout of
 `57f7db8` and is byte-identical to the copy taken during M11. To reproduce the
@@ -257,7 +276,7 @@ CI runs the suite twice to catch it.
 | M11.4 vacuous-axis diagnosis | `python scripts/run_m11_4_extrapolation.py` | ~4 min | §5 above |
 | hold-out gate retro-validation | `pytest tests/test_holdout_discrimination.py -q` | ~50 s | 5 passed |
 | E-38 validity catch | `pytest "…::test_the_report_catches_koistinen_marburger_applied_at_the_soak_temperature" -q` | <1 s | 1 passed |
-| audit-gate invariance | `scripts/check_audit_gate.sh audit/baselines/v13-items7.json audit/e53-label-changes.json` | ~570 s | PASS: 0 undeclared, 4 declared label changes, 2 retirements, no numeric movement |
+| audit-gate invariance | `scripts/check_audit_gate.sh audit/baselines/redesign-items8.json` | ~570 s | PASS: 547 of 547 byte-identical, 0 changed, 0 missing, no declared exception needed. **This is the current generation** (ADR-071's eight-item interface). Gating against `audit/baselines/v13-items7.json audit/e53-label-changes.json` instead reports the ten rows the item-1 split moved — eight sketch `diff` dicts gaining a key, and `diff_result` retired with no replacement — which is a criterion change, not drift; see `audit/BASELINES.md` |
 | determinism | `scripts/check_determinism.sh` | ~220 s | passed |
 | v1.5 Part 5(1) figures | `python scripts/run_v15_part5_1.py` | ~10 min | `docs/V1.5-PART5-1.md` |
 | Part 5(1) §5.1 diagnostic trace | `pytest tests/oracles/test_contrast_diagnostic_trace.py -q` | ~60 s | 7 passed |

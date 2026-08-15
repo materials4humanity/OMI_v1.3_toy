@@ -12,6 +12,36 @@ is ever rewritten in place; a new generation is *added*.
 | file | criterion | frozen at | rows | audited pairs |
 |---|---|---|---|---|
 | `v13-items7.json` | Core §4's seven-item interface, exactly as issued in v1.3 | `57f7db8` ("M10.4 Part B: plan the proposed-v1.4 constitutive track") — the last commit before `src/omi/` was touched by the proposed constitutive extension | 267 | **267** — every `(test, name)` pair, verified (see below) |
+| `redesign-items8.json` | The **eight-item** interface: Core §4 item 1 split into 1a (state schema) and 1b (declared parameters), items 2–7 unchanged — ADR-071, implementing `docs/V1.4-EDITS.md` E-46. Item 6 is **not** split | the arity redesign's Stage 2 commit | 547 | **547** — every `(test, name)` pair, unique by construction |
+
+### Why the second generation was opened (ADR-071)
+
+`omi.interface.diff` iterates the declaration's fields, so splitting item 1 gave it a ninth key
+(`declared_parameters`) and every `diff`-dict observation moved by construction. Measured against
+`v13-items7` immediately before the freeze, **exactly ten rows moved and nothing else**:
+
+| what moved | rows | why |
+|---|---|---|
+| eight sketch-versus-domain `diff` dicts | 8 | each gained one key, value `True`; no pre-existing key's value changed |
+| `diff_result`, recorded by two different tests | 2 | **retired with no replacement** — see below |
+
+Nothing else in the 267-row baseline moved except E-53's four already-declared label changes and its
+two already-declared retirements. **No numeric observation moved at all.** So the item-1 split
+changed what the interface *declares* and nothing about what any estimator *measures*, which is the
+property a re-charter is supposed to have and is checkable here rather than asserted.
+
+`docs/ARITY-REDESIGN-BRIEF.md` §2 predicted "eleven names, twelve rows". The realised count is ten
+rows: `invariants_literal_differs` and `invariants_structural_differs` did **not** move, because
+both are booleans about item 6 and a new key elsewhere in the dict does not touch them.
+
+**`diff_result` is retired with no replacement**, the one retirement ADR-062's guard would have
+blocked and the case the brief flagged in advance as un-retirable. It recorded the raw `diff()`
+dict, and one of its two recordings pinned ADR-034's mapping of Core §7.2's seven published rows
+onto six of Core §4's items — a hand-written claim that `tests/test_interface_diff.py` now
+*derives* from `omi.interface.INTERFACE_ITEMS` instead of asserting. The comparison ceased to exist
+rather than moved, so no `replaced_by` would be honest. The versioned scheme is what makes that
+disposition legitimate: `diff_result` remains valid and audited **forever** in `v13-items7`, under
+the seven-item criterion it was true of, and simply does not exist here.
 
 **How a reader verifies a pre-redesign claim against this generation, forever, after
 later generations exist.** Check out `57f7db8` (or any later commit up to the one that

@@ -1,6 +1,7 @@
-"""The proposed constitutive-extension declaration: a wrapper around Core §4's seven items.
+"""The proposed constitutive-extension declaration: a wrapper around the Core §4 item
+declaration (eight items since ADR-071 split item 1; seven as v1.3 issues them).
 
-Cites Core §4 (the seven-item instantiation interface) and Spec §9.1 (the
+Cites Core §4 (the instantiation interface) and Spec §9.1 (the
 conformance level table whose version a claim must state). ADR-042
 (docs/DECISIONS.md) fixes the composition-over-modification choice this module
 exists to realise; `docs/V1.4-EDITS.md` E-35 is the finding that motivated it,
@@ -18,7 +19,7 @@ from omi.proposed.constitutive import ConstitutiveForm
 @dataclass(frozen=True)
 class ExtendedDeclaration:
     """A constitutive-extension instantiation declaration, expressed as a v1.3
-    declaration (Core §4's seven items) **plus** whatever the extension adds.
+    declaration (Core §4's items) **plus** whatever the extension adds.
 
     **Composition, not modification** (ADR-042). The v1.3 declaration is held
     whole in :attr:`v13_core` rather than being reproduced field by field, which
@@ -48,7 +49,8 @@ class ExtendedDeclaration:
     """
 
     v13_core: InstantiationDeclaration
-    """The unmodified Core §4 seven-item declaration. Frozen and shared, not
+    """The wrapped Core §4 item declaration, unmodified BY THIS WRAPPER. Frozen and shared,
+    not
     copied: this is the same object a v1.3 domain declares."""
 
     constitutive_forms: tuple[ConstitutiveForm, ...] = ()

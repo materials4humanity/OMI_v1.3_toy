@@ -1,0 +1,5069 @@
+[
+  {
+    "test": "tests/oracles/test_contrast_diagnostic_trace.py::test_the_triage_median_split_is_degenerate_on_contrast",
+    "name": "influence_medians",
+    "value": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "units": null,
+    "bound": "every entry == 0.0"
+  },
+  {
+    "test": "tests/oracles/test_contrast_diagnostic_trace.py::test_the_triage_median_split_is_degenerate_on_contrast",
+    "name": "distinct_label_sets",
+    "value": [
+      [
+        "dangerous",
+        "inferred"
+      ],
+      [
+        "dangerous",
+        "inferred",
+        "observed"
+      ]
+    ],
+    "units": null,
+    "bound": "narrative; see interior test"
+  },
+  {
+    "test": "tests/oracles/test_contrast_diagnostic_trace.py::test_the_continuous_triage_reading_is_flat_across_the_campaign",
+    "name": "total_danger_by_interval",
+    "value": {
+      "0": 0.00014641852421435955,
+      "2": 0.00014641935695481017,
+      "4": 0.00014642018969526085,
+      "6": 0.00014642102243571164,
+      "8": 0.00014642185517616235,
+      "10": 0.000146422687916613,
+      "12": 0.00014642352062455203,
+      "14": 0.00014642435333249229,
+      "16": 0.00014642518604043286,
+      "18": 0.00014642601874837412,
+      "20": 0.00014642685145631662,
+      "22": 0.00014642768416425755,
+      "24": 25.000000009993055
+    },
+    "units": null,
+    "bound": "interior flat"
+  },
+  {
+    "test": "tests/oracles/test_contrast_diagnostic_trace.py::test_the_continuous_triage_reading_is_flat_across_the_campaign",
+    "name": "danger_relative_range_interior",
+    "value": 6.255809113034549e-05,
+    "units": null,
+    "bound": "< 1e-3"
+  },
+  {
+    "test": "tests/oracles/test_contrast_diagnostic_trace.py::test_the_continuous_triage_reading_is_flat_across_the_campaign",
+    "name": "dangerous_set_sizes",
+    "value": [
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3
+    ],
+    "units": null,
+    "bound": "constant across the campaign"
+  },
+  {
+    "test": "tests/oracles/test_contrast_diagnostic_trace.py::test_the_observed_inferred_split_is_decided_at_machine_precision",
+    "name": "modal_label_set",
+    "value": [
+      "dangerous",
+      "inferred"
+    ],
+    "units": null,
+    "bound": "narrative only"
+  },
+  {
+    "test": "tests/oracles/test_contrast_diagnostic_trace.py::test_the_observed_inferred_split_is_decided_at_machine_precision",
+    "name": "intervals_where_label_set_differs",
+    "value": [
+      14,
+      22
+    ],
+    "units": null,
+    "bound": "isolated, not a trend"
+  },
+  {
+    "test": "tests/oracles/test_contrast_diagnostic_trace.py::test_the_observed_inferred_split_is_decided_at_machine_precision",
+    "name": "smallest_margin_to_observed_threshold",
+    "value": 1.4389822666771579e-11,
+    "units": null,
+    "bound": "< 1e-6"
+  },
+  {
+    "test": "tests/oracles/test_contrast_diagnostic_trace.py::test_the_observed_inferred_split_is_decided_at_machine_precision",
+    "name": "shares_receiving_different_labels",
+    "value": [
+      0.5000000000596156,
+      0.4999999999856102
+    ],
+    "units": null,
+    "bound": "non-empty; two shares agreeing to ~1e-10"
+  },
+  {
+    "test": "tests/oracles/test_contrast_diagnostic_trace.py::test_the_validity_report_diagnostic_is_unavailable_on_this_domain",
+    "name": "contrast_operator_is_constitutively_constrained",
+    "value": false,
+    "units": null,
+    "bound": "False"
+  },
+  {
+    "test": "tests/oracles/test_contrast_diagnostic_trace.py::test_the_declared_observation_suite_is_wider_than_the_state_schema_supports",
+    "name": "evaluable_modalities",
+    "value": [
+      "voltage",
+      "terminal current"
+    ],
+    "units": null,
+    "bound": "len 2 of 3 declared"
+  },
+  {
+    "test": "tests/oracles/test_contrast_diagnostic_trace.py::test_the_declared_observation_suite_is_wider_than_the_state_schema_supports",
+    "name": "declared_but_unevaluable_modalities",
+    "value": [
+      "surface temperature"
+    ],
+    "units": null,
+    "bound": "== ('surface temperature',)"
+  },
+  {
+    "test": "tests/oracles/test_contrast_diagnostic_trace.py::test_nothing_declared_stops_the_chain_leaving_physical_validity",
+    "name": "terminal_voltage_at_interval_0",
+    "value": 4.0,
+    "units": null,
+    "bound": "narrative only"
+  },
+  {
+    "test": "tests/oracles/test_contrast_diagnostic_trace.py::test_nothing_declared_stops_the_chain_leaving_physical_validity",
+    "name": "terminal_voltage_final",
+    "value": -0.09263867628670086,
+    "units": null,
+    "bound": "< 0 -- past physical validity"
+  },
+  {
+    "test": "tests/oracles/test_contrast_diagnostic_trace.py::test_nothing_declared_stops_the_chain_leaving_physical_validity",
+    "name": "first_interval_with_negative_voltage",
+    "value": 40,
+    "units": null,
+    "bound": "> 0 and < len(trajectory)"
+  },
+  {
+    "test": "tests/oracles/test_contrast_diagnostic_trace.py::test_the_drift_monitor_is_calibrated_per_window_but_its_campaign_aggregate_is_not",
+    "name": "null_arm_mean_nis",
+    "value": 1.007391094776882,
+    "units": null,
+    "bound": "within 10% of 1.0"
+  },
+  {
+    "test": "tests/oracles/test_contrast_diagnostic_trace.py::test_the_drift_monitor_is_calibrated_per_window_but_its_campaign_aggregate_is_not",
+    "name": "null_arm_per_window_flag_rate",
+    "value": 0.05605263157894736,
+    "units": null,
+    "bound": "within 3x of nominal 0.050000000000000044"
+  },
+  {
+    "test": "tests/oracles/test_contrast_diagnostic_trace.py::test_the_drift_monitor_is_calibrated_per_window_but_its_campaign_aggregate_is_not",
+    "name": "null_arm_any_drift_rate",
+    "value": 0.385,
+    "units": null,
+    "bound": "> 0.2 -- not a decision-grade trigger"
+  },
+  {
+    "test": "tests/oracles/test_contrast_diagnostic_trace.py::test_the_drift_monitor_is_calibrated_per_window_but_its_campaign_aggregate_is_not",
+    "name": "null_lower_tail_windows",
+    "value": 97,
+    "units": null,
+    "bound": "both tails materially populated"
+  },
+  {
+    "test": "tests/oracles/test_contrast_diagnostic_trace.py::test_the_drift_monitor_is_calibrated_per_window_but_its_campaign_aggregate_is_not",
+    "name": "null_upper_tail_windows",
+    "value": 116,
+    "units": null,
+    "bound": "both tails materially populated"
+  },
+  {
+    "test": "tests/oracles/test_contrast_diagnostic_trace.py::test_the_drift_monitor_is_calibrated_per_window_but_its_campaign_aggregate_is_not",
+    "name": "drift_window",
+    "value": 6,
+    "units": null,
+    "bound": "narrative only"
+  },
+  {
+    "test": "tests/oracles/test_contrast_diagnostic_trace.py::test_the_drift_monitor_is_calibrated_per_window_but_its_campaign_aggregate_is_not",
+    "name": "campaign_depth",
+    "value": 24,
+    "units": null,
+    "bound": "narrative only"
+  },
+  {
+    "test": "tests/oracles/test_discovery_campaign.py::test_the_planted_defect_is_a_state_insufficiency_and_not_an_operator_error",
+    "name": "sdl_schema_components",
+    "value": [
+      "active_site_density",
+      "defect_site_fraction",
+      "dispersed_phase_loading",
+      "mean_particle_size",
+      "pore_network_accessibility",
+      "support_interface_coverage",
+      "surface_reconstruction_index"
+    ],
+    "units": null,
+    "bound": "must not contain precursor_texture"
+  },
+  {
+    "test": "tests/oracles/test_discovery_campaign.py::test_the_planted_defect_is_a_state_insufficiency_and_not_an_operator_error",
+    "name": "null_arm_textures",
+    "value": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "units": null,
+    "bound": "all exactly 0"
+  },
+  {
+    "test": "tests/oracles/test_discovery_campaign.py::test_the_planted_defect_is_a_state_insufficiency_and_not_an_operator_error",
+    "name": "insufficient_arm_textures",
+    "value": [
+      0.4066556570421016,
+      0.1267395201472964,
+      0.15437264421864724,
+      0.2194370910822996,
+      0.25896038173226454,
+      0.21331479545755042,
+      0.28066943143951817,
+      0.08468007853860736
+    ],
+    "units": null,
+    "bound": "all > 0 \u2014 a one-sided disorder density with a floor at zero"
+  },
+  {
+    "test": "tests/oracles/test_discovery_campaign.py::test_the_axis_carries_signal_and_carries_more_of_it_at_the_far_length",
+    "name": "discovery_axis_signal_near",
+    "value": 1.8752291096265346,
+    "units": null,
+    "bound": "> 1.0 noise-widths"
+  },
+  {
+    "test": "tests/oracles/test_discovery_campaign.py::test_the_axis_carries_signal_and_carries_more_of_it_at_the_far_length",
+    "name": "discovery_axis_signal_far",
+    "value": 5.401616651391821,
+    "units": null,
+    "bound": "> near, and > 1.0"
+  },
+  {
+    "test": "tests/oracles/test_discovery_campaign.py::test_the_framework_statistic_diverges_on_the_discovery_domain",
+    "name": "discovery_innovation_separation_near",
+    "value": 0.7969863211672127,
+    "units": null,
+    "bound": "in null-sigma units"
+  },
+  {
+    "test": "tests/oracles/test_discovery_campaign.py::test_the_framework_statistic_diverges_on_the_discovery_domain",
+    "name": "discovery_innovation_separation_far",
+    "value": 3.5075101150651835,
+    "units": null,
+    "bound": "> near"
+  },
+  {
+    "test": "tests/oracles/test_discovery_campaign.py::test_the_framework_statistic_diverges_on_the_discovery_domain",
+    "name": "discovery_innovation_growth_ratio",
+    "value": 4.400966518381796,
+    "units": null,
+    "bound": ">= 2.0"
+  },
+  {
+    "test": "tests/oracles/test_discovery_campaign.py::test_the_framework_statistic_diverges_on_the_discovery_domain",
+    "name": "discovery_innovation_verdict_deferred_criterion_3",
+    "value": "DIVERGING_BASELINE_DEFERRED",
+    "units": null,
+    "bound": "DIVERGING_BASELINE_DEFERRED"
+  },
+  {
+    "test": "tests/oracles/test_discovery_campaign.py::test_the_framework_statistic_diverges_on_the_discovery_domain",
+    "name": "discovery_innovation_verdict_on_the_null_contrast",
+    "value": "DISCRIMINATING",
+    "units": null,
+    "bound": "DISCRIMINATING \u2014 all three criteria, INSUFFICIENT vs NULL only"
+  },
+  {
+    "test": "tests/oracles/test_discovery_campaign.py::test_the_divergence_matches_the_closed_form_predicted_before_the_run",
+    "name": "discovery_bias_growth",
+    "value": 1.295742178901709,
+    "units": null,
+    "bound": "> 1 \u2014 acquisition selection"
+  },
+  {
+    "test": "tests/oracles/test_discovery_campaign.py::test_the_divergence_matches_the_closed_form_predicted_before_the_run",
+    "name": "discovery_z_growth_measured",
+    "value": 2.591446231043985,
+    "units": null,
+    "bound": ">= 2.0 (closed-form floor)"
+  },
+  {
+    "test": "tests/oracles/test_discovery_campaign.py::test_the_divergence_matches_the_closed_form_predicted_before_the_run",
+    "name": "discovery_z_growth_predicted",
+    "value": 2.591484357803418,
+    "units": null,
+    "bound": "within 25% of measured"
+  },
+  {
+    "test": "tests/oracles/test_discovery_campaign.py::test_the_monitor_is_calibrated_on_the_null_arm",
+    "name": "discovery_null_innovation_dispersion",
+    "value": 1.0118054805766616,
+    "units": null,
+    "bound": "~1.0: realised sd / predicted sd"
+  },
+  {
+    "test": "tests/oracles/test_discovery_campaign.py::test_the_monitor_is_calibrated_on_the_null_arm",
+    "name": "discovery_null_z_mean",
+    "value": 0.9954720217809635,
+    "units": null,
+    "bound": "compare E|Z| = 0.798"
+  },
+  {
+    "test": "tests/oracles/test_discovery_campaign.py::test_the_monitor_is_calibrated_on_the_null_arm",
+    "name": "discovery_null_z_q95",
+    "value": 2.621658458639207,
+    "units": null,
+    "bound": "compare |Z| 95% = 1.96"
+  },
+  {
+    "test": "tests/oracles/test_discovery_campaign.py::test_the_comparator_is_not_a_straw_man",
+    "name": "discovery_gp_null_excess_ratio_far",
+    "value": 0.916960030939798,
+    "units": null,
+    "bound": "~1.0 \u2014 correctly calibrated"
+  },
+  {
+    "test": "tests/oracles/test_discovery_campaign.py::test_the_comparator_is_not_a_straw_man",
+    "name": "discovery_gp_excess_ratio_far",
+    "value": 1.117801342729167,
+    "units": null,
+    "bound": "> null arm's, and > 1.0"
+  },
+  {
+    "test": "tests/oracles/test_discovery_campaign.py::test_the_comparator_is_not_a_straw_man",
+    "name": "discovery_gp_separation_far",
+    "value": 1.5895164240247983,
+    "units": null,
+    "bound": "recorded, not asserted"
+  },
+  {
+    "test": "tests/oracles/test_discovery_campaign.py::test_the_comparator_is_not_a_straw_man",
+    "name": "discovery_gp_growth_ratio",
+    "value": 13.519447545797915,
+    "units": null,
+    "bound": "recorded, not asserted"
+  },
+  {
+    "test": "tests/oracles/test_discovery_campaign.py::test_the_campaign_actually_optimises",
+    "name": "discovery_initial_design_best",
+    "value": 0.7163918053949083,
+    "units": null,
+    "bound": "< final best"
+  },
+  {
+    "test": "tests/oracles/test_discovery_campaign.py::test_the_campaign_actually_optimises",
+    "name": "discovery_campaign_best",
+    "value": 1.0006002600053765,
+    "units": null,
+    "bound": "> initial design best"
+  },
+  {
+    "test": "tests/oracles/test_e53_option_comparison.py::test_option_one_makes_dominates_vacuous_on_a_condition_b_chain",
+    "name": "option_one_support_verdicts_on_contrast",
+    "value": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "units": null,
+    "bound": "all True"
+  },
+  {
+    "test": "tests/oracles/test_e53_option_comparison.py::test_option_one_makes_dominates_vacuous_on_a_condition_b_chain",
+    "name": "shares_at_which_option_one_says_observed",
+    "value": [
+      0.083333,
+      0.1,
+      0.125,
+      0.166667,
+      0.25,
+      0.5
+    ],
+    "units": null,
+    "bound": "includes 1/12 -- 8% near-diagonal"
+  },
+  {
+    "test": "tests/oracles/test_e53_option_comparison.py::test_option_two_removes_the_ladder_and_replaces_a_zero_margin_with_a_real_one",
+    "name": "option_two_ratios_on_contrast",
+    "value": [
+      0.999999999,
+      1.0
+    ],
+    "units": null,
+    "bound": "all 1 to ~1e-9"
+  },
+  {
+    "test": "tests/oracles/test_e53_option_comparison.py::test_option_two_removes_the_ladder_and_replaces_a_zero_margin_with_a_real_one",
+    "name": "option_two_ratio_spread_across_indices",
+    "value": 9.961759195320496e-10,
+    "units": null,
+    "bound": "< 1e-6 -- index-independent"
+  },
+  {
+    "test": "tests/oracles/test_e53_option_comparison.py::test_option_two_removes_the_ladder_and_replaces_a_zero_margin_with_a_real_one",
+    "name": "share_values_on_contrast",
+    "value": [
+      0.083333,
+      0.1,
+      0.125,
+      0.166667,
+      0.25,
+      0.5
+    ],
+    "units": null,
+    "bound": "six distinct values -- the ladder"
+  },
+  {
+    "test": "tests/oracles/test_e53_option_comparison.py::test_option_two_removes_the_ladder_and_replaces_a_zero_margin_with_a_real_one",
+    "name": "option_two_margin_to_rho",
+    "value": 0.4999999997615374,
+    "units": null,
+    "bound": "~0.5 -- against the share's 1.4e-11"
+  },
+  {
+    "test": "tests/oracles/test_e53_option_comparison.py::test_the_abstention_fires_exactly_where_the_two_contributions_are_equal",
+    "name": "verdicts_at_literal_dominance",
+    "value": [
+      "unresolved"
+    ],
+    "units": null,
+    "bound": "== ['unresolved']"
+  },
+  {
+    "test": "tests/oracles/test_e53_option_comparison.py::test_the_abstention_fires_exactly_where_the_two_contributions_are_equal",
+    "name": "verdicts_at_margined_dominance",
+    "value": [
+      "inferred"
+    ],
+    "units": null,
+    "bound": "== ['inferred']"
+  },
+  {
+    "test": "tests/oracles/test_e53_option_comparison.py::test_the_window_still_moves_the_verdict_under_option_two",
+    "name": "option_two_verdicts_by_window",
+    "value": {
+      "0": [
+        "inferred"
+      ],
+      "1": [
+        "inferred"
+      ],
+      "2": [
+        "inferred",
+        "observed"
+      ]
+    },
+    "units": null,
+    "bound": "0,1 inferred; 2 includes observed"
+  },
+  {
+    "test": "tests/oracles/test_e53_option_comparison.py::test_the_window_still_moves_the_verdict_under_option_two",
+    "name": "option_two_ratios_by_window",
+    "value": {
+      "0": [
+        0.0,
+        5.215e-39,
+        2.083e-38,
+        3.084e-33,
+        3.087e-33,
+        3.088e-33
+      ],
+      "1": [
+        1.0
+      ],
+      "2": [
+        1.0,
+        Infinity
+      ]
+    },
+    "units": null,
+    "bound": "~0 / 1 / inf -- decisive at each"
+  },
+  {
+    "test": "tests/oracles/test_e53_option_comparison.py::test_flagship_is_insensitive_to_both_conventions_because_its_answer_is_structural",
+    "name": "flagship_option_two_ratios",
+    "value": [
+      0.0,
+      Infinity
+    ],
+    "units": null,
+    "bound": "only 0 and inf -- structural"
+  },
+  {
+    "test": "tests/oracles/test_e53_option_comparison.py::test_flagship_is_insensitive_to_both_conventions_because_its_answer_is_structural",
+    "name": "flagship_verdicts_by_window_and_rho",
+    "value": {
+      "w0_rho1.0": [
+        "inferred",
+        "observed"
+      ],
+      "w0_rho1.5": [
+        "inferred",
+        "observed"
+      ],
+      "w1_rho1.0": [
+        "inferred",
+        "observed"
+      ],
+      "w1_rho1.5": [
+        "inferred",
+        "observed"
+      ],
+      "w2_rho1.0": [
+        "observed"
+      ],
+      "w2_rho1.5": [
+        "observed"
+      ]
+    },
+    "units": null,
+    "bound": "stable"
+  },
+  {
+    "test": "tests/oracles/test_e53_option_comparison.py::test_nothing_numeric_in_the_repository_consumes_the_label",
+    "name": "labels_by_window",
+    "value": {
+      "0": [
+        "dangerous",
+        "dangerous",
+        "dangerous",
+        "inferred",
+        "inferred",
+        "unresolved",
+        "unresolved"
+      ],
+      "1": [
+        "dangerous",
+        "dangerous",
+        "dangerous",
+        "inferred",
+        "inferred",
+        "unresolved",
+        "unresolved"
+      ],
+      "2": [
+        "dangerous",
+        "dangerous",
+        "dangerous",
+        "observed",
+        "observed",
+        "unresolved",
+        "unresolved"
+      ]
+    },
+    "units": null,
+    "bound": "differ across windows"
+  },
+  {
+    "test": "tests/oracles/test_e53_option_comparison.py::test_nothing_numeric_in_the_repository_consumes_the_label",
+    "name": "numeric_outputs_by_window",
+    "value": {
+      "0": [
+        0.00014642768416425755,
+        0.0,
+        0.00014642768416425755
+      ],
+      "1": [
+        0.00014642768416425755,
+        0.0,
+        0.00014642768416425755
+      ],
+      "2": [
+        0.00014642768416425755,
+        0.0,
+        0.00014642768416425755
+      ]
+    },
+    "units": null,
+    "bound": "identical across windows"
+  },
+  {
+    "test": "tests/oracles/test_erasure_truncates_gramian.py::test_gramian_rank_before_the_erasure_is_bounded_by_its_designed_rank",
+    "name": "designed_rank",
+    "value": 2,
+    "units": null,
+    "bound": "constructed, not measured"
+  },
+  {
+    "test": "tests/oracles/test_erasure_truncates_gramian.py::test_gramian_rank_before_the_erasure_is_bounded_by_its_designed_rank",
+    "name": "measured_rank",
+    "value": 2,
+    "units": null,
+    "bound": "<= designed_rank, == designed_rank"
+  },
+  {
+    "test": "tests/oracles/test_erasure_truncates_gramian.py::test_erased_direction_is_unidentifiable_even_with_a_perfect_downstream_sensor",
+    "name": "erased_direction_action_norm",
+    "value": 0.0,
+    "units": null,
+    "bound": "< 1e-6"
+  },
+  {
+    "test": "tests/oracles/test_known_blind_spot.py::test_designed_direction_lies_in_the_kernel_of_the_gramian",
+    "name": "kernel_action_norm",
+    "value": 3.845925372767128e-15,
+    "units": null,
+    "bound": "< 1e-10"
+  },
+  {
+    "test": "tests/oracles/test_known_blind_spot.py::test_a_direction_orthogonal_to_the_blind_spot_is_not_in_the_kernel",
+    "name": "resolved_action_norm",
+    "value": 264.575131106459,
+    "units": null,
+    "bound": "> 0.1"
+  },
+  {
+    "test": "tests/oracles/test_known_decaying_sensitivity.py::test_the_construction_is_not_an_erasure_at_any_decay_rate",
+    "name": "decay_operator_is_erasure_by_rate",
+    "value": {
+      "0.995": false,
+      "0.95": false,
+      "0.9": false,
+      "0.8": false,
+      "0.7": false,
+      "0.5": false,
+      "0.3": false,
+      "0.1": false
+    },
+    "units": null,
+    "bound": "all False -- full-rank contraction"
+  },
+  {
+    "test": "tests/oracles/test_known_decaying_sensitivity.py::test_the_measured_ratio_matches_the_closed_form_at_every_decay_rate",
+    "name": "measured_dominance_ratios",
+    "value": {
+      "0.995": 1.0100755030237818,
+      "0.95": 1.1080332408687599,
+      "0.9": 1.2345679011635664,
+      "0.8": 1.5624999999101385,
+      "0.7": 2.040816326575082,
+      "0.5": 4.000000000103022,
+      "0.3": 11.111111111114585,
+      "0.1": 100.0000000003204
+    },
+    "units": null,
+    "bound": "== lambda^-2"
+  },
+  {
+    "test": "tests/oracles/test_known_decaying_sensitivity.py::test_the_measured_ratio_matches_the_closed_form_at_every_decay_rate",
+    "name": "predicted_dominance_ratios",
+    "value": {
+      "0.995": 1.01007550314386,
+      "0.95": 1.10803324099723,
+      "0.9": 1.2345679012345678,
+      "0.8": 1.5624999999999998,
+      "0.7": 2.0408163265306123,
+      "0.5": 4.0,
+      "0.3": 11.111111111111112,
+      "0.1": 99.99999999999999
+    },
+    "units": null,
+    "bound": "closed form"
+  },
+  {
+    "test": "tests/oracles/test_known_decaying_sensitivity.py::test_the_measured_ratio_matches_the_closed_form_at_every_decay_rate",
+    "name": "relative_errors_vs_closed_form",
+    "value": {
+      "0.995": 1.188803898877211e-10,
+      "0.95": 1.1594428639405407e-10,
+      "0.9": 5.751115583763067e-11,
+      "0.8": 5.751118692387537e-11,
+      "0.7": 2.1790182991310302e-11,
+      "0.5": 2.575539781446423e-11,
+      "0.3": 3.1254998589247405e-13,
+      "0.1": 3.204121412636596e-12
+    },
+    "units": null,
+    "bound": "each < 1e-8"
+  },
+  {
+    "test": "tests/oracles/test_known_decaying_sensitivity.py::test_the_criterion_discriminates_across_the_sweep_which_refutes_e54s_strong_form",
+    "name": "label_by_decay_rate",
+    "value": {
+      "0.995": "inferred",
+      "0.95": "inferred",
+      "0.9": "inferred",
+      "0.8": "unresolved",
+      "0.7": "observed",
+      "0.5": "observed",
+      "0.3": "observed",
+      "0.1": "observed"
+    },
+    "units": null,
+    "bound": "inferred -> unresolved -> observed"
+  },
+  {
+    "test": "tests/oracles/test_known_decaying_sensitivity.py::test_the_criterion_discriminates_across_the_sweep_which_refutes_e54s_strong_form",
+    "name": "predicted_turnover_decay",
+    "value": 0.816496580927726,
+    "units": null,
+    "bound": "rho^(-1/2)"
+  },
+  {
+    "test": "tests/oracles/test_known_decaying_sensitivity.py::test_the_criterion_discriminates_across_the_sweep_which_refutes_e54s_strong_form",
+    "name": "distinct_labels_across_sweep",
+    "value": [
+      "inferred",
+      "observed",
+      "unresolved"
+    ],
+    "units": null,
+    "bound": "three, not one"
+  },
+  {
+    "test": "tests/oracles/test_known_decaying_sensitivity.py::test_the_abstention_fires_in_a_neighbourhood_of_the_turnover",
+    "name": "abstained_decay_rates",
+    "value": [
+      0.8
+    ],
+    "units": null,
+    "bound": "non-empty, near the turnover"
+  },
+  {
+    "test": "tests/oracles/test_known_decaying_sensitivity.py::test_the_abstention_fires_in_a_neighbourhood_of_the_turnover",
+    "name": "abstained_ratios",
+    "value": [
+      1.5624999999101385
+    ],
+    "units": null,
+    "bound": "within the band of 1.5"
+  },
+  {
+    "test": "tests/oracles/test_known_decaying_sensitivity.py::test_the_superseded_share_also_varies_which_narrows_the_criticism_of_it",
+    "name": "share_by_decay_rate",
+    "value": {
+      "0.995": 0.14718928102229817,
+      "0.95": 0.19030887816025718,
+      "0.9": 0.24635904810619114,
+      "0.8": 0.3765613429954022,
+      "0.7": 0.5134825571872367,
+      "0.5": 0.7500457791660314,
+      "0.3": 0.910000043525049,
+      "0.1": 0.9900000000000415
+    },
+    "units": null,
+    "bound": "varies continuously, 0.15 -> 0.99"
+  },
+  {
+    "test": "tests/oracles/test_known_decaying_sensitivity.py::test_the_superseded_share_also_varies_which_narrows_the_criticism_of_it",
+    "name": "share_spread_across_sweep",
+    "value": 0.8428107189777434,
+    "units": null,
+    "bound": "> 0.5 -- the share discriminates here too"
+  },
+  {
+    "test": "tests/oracles/test_known_decaying_sensitivity.py::test_a_wider_window_shifts_the_turnover_exactly_as_predicted",
+    "name": "turnover_by_window",
+    "value": {
+      "0": 0.816496580927726,
+      "1": 0.9036020036098449,
+      "2": 0.9346552651840672
+    },
+    "units": null,
+    "bound": "increases toward 1 with the window"
+  },
+  {
+    "test": "tests/oracles/test_known_decaying_sensitivity.py::test_a_wider_window_shifts_the_turnover_exactly_as_predicted",
+    "name": "ratio_at_decay_0.9_by_window",
+    "value": {
+      "0": 1.2345679011635664,
+      "1": 1.5241579025834133,
+      "2": 1.8816764228342677
+    },
+    "units": null,
+    "bound": "== 0.9^-2(w+1)"
+  },
+  {
+    "test": "tests/oracles/test_known_drift.py::test_a_nominal_run_with_no_planted_drift_rarely_trips_the_monitor",
+    "name": "flagged_fraction",
+    "value": 0.09259259259259259,
+    "units": null,
+    "bound": "< 0.2"
+  },
+  {
+    "test": "tests/oracles/test_known_drift.py::test_a_planted_drift_is_detected_after_the_change_point",
+    "name": "late_flags_all_true",
+    "value": true,
+    "units": null,
+    "bound": "True"
+  },
+  {
+    "test": "tests/oracles/test_known_drift.py::test_a_planted_drift_is_detected_after_the_change_point",
+    "name": "late_means_min",
+    "value": 426.8689073843158,
+    "units": null,
+    "bound": "> 5 * upper_limit"
+  },
+  {
+    "test": "tests/oracles/test_known_drift.py::test_a_planted_drift_is_detected_after_the_change_point",
+    "name": "upper_limit",
+    "value": 2.191818267435581,
+    "units": null,
+    "bound": "narrative only, not asserted"
+  },
+  {
+    "test": "tests/oracles/test_known_drift.py::test_the_planted_drift_run_flags_far_more_windows_than_the_nominal_run",
+    "name": "nominal_flagged_windows",
+    "value": 5,
+    "units": null,
+    "bound": "narrative only, not asserted"
+  },
+  {
+    "test": "tests/oracles/test_known_drift.py::test_the_planted_drift_run_flags_far_more_windows_than_the_nominal_run",
+    "name": "drifted_flagged_windows",
+    "value": 29,
+    "units": null,
+    "bound": "> 3 * max(1, nominal_flagged_windows)"
+  },
+  {
+    "test": "tests/oracles/test_known_empty_slot.py::test_measure_erasure_recovers_the_designed_spectrum_on_a_gamma_only_schema",
+    "name": "rank",
+    "value": 2,
+    "units": null,
+    "bound": "== 2 (full rank, truth().size)"
+  },
+  {
+    "test": "tests/oracles/test_known_empty_slot.py::test_measure_erasure_recovers_the_designed_spectrum_on_a_gamma_only_schema",
+    "name": "spectrum",
+    "value": [
+      1.0,
+      0.3
+    ],
+    "units": null,
+    "bound": "== truth() == [1.0, 0.3]"
+  },
+  {
+    "test": "tests/oracles/test_known_empty_slot.py::test_component_recoverability_runs_on_a_gamma_only_component",
+    "name": "component_recoverability",
+    "value": 1.0,
+    "units": null,
+    "bound": "> 0.999 (noiseless deterministic linear map)"
+  },
+  {
+    "test": "tests/oracles/test_known_empty_slot.py::test_compute_gramian_runs_on_a_gamma_only_chain",
+    "name": "gramian_shape",
+    "value": [
+      2,
+      2
+    ],
+    "units": null,
+    "bound": "== (2, 2)"
+  },
+  {
+    "test": "tests/oracles/test_known_empty_slot.py::test_compute_gramian_runs_on_a_gamma_only_chain",
+    "name": "gramian_action_on_designed_direction",
+    "value": [
+      100.0,
+      0.0
+    ],
+    "units": null,
+    "bound": "nonzero, aligned with [1, 0]"
+  },
+  {
+    "test": "tests/oracles/test_known_empty_slot.py::test_danger_triage_runs_on_a_gamma_only_chain_and_classifies_both_directions",
+    "name": "n_directions",
+    "value": 2,
+    "units": null,
+    "bound": "== 2 (schema.size)"
+  },
+  {
+    "test": "tests/oracles/test_known_empty_slot.py::test_danger_triage_runs_on_a_gamma_only_chain_and_classifies_both_directions",
+    "name": "labels",
+    "value": [
+      "marginalisable",
+      "inferred"
+    ],
+    "units": null,
+    "bound": "each a valid Triage label, no crash/NaN"
+  },
+  {
+    "test": "tests/oracles/test_known_empty_slot.py::test_danger_triage_runs_on_a_gamma_only_chain_and_classifies_both_directions",
+    "name": "influence_median",
+    "value": 0.6799999999999999,
+    "units": null,
+    "bound": "finite, nonzero"
+  },
+  {
+    "test": "tests/oracles/test_known_envelope.py::test_reported_factor_recovers_the_constructed_envelope",
+    "name": "known_envelope_worst_factors",
+    "value": {
+      "drive=5,extent=1": 0.0,
+      "drive=26.5,extent=1.4": 4.3,
+      "drive=6,extent=3.6": 2.6,
+      "drive=30,extent=5": 5.0
+    },
+    "units": null,
+    "bound": "each recovered exactly from the constructed half-widths"
+  },
+  {
+    "test": "tests/oracles/test_known_envelope.py::test_the_binding_space_determines_the_practitioner_action",
+    "name": "known_envelope_actions",
+    "value": {
+      "drive=5,extent=1": "within_envelope",
+      "drive=26.5,extent=1.4": "control_inverse",
+      "drive=6,extent=3.6": "buy_physics",
+      "drive=30,extent=5": "control_inverse"
+    },
+    "units": null,
+    "bound": "one action per query, from the binding space"
+  },
+  {
+    "test": "tests/oracles/test_known_envelope.py::test_a_state_space_violation_is_not_recoverable_by_any_control",
+    "name": "state_violation_actions_across_full_control_window",
+    "value": [
+      "buy_physics"
+    ],
+    "units": null,
+    "bound": "must be BUY_PHYSICS at every admissible control"
+  },
+  {
+    "test": "tests/oracles/test_known_envelope.py::test_chain_level_report_names_the_binding_segment",
+    "name": "chain_binding_segment",
+    "value": {
+      "segment": "second",
+      "worst_factor": 2.6
+    },
+    "units": null,
+    "bound": "the segment carrying the out-of-envelope state bound"
+  },
+  {
+    "test": "tests/oracles/test_known_envelope.py::test_one_sided_factor_recovers_the_constructed_rule",
+    "name": "one_sided_factors",
+    "value": {
+      "105": 1.0,
+      "5": 1.0,
+      "3": 2.0,
+      "-1": 4.0
+    },
+    "units": null,
+    "bound": "1 + (edge - value)/fitted_scale, flat 1.0 inside"
+  },
+  {
+    "test": "tests/oracles/test_known_envelope.py::test_the_report_distinguishes_a_fuzzy_edge_from_a_sharp_one",
+    "name": "mixed_edge_report",
+    "value": {
+      "below": {
+        "factor": 1.6666666666666667,
+        "approx": true
+      },
+      "above": {
+        "factor": 1.6666666666666667,
+        "approx": false
+      },
+      "inside": {
+        "factor": 0.0,
+        "approx": false
+      }
+    },
+    "units": null,
+    "bound": "same magnitude either side; only the edge kind differs"
+  },
+  {
+    "test": "tests/oracles/test_known_erasure.py::test_measured_rank_matches_the_designed_rank",
+    "name": "measured_rank",
+    "value": 2,
+    "units": null,
+    "bound": "== truth.rank"
+  },
+  {
+    "test": "tests/oracles/test_known_erasure.py::test_measured_rank_matches_the_designed_rank",
+    "name": "truth_rank",
+    "value": 2,
+    "units": null,
+    "bound": "constructed, not measured"
+  },
+  {
+    "test": "tests/oracles/test_known_erasure.py::test_oq2_naive_magnitude_heuristic_disagrees_with_recoverability",
+    "name": "naive_full",
+    "value": 1.0,
+    "units": null,
+    "bound": "> 0.99"
+  },
+  {
+    "test": "tests/oracles/test_known_erasure.py::test_oq2_naive_magnitude_heuristic_disagrees_with_recoverability",
+    "name": "naive_small",
+    "value": 0.0225,
+    "units": null,
+    "bound": "< 0.05"
+  },
+  {
+    "test": "tests/oracles/test_known_erasure.py::test_oq2_naive_magnitude_heuristic_disagrees_with_recoverability",
+    "name": "naive_erased",
+    "value": 0.0,
+    "units": null,
+    "bound": "< 0.01"
+  },
+  {
+    "test": "tests/oracles/test_known_erasure.py::test_oq2_naive_magnitude_heuristic_disagrees_with_recoverability",
+    "name": "r2_full",
+    "value": 1.0,
+    "units": null,
+    "bound": "> 0.999"
+  },
+  {
+    "test": "tests/oracles/test_known_erasure.py::test_oq2_naive_magnitude_heuristic_disagrees_with_recoverability",
+    "name": "r2_small",
+    "value": 1.0,
+    "units": null,
+    "bound": "> 0.999"
+  },
+  {
+    "test": "tests/oracles/test_known_erasure.py::test_oq2_naive_magnitude_heuristic_disagrees_with_recoverability",
+    "name": "r2_erased",
+    "value": 0.0,
+    "units": null,
+    "bound": "< 0.01"
+  },
+  {
+    "test": "tests/oracles/test_known_erasure.py::test_oq2_naive_magnitude_heuristic_disagrees_with_recoverability",
+    "name": "naive_small_variance_loss_pct",
+    "value": 97.75,
+    "units": null,
+    "bound": "narrative only, not asserted"
+  },
+  {
+    "test": "tests/oracles/test_known_erasure.py::test_oq2_naive_magnitude_heuristic_disagrees_with_recoverability",
+    "name": "r2_small_minus_naive_small",
+    "value": 0.9775,
+    "units": null,
+    "bound": "> 0.9"
+  },
+  {
+    "test": "tests/oracles/test_known_insufficiency.py::test_deficit_recovers_the_constructed_gap_for_the_incomplete_description",
+    "name": "deficit_squared",
+    "value": 4.598042175613981,
+    "units": null,
+    "bound": "abs(deficit_squared - truth) / truth < 0.15"
+  },
+  {
+    "test": "tests/oracles/test_known_insufficiency.py::test_deficit_recovers_the_constructed_gap_for_the_incomplete_description",
+    "name": "truth",
+    "value": 4.5,
+    "units": null,
+    "bound": "constructed, not measured"
+  },
+  {
+    "test": "tests/oracles/test_known_insufficiency.py::test_deficit_recovers_the_constructed_gap_for_the_incomplete_description",
+    "name": "relative_error",
+    "value": 0.021787150136440146,
+    "units": null,
+    "bound": "< 0.15"
+  },
+  {
+    "test": "tests/oracles/test_known_insufficiency.py::test_deficit_is_near_zero_when_matching_on_the_full_state",
+    "name": "deficit_squared",
+    "value": 0.0,
+    "units": null,
+    "bound": "< 0.05 * truth"
+  },
+  {
+    "test": "tests/oracles/test_known_insufficiency.py::test_deficit_is_near_zero_when_matching_on_the_full_state",
+    "name": "truth",
+    "value": 4.5,
+    "units": null,
+    "bound": "constructed, not measured"
+  },
+  {
+    "test": "tests/oracles/test_known_insufficiency.py::test_raw_statistic_demonstrably_overstates_the_deficit",
+    "name": "raw_gap_squared",
+    "value": 4.732171984890661,
+    "units": null,
+    "bound": "> deficit_squared"
+  },
+  {
+    "test": "tests/oracles/test_known_insufficiency.py::test_raw_statistic_demonstrably_overstates_the_deficit",
+    "name": "deficit_squared",
+    "value": 4.6343510587828405,
+    "units": null,
+    "bound": "< raw_gap_squared"
+  },
+  {
+    "test": "tests/oracles/test_known_insufficiency.py::test_raw_statistic_demonstrably_overstates_the_deficit",
+    "name": "repeat_variance_term",
+    "value": 0.07753473002357962,
+    "units": null,
+    "bound": "> 0.0"
+  },
+  {
+    "test": "tests/oracles/test_known_insufficiency.py::test_raw_statistic_demonstrably_overstates_the_deficit",
+    "name": "mismatch_correction_term",
+    "value": 0.020286196084240954,
+    "units": null,
+    "bound": "> 0.0"
+  },
+  {
+    "test": "tests/oracles/test_known_insufficiency.py::test_oq1_single_probe_direction_gives_the_same_deficit_either_way",
+    "name": "forward_deficit_squared",
+    "value": 4.466107289695028,
+    "units": null,
+    "bound": "ratio vs reversed_deficit_squared in (0.7, 1.3)"
+  },
+  {
+    "test": "tests/oracles/test_known_insufficiency.py::test_oq1_single_probe_direction_gives_the_same_deficit_either_way",
+    "name": "reversed_deficit_squared",
+    "value": 4.554435479750852,
+    "units": null,
+    "bound": "ratio vs forward_deficit_squared in (0.7, 1.3)"
+  },
+  {
+    "test": "tests/oracles/test_known_insufficiency.py::test_oq1_single_probe_direction_gives_the_same_deficit_either_way",
+    "name": "ratio",
+    "value": 0.9806061167298266,
+    "units": null,
+    "bound": "0.7 < ratio < 1.3"
+  },
+  {
+    "test": "tests/oracles/test_known_insufficiency.py::test_oq1_discriminating_signature_separates_kinematic_from_magnitude_type",
+    "name": "naive_signatures",
+    "value": {
+      "kinematic": [
+        0.0,
+        0.9000000000000004
+      ],
+      "magnitude": [
+        0.0,
+        0.9000000000000004
+      ]
+    },
+    "units": null,
+    "bound": "discriminating(...) is False"
+  },
+  {
+    "test": "tests/oracles/test_known_insufficiency.py::test_oq1_discriminating_signature_separates_kinematic_from_magnitude_type",
+    "name": "full_signatures",
+    "value": {
+      "kinematic": [
+        0.0,
+        -0.9000000000000004
+      ],
+      "magnitude": [
+        0.9000000000000004,
+        0.0
+      ]
+    },
+    "units": null,
+    "bound": "discriminating(...) is True"
+  },
+  {
+    "test": "tests/oracles/test_known_insufficiency.py::test_oq1_discriminating_signature_separates_kinematic_from_magnitude_type",
+    "name": "naive_discriminating",
+    "value": false,
+    "units": null,
+    "bound": "False"
+  },
+  {
+    "test": "tests/oracles/test_known_insufficiency.py::test_oq1_discriminating_signature_separates_kinematic_from_magnitude_type",
+    "name": "full_discriminating",
+    "value": true,
+    "units": null,
+    "bound": "True"
+  },
+  {
+    "test": "tests/oracles/test_known_latent_trajectory.py::test_smoother_recovers_the_hidden_trajectory_within_three_sigma",
+    "name": "per_index_error_in_sigma",
+    "value": [
+      0.7544168006315306,
+      0.051654596126588924,
+      0.11867778619734658,
+      0.38171338540367683,
+      0.09145075639219423,
+      0.13596967946935068,
+      0.1623436169440634,
+      0.6538903368454769,
+      1.0116591092085636,
+      1.2033828583250743,
+      1.3036695862662682,
+      1.3964707568396137,
+      1.2753026539211596
+    ],
+    "units": null,
+    "bound": "all < 3.0"
+  },
+  {
+    "test": "tests/oracles/test_known_latent_trajectory.py::test_smoother_beats_the_raw_prior_at_the_unobserved_initial_index",
+    "name": "prior_error",
+    "value": 3.938125847648797,
+    "units": null,
+    "bound": "> smoothed_error * 5"
+  },
+  {
+    "test": "tests/oracles/test_known_latent_trajectory.py::test_smoother_beats_the_raw_prior_at_the_unobserved_initial_index",
+    "name": "smoothed_error",
+    "value": 0.09688836584519134,
+    "units": null,
+    "bound": "< prior_error / 5"
+  },
+  {
+    "test": "tests/oracles/test_known_latent_trajectory.py::test_hidden_direction_is_classified_inferred_by_m3_triage",
+    "name": "hidden_dominated_labels",
+    "value": [
+      "INFERRED"
+    ],
+    "units": null,
+    "bound": "at least one is INFERRED"
+  },
+  {
+    "test": "tests/oracles/test_known_mixing_erasure.py::test_measured_rank_and_surviving_subspace_match_the_designed_mix",
+    "name": "measured_rank",
+    "value": 2,
+    "units": null,
+    "bound": "== truth().rank"
+  },
+  {
+    "test": "tests/oracles/test_known_mixing_erasure.py::test_measured_rank_and_surviving_subspace_match_the_designed_mix",
+    "name": "erased_direction_alignment_with_designed_kernel",
+    "value": 0.9999608585599539,
+    "units": null,
+    "bound": "> 0.999 (parallel up to sign)"
+  },
+  {
+    "test": "tests/oracles/test_known_mixing_erasure.py::test_component_recoverability_gives_no_clean_per_component_answer_for_a_mixing_erasure",
+    "name": "component_recoverability",
+    "value": {
+      "component_a": 0.784654961585439,
+      "component_b": 0.7606066500926413,
+      "component_c": 0.32803641186531046
+    },
+    "units": null,
+    "bound": "all intermediate, none near exactly 0 or 1"
+  },
+  {
+    "test": "tests/oracles/test_known_mixing_erasure.py::test_component_recoverability_gives_no_clean_per_component_answer_for_a_mixing_erasure",
+    "name": "ordering_check",
+    "value": [
+      0.32803641186531046,
+      0.784654961585439,
+      0.7606066500926413
+    ],
+    "units": null,
+    "bound": "component_c < component_a and component_c < component_b"
+  },
+  {
+    "test": "tests/oracles/test_known_mixing_erasure.py::test_component_surviving_overlap_recovers_the_designed_geometry_exactly",
+    "name": "component_surviving_overlap",
+    "value": {
+      "component_a": 0.832870957539272,
+      "component_b": 0.8333603531013181,
+      "component_c": 0.3337686893594089
+    },
+    "units": null,
+    "bound": "matches truth().component_surviving_overlap closely"
+  },
+  {
+    "test": "tests/oracles/test_known_mixing_erasure.py::test_operator_level_rank_alone_does_not_predict_per_component_influence_for_mixing_erasure",
+    "name": "component_surviving_overlap_spread",
+    "value": [
+      0.8333333333333331,
+      0.8333333333333331,
+      0.33333333333333354
+    ],
+    "units": null,
+    "bound": "not uniform, not derivable from rank=2 alone"
+  },
+  {
+    "test": "tests/oracles/test_known_ranking_inversion.py::test_material_a_is_weaker_at_the_thick_process_zone",
+    "name": "p_fail_a_thick",
+    "value": 0.7134969937995023,
+    "units": null,
+    "bound": "> p_fail_b_thick"
+  },
+  {
+    "test": "tests/oracles/test_known_ranking_inversion.py::test_material_a_is_weaker_at_the_thick_process_zone",
+    "name": "p_fail_b_thick",
+    "value": 0.3108075032192046,
+    "units": null,
+    "bound": "< p_fail_a_thick"
+  },
+  {
+    "test": "tests/oracles/test_known_ranking_inversion.py::test_material_b_is_weaker_at_the_thin_process_zone",
+    "name": "p_fail_b_thin",
+    "value": 0.8928373995316268,
+    "units": null,
+    "bound": "> p_fail_a_thin"
+  },
+  {
+    "test": "tests/oracles/test_known_ranking_inversion.py::test_material_b_is_weaker_at_the_thin_process_zone",
+    "name": "p_fail_a_thin",
+    "value": 0.7134969937995023,
+    "units": null,
+    "bound": "< p_fail_b_thin"
+  },
+  {
+    "test": "tests/oracles/test_known_ranking_inversion.py::test_the_ranking_genuinely_inverts_between_the_two_thicknesses",
+    "name": "difference_thick",
+    "value": 0.4026894905802977,
+    "units": null,
+    "bound": "> 0"
+  },
+  {
+    "test": "tests/oracles/test_known_ranking_inversion.py::test_the_ranking_genuinely_inverts_between_the_two_thicknesses",
+    "name": "difference_thin",
+    "value": -0.1793404057321245,
+    "units": null,
+    "bound": "< 0"
+  },
+  {
+    "test": "tests/oracles/test_known_ranking_inversion.py::test_the_inversion_is_driven_by_dimensional_reduction_not_by_severity_alone",
+    "name": "n_eff_a_thick",
+    "value": 124999.99999999997,
+    "units": null,
+    "bound": "== n_eff_a_thin"
+  },
+  {
+    "test": "tests/oracles/test_known_ranking_inversion.py::test_the_inversion_is_driven_by_dimensional_reduction_not_by_severity_alone",
+    "name": "n_eff_a_thin",
+    "value": 124999.99999999997,
+    "units": null,
+    "bound": "== n_eff_a_thick"
+  },
+  {
+    "test": "tests/oracles/test_known_ranking_inversion.py::test_the_inversion_is_driven_by_dimensional_reduction_not_by_severity_alone",
+    "name": "n_eff_b_thick",
+    "value": 37.03703703703704,
+    "units": null,
+    "bound": "< n_eff_b_thin"
+  },
+  {
+    "test": "tests/oracles/test_known_ranking_inversion.py::test_the_inversion_is_driven_by_dimensional_reduction_not_by_severity_alone",
+    "name": "n_eff_b_thin",
+    "value": 222.22222222222223,
+    "units": null,
+    "bound": "> n_eff_b_thick"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness.py::test_exact_flow_has_zero_semigroup_residual_at_every_separation_ratio",
+    "name": "exact_flow_semigroup_residuals",
+    "value": {
+      "decay_1": 0.0,
+      "decay_2": 1.1102230246251565e-16,
+      "decay_5": 5.647850449853784e-17,
+      "decay_10": 6.776263578034403e-21,
+      "decay_20": 0.0,
+      "decay_50": 5.551115123125783e-17,
+      "decay_100": 0.0,
+      "decay_200": 0.0,
+      "decay_500": 5.551115123125783e-17,
+      "osc_1": 2.482534153247273e-16,
+      "osc_2": 0.0,
+      "osc_5": 0.0,
+      "osc_10": 5.551115123125783e-17,
+      "osc_20": 5.551115123125783e-17,
+      "osc_50": 0.0,
+      "osc_100": 0.0,
+      "osc_200": 0.0,
+      "osc_500": 5.551115123125783e-17
+    },
+    "units": null,
+    "bound": "all < 1e-12 (constructed truth: exactly 0)"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness.py::test_exact_flow_has_zero_semigroup_residual_at_every_separation_ratio",
+    "name": "exact_flow_worst_residual",
+    "value": 2.482534153247273e-16,
+    "units": null,
+    "bound": "< 1e-12"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness.py::test_stiffness_does_not_systematically_grow_the_residual_for_a_decaying_fast_mode",
+    "name": "decaying_residuals_by_ratio",
+    "value": {
+      "1": 4.961605415113863e-07,
+      "2": 1.0842448305951212e-06,
+      "5": 8.376510654451694e-07,
+      "10": 3.8743595965582493e-07,
+      "20": 3.693022292954699e-07,
+      "50": 3.579978569145936e-07,
+      "100": 3.5438171680501895e-07,
+      "200": 3.5260090397448707e-07,
+      "500": 3.5154098187994975e-07
+    },
+    "units": null,
+    "bound": "max/min spread < 10 (flat, not systematically growing)"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness.py::test_stiffness_does_not_systematically_grow_the_residual_for_a_decaying_fast_mode",
+    "name": "decaying_residual_spread",
+    "value": 3.0842629635863843,
+    "units": null,
+    "bound": "< 10"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness.py::test_stiffness_does_not_systematically_grow_the_residual_for_a_decaying_fast_mode",
+    "name": "decaying_norm_drift_worst",
+    "value": 1.2715678587849055e-06,
+    "units": null,
+    "bound": "< 1e-3 (integrator not diverging)"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness.py::test_residual_is_non_monotone_in_separation_for_a_persistently_excited_fast_mode",
+    "name": "oscillatory_residuals_by_ratio",
+    "value": {
+      "1": 9.116165790151262e-07,
+      "2": 7.325452692825925e-06,
+      "5": 9.377729581915951e-05,
+      "10": 0.000581959951354405,
+      "20": 0.0028169573348475587,
+      "50": 0.009893842073246053,
+      "100": 0.006797594750764655,
+      "200": 0.00011835037084608355,
+      "500": 2.804537386989451e-06
+    },
+    "units": null,
+    "bound": "interior peak: rises then falls; peak/first > 100 and peak/last > 100"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness.py::test_residual_is_non_monotone_in_separation_for_a_persistently_excited_fast_mode",
+    "name": "oscillatory_peak_separation_ratio",
+    "value": 50.0,
+    "units": null,
+    "bound": "strictly interior to the sweep"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness.py::test_residual_is_non_monotone_in_separation_for_a_persistently_excited_fast_mode",
+    "name": "oscillatory_rise_to_peak",
+    "value": 10853.073870085778,
+    "units": null,
+    "bound": "> 100"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness.py::test_residual_is_non_monotone_in_separation_for_a_persistently_excited_fast_mode",
+    "name": "oscillatory_fall_from_peak",
+    "value": 3527.7982454948346,
+    "units": null,
+    "bound": "> 100"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness.py::test_residual_is_non_monotone_in_separation_for_a_persistently_excited_fast_mode",
+    "name": "oscillatory_norm_drift_worst",
+    "value": 0.0006580683401928855,
+    "units": null,
+    "bound": "< 1e-2 (integrator not diverging)"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness.py::test_insufficiency_produces_residual_that_falls_with_separation_confounding_the_diagnostic",
+    "name": "insufficiency_residuals_by_ratio",
+    "value": {
+      "1": 0.11932560927059555,
+      "2": 0.150856341629374,
+      "5": 0.12034913492998922,
+      "10": 0.06619459346720513,
+      "20": 0.03191882765235132,
+      "50": 0.01237817672837388,
+      "100": 0.006126572320329593,
+      "200": 0.0030478927623750485,
+      "500": 0.0012154923040332832
+    },
+    "units": null,
+    "bound": "large at low separation; falls by > 10x by the highest ratio"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness.py::test_insufficiency_produces_residual_that_falls_with_separation_confounding_the_diagnostic",
+    "name": "insufficiency_residual_at_lowest_separation",
+    "value": 0.11932560927059555,
+    "units": null,
+    "bound": "> 1e-2"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness.py::test_insufficiency_produces_residual_that_falls_with_separation_confounding_the_diagnostic",
+    "name": "insufficiency_decay_factor",
+    "value": 98.17060040170202,
+    "units": null,
+    "bound": "> 10"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness.py::test_the_two_causes_are_indistinguishable_by_residual_magnitude_at_one_separation_ratio",
+    "name": "separation_ratio",
+    "value": 50.0,
+    "units": null,
+    "bound": "fixed at the stiffness arm's peak"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness.py::test_the_two_causes_are_indistinguishable_by_residual_magnitude_at_one_separation_ratio",
+    "name": "stiffness_residual_sufficient_state",
+    "value": 0.009893842073246053,
+    "units": null,
+    "bound": "same order as insufficiency_residual"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness.py::test_the_two_causes_are_indistinguishable_by_residual_magnitude_at_one_separation_ratio",
+    "name": "insufficiency_residual_exact_propagator",
+    "value": 0.01237817672837388,
+    "units": null,
+    "bound": "same order as stiffness_residual"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness.py::test_the_two_causes_are_indistinguishable_by_residual_magnitude_at_one_separation_ratio",
+    "name": "residual_ratio_between_the_two_causes",
+    "value": 1.2510990813008547,
+    "units": null,
+    "bound": "< 10 (same order of magnitude)"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness.py::test_the_two_causes_are_indistinguishable_by_residual_magnitude_at_one_separation_ratio",
+    "name": "stiff_arm_norm_drift",
+    "value": 0.00048177668029203424,
+    "units": null,
+    "bound": "< 1e-2 (integrator not diverging)"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness_attribution.py::test_null_exact_operator_has_zero_residual_at_every_stiffness_ratio",
+    "name": "null_exact_residuals",
+    "value": {
+      "1": 0.0,
+      "3": 6.938893903907228e-18,
+      "10": 6.776263578034403e-21,
+      "30": 0.0,
+      "100": 0.0,
+      "300": 1.0010415475915505e-146,
+      "1000": 0.0
+    },
+    "units": null,
+    "bound": "all < 1e-12 (constructed truth: identically 0)"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness_attribution.py::test_null_exact_operator_has_zero_residual_at_every_stiffness_ratio",
+    "name": "null_exact_worst",
+    "value": 6.938893903907228e-18,
+    "units": null,
+    "bound": "< 1e-12"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness_attribution.py::test_residual_is_flat_in_stiffness_at_exact_sufficiency",
+    "name": "stiffness_ratios",
+    "value": [
+      "1",
+      "3",
+      "10",
+      "30",
+      "100",
+      "300",
+      "1000"
+    ],
+    "units": null,
+    "bound": "three orders of magnitude"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness_attribution.py::test_residual_is_flat_in_stiffness_at_exact_sufficiency",
+    "name": "residual_by_ratio",
+    "value": {
+      "1": 0.00012709419374634922,
+      "3": 0.00014154509906292098,
+      "10": 8.987564195551005e-05,
+      "30": 8.986916624748043e-05,
+      "100": 8.986916624748043e-05,
+      "300": 8.986916624748043e-05,
+      "1000": 8.986916624748043e-05
+    },
+    "units": null,
+    "bound": "spread < 3x (flat, not growing)"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness_attribution.py::test_residual_is_flat_in_stiffness_at_exact_sufficiency",
+    "name": "residual_spread",
+    "value": 1.5750129323903608,
+    "units": null,
+    "bound": "< 3.0"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness_attribution.py::test_residual_is_flat_in_stiffness_at_exact_sufficiency",
+    "name": "residual_last_over_first",
+    "value": 0.7071067811865475,
+    "units": null,
+    "bound": "<= 1.0 (not growing)"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness_attribution.py::test_residual_is_flat_in_stiffness_at_exact_sufficiency",
+    "name": "fast_component_by_ratio",
+    "value": {
+      "1": 8.986916624748043e-05,
+      "3": 0.00010935514632021137,
+      "10": 1.0788766832980245e-06,
+      "30": 1.518183820610501e-14,
+      "100": 2.781524132314136e-45,
+      "300": 1.321608541835674e-141,
+      "1000": 5e-324
+    },
+    "units": null,
+    "bound": "collapses super-exponentially"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness_attribution.py::test_residual_is_flat_in_stiffness_at_exact_sufficiency",
+    "name": "slow_component_by_ratio",
+    "value": {
+      "1": 8.986916624748043e-05,
+      "3": 8.986916624748043e-05,
+      "10": 8.986916624748043e-05,
+      "30": 8.986916624748043e-05,
+      "100": 8.986916624748043e-05,
+      "300": 8.986916624748043e-05,
+      "1000": 8.986916624748043e-05
+    },
+    "units": null,
+    "bound": "stiffness-independent"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness_attribution.py::test_residual_is_flat_in_stiffness_at_exact_sufficiency",
+    "name": "max_lambda_h_by_ratio",
+    "value": {
+      "1": 0.0009765625,
+      "3": 0.0029296875,
+      "10": 0.009765625,
+      "30": 0.029296875,
+      "100": 0.09765625,
+      "300": 0.29296875,
+      "1000": 0.9765625
+    },
+    "units": null,
+    "bound": "all < 2 (Euler stable throughout)"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness_attribution.py::test_answer_is_metric_dependent_and_an_outgoing_sigma_metric_manufactures_growth",
+    "name": "incoming_sigma_metric_scale",
+    "value": [
+      0.20193485976289052,
+      0.19916235139256652
+    ],
+    "units": null,
+    "bound": "stiffness-independent by construction (ADR-002 uses the INCOMING population)"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness_attribution.py::test_answer_is_metric_dependent_and_an_outgoing_sigma_metric_manufactures_growth",
+    "name": "residual_raw_no_metric",
+    "value": {
+      "1": 0.00012709419374634922,
+      "3": 0.00014154509906292098,
+      "10": 8.987564195551005e-05,
+      "30": 8.986916624748043e-05,
+      "100": 8.986916624748043e-05,
+      "300": 8.986916624748043e-05,
+      "1000": 8.986916624748043e-05
+    },
+    "units": null,
+    "bound": "flat"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness_attribution.py::test_answer_is_metric_dependent_and_an_outgoing_sigma_metric_manufactures_growth",
+    "name": "residual_identity_metric",
+    "value": {
+      "1": 0.00012709419374634922,
+      "3": 0.00014154509906292098,
+      "10": 8.987564195551005e-05,
+      "30": 8.986916624748043e-05,
+      "100": 8.986916624748043e-05,
+      "300": 8.986916624748043e-05,
+      "1000": 8.986916624748043e-05
+    },
+    "units": null,
+    "bound": "flat"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness_attribution.py::test_answer_is_metric_dependent_and_an_outgoing_sigma_metric_manufactures_growth",
+    "name": "residual_incoming_sigma_metric",
+    "value": {
+      "1": 0.000633778044112387,
+      "3": 0.0007048941167598396,
+      "10": 0.00045126734412760536,
+      "30": 0.0004512357160834097,
+      "100": 0.0004512357160834097,
+      "300": 0.0004512357160834097,
+      "1000": 0.0004512357160834097
+    },
+    "units": null,
+    "bound": "flat"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness_attribution.py::test_answer_is_metric_dependent_and_an_outgoing_sigma_metric_manufactures_growth",
+    "name": "residual_outgoing_sigma_metric",
+    "value": {
+      "1": 0.0017236292990773898,
+      "3": 0.010993762322113312,
+      "10": 0.12361511975459454,
+      "30": 1.2577989988155145,
+      "100": 68.88562528556989,
+      "300": 97893837415108.56,
+      "1000": 0.001227185302893849
+    },
+    "units": null,
+    "bound": "spurious excursion > 1e10x \u2014 the artifact"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness_attribution.py::test_answer_is_metric_dependent_and_an_outgoing_sigma_metric_manufactures_growth",
+    "name": "outgoing_metric_worst_over_first",
+    "value": 5.679518065021776e+16,
+    "units": null,
+    "bound": "> 1e10"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness_attribution.py::test_answer_is_metric_dependent_and_an_outgoing_sigma_metric_manufactures_growth",
+    "name": "incoming_metric_spread",
+    "value": 1.5621416737090505,
+    "units": null,
+    "bound": "< 3.0"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness_attribution.py::test_fixed_step_size_operator_passes_vacuously_on_a_commensurable_split",
+    "name": "fixed_step_size_commensurable_split",
+    "value": {
+      "1": 0.0,
+      "3": 0.0,
+      "10": 0.0,
+      "30": 0.0,
+      "100": 0.0,
+      "300": 0.0,
+      "1000": 0.0
+    },
+    "units": null,
+    "bound": "identically 0 at every ratio \u2014 a vacuous pass"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness_attribution.py::test_fixed_step_size_operator_passes_vacuously_on_a_commensurable_split",
+    "name": "fixed_step_size_incommensurable_split",
+    "value": {
+      "1": 1.300732522038818e-07,
+      "3": 1.449475644911607e-07,
+      "10": 9.197922642932738e-08,
+      "30": 9.197567868435286e-08,
+      "100": 9.197567868435286e-08,
+      "300": 6.969819491649209e+27,
+      "1000": 8.033446981738434e+92
+    },
+    "units": null,
+    "bound": "nonzero; high-ratio entries are Euler divergence, not consistency error"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness_attribution.py::test_fixed_step_size_operator_passes_vacuously_on_a_commensurable_split",
+    "name": "vacuous_pass_worst_diverged_output_magnitude",
+    "value": 2.6561398887587552e+95,
+    "units": null,
+    "bound": "the check still reads 0 on an output this large (> 1e20)"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness_attribution.py::test_learned_operator_trained_at_one_dt_reported_separately",
+    "name": "learned_residual_by_ratio",
+    "value": {
+      "1": 0.4708788406742084,
+      "10": 0.05936220660123197,
+      "100": 0.1920533460694215,
+      "1000": 0.30130458496990836
+    },
+    "units": null,
+    "bound": "finite; confounded with training quality \u2014 not pooled with the analytic arms"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness_attribution.py::test_learned_operator_trained_at_one_dt_reported_separately",
+    "name": "learned_forward_error_at_trained_dt",
+    "value": {
+      "1": 0.008473205951807441,
+      "10": 0.0030629746590186955,
+      "100": 0.01318556829336149,
+      "1000": 0.012953250811431343
+    },
+    "units": null,
+    "bound": "the training-quality confound, reported alongside"
+  },
+  {
+    "test": "tests/oracles/test_known_stiffness_attribution.py::test_learned_operator_trained_at_one_dt_reported_separately",
+    "name": "learned_residual_over_fixed_step_arm",
+    "value": 5239.555365240996,
+    "units": null,
+    "bound": "orders of magnitude above the analytic arm"
+  },
+  {
+    "test": "tests/oracles/test_known_tail.py::test_hill_estimator_and_transfer_recover_xi_d[3.0-0.5]",
+    "name": "xi_a_hat",
+    "value": 0.33541458175539995,
+    "units": "alpha_a=3.0",
+    "bound": "narrative only, not asserted"
+  },
+  {
+    "test": "tests/oracles/test_known_tail.py::test_hill_estimator_and_transfer_recover_xi_d[3.0-0.5]",
+    "name": "xi_d_hat",
+    "value": 0.16770729087769998,
+    "units": "beta=0.5",
+    "bound": "abs(xi_d_hat - xi_d_true) < 0.15*xi_d_true + 0.02"
+  },
+  {
+    "test": "tests/oracles/test_known_tail.py::test_hill_estimator_and_transfer_recover_xi_d[3.0-0.5]",
+    "name": "xi_d_true",
+    "value": 0.16666666666666666,
+    "units": null,
+    "bound": "constructed, not measured"
+  },
+  {
+    "test": "tests/oracles/test_known_tail.py::test_hill_estimator_and_transfer_recover_xi_d[2.0-0.16666666666666666]",
+    "name": "xi_a_hat",
+    "value": 0.5031218726330998,
+    "units": "alpha_a=2.0",
+    "bound": "narrative only, not asserted"
+  },
+  {
+    "test": "tests/oracles/test_known_tail.py::test_hill_estimator_and_transfer_recover_xi_d[2.0-0.16666666666666666]",
+    "name": "xi_d_hat",
+    "value": 0.08385364543884996,
+    "units": "beta=0.16666666666666666",
+    "bound": "abs(xi_d_hat - xi_d_true) < 0.15*xi_d_true + 0.02"
+  },
+  {
+    "test": "tests/oracles/test_known_tail.py::test_hill_estimator_and_transfer_recover_xi_d[2.0-0.16666666666666666]",
+    "name": "xi_d_true",
+    "value": 0.08333333333333333,
+    "units": null,
+    "bound": "constructed, not measured"
+  },
+  {
+    "test": "tests/oracles/test_known_tail.py::test_hill_estimator_and_transfer_recover_xi_d[1.5-2.0]",
+    "name": "xi_a_hat",
+    "value": 0.6708291635107997,
+    "units": "alpha_a=1.5",
+    "bound": "narrative only, not asserted"
+  },
+  {
+    "test": "tests/oracles/test_known_tail.py::test_hill_estimator_and_transfer_recover_xi_d[1.5-2.0]",
+    "name": "xi_d_hat",
+    "value": 1.3416583270215994,
+    "units": "beta=2.0",
+    "bound": "abs(xi_d_hat - xi_d_true) < 0.15*xi_d_true + 0.02"
+  },
+  {
+    "test": "tests/oracles/test_known_tail.py::test_hill_estimator_and_transfer_recover_xi_d[1.5-2.0]",
+    "name": "xi_d_true",
+    "value": 1.3333333333333333,
+    "units": null,
+    "bound": "constructed, not measured"
+  },
+  {
+    "test": "tests/oracles/test_known_tail.py::test_hill_estimator_and_transfer_recover_xi_d[4.0-1.0]",
+    "name": "xi_a_hat",
+    "value": 0.2515609363165499,
+    "units": "alpha_a=4.0",
+    "bound": "narrative only, not asserted"
+  },
+  {
+    "test": "tests/oracles/test_known_tail.py::test_hill_estimator_and_transfer_recover_xi_d[4.0-1.0]",
+    "name": "xi_d_hat",
+    "value": 0.2515609363165499,
+    "units": "beta=1.0",
+    "bound": "abs(xi_d_hat - xi_d_true) < 0.15*xi_d_true + 0.02"
+  },
+  {
+    "test": "tests/oracles/test_known_tail.py::test_hill_estimator_and_transfer_recover_xi_d[4.0-1.0]",
+    "name": "xi_d_true",
+    "value": 0.25,
+    "units": null,
+    "bound": "constructed, not measured"
+  },
+  {
+    "test": "tests/oracles/test_known_tail.py::test_transfer_scales_linearly_with_beta",
+    "name": "xi_d_small_beta",
+    "value": 0.16770729087769998,
+    "units": "beta=0.5",
+    "bound": "< xi_d_large_beta"
+  },
+  {
+    "test": "tests/oracles/test_known_tail.py::test_transfer_scales_linearly_with_beta",
+    "name": "xi_d_large_beta",
+    "value": 0.33541458175539995,
+    "units": "beta=1.0",
+    "bound": "> xi_d_small_beta"
+  },
+  {
+    "test": "tests/oracles/test_known_unreachability.py::test_nearest_reachable_state_is_the_true_closest_point_on_the_boundary",
+    "name": "projected_distance",
+    "value": 76.36753236814714,
+    "units": null,
+    "bound": "<= best_grid_distance + 1e-3"
+  },
+  {
+    "test": "tests/oracles/test_known_unreachability.py::test_nearest_reachable_state_is_the_true_closest_point_on_the_boundary",
+    "name": "best_grid_distance",
+    "value": 76.3675326698762,
+    "units": null,
+    "bound": "grid-search cross-check"
+  },
+  {
+    "test": "tests/oracles/test_metric_dependence.py::test_bare_undeclared_metric_hides_the_true_coupling_strength",
+    "name": "bare_scaled_offdiagonal",
+    "value": 0.01,
+    "units": null,
+    "bound": "< 0.02"
+  },
+  {
+    "test": "tests/oracles/test_metric_dependence.py::test_aleatoric_sigma_metric_reveals_the_coupling_is_as_strong_as_the_diagonal",
+    "name": "metric_scale",
+    "value": [
+      1.0065967852371636,
+      99.94651303173626
+    ],
+    "units": null,
+    "bound": "narrative only, not asserted"
+  },
+  {
+    "test": "tests/oracles/test_metric_dependence.py::test_aleatoric_sigma_metric_reveals_the_coupling_is_as_strong_as_the_diagonal",
+    "name": "true_scaled_offdiagonal",
+    "value": 0.9929150827576698,
+    "units": null,
+    "bound": "> 0.5"
+  },
+  {
+    "test": "tests/oracles/test_metric_dependence.py::test_lipschitz_spectrum_changes_with_the_declared_metric",
+    "name": "spectrum_bare",
+    "value": [
+      1.005012499921876,
+      0.995012499921876
+    ],
+    "units": null,
+    "bound": "not allclose(spectrum_true, rtol=0.1)"
+  },
+  {
+    "test": "tests/oracles/test_metric_dependence.py::test_lipschitz_spectrum_changes_with_the_declared_metric",
+    "name": "spectrum_true",
+    "value": [
+      1.62448433970649,
+      0.6155799570100373
+    ],
+    "units": null,
+    "bound": "not allclose(spectrum_bare, rtol=0.1)"
+  },
+  {
+    "test": "tests/oracles/test_metric_dependence.py::test_aleatoric_normalisation_makes_a_one_sigma_perturbation_comparable_across_slots",
+    "name": "effect_from_a",
+    "value": 1.0055353051153393,
+    "units": null,
+    "bound": "narrative only, not asserted"
+  },
+  {
+    "test": "tests/oracles/test_metric_dependence.py::test_aleatoric_normalisation_makes_a_one_sigma_perturbation_comparable_across_slots",
+    "name": "effect_from_b",
+    "value": 1.001278787828312,
+    "units": null,
+    "bound": "narrative only, not asserted"
+  },
+  {
+    "test": "tests/oracles/test_metric_dependence.py::test_aleatoric_normalisation_makes_a_one_sigma_perturbation_comparable_across_slots",
+    "name": "ratio",
+    "value": 0.995766914134816,
+    "units": null,
+    "bound": "0.5 < ratio < 2.0"
+  },
+  {
+    "test": "tests/oracles/test_parameter_ridge.py::test_the_declared_form_recovers_its_true_parameters_and_fits_excellently",
+    "name": "parameter_metric",
+    "value": "fractional parameter units: theta_i / theta_i_true, with theta_true = (8.0, 2.0, 1.5) (ADR-058; CLAUDE.md invariant 1). Deliberately NOT the invariant-1 aleatoric default, which here would be the across-seed sd of the very covariance being measured.",
+    "units": null,
+    "bound": "declared, per CLAUDE.md invariant 1"
+  },
+  {
+    "test": "tests/oracles/test_parameter_ridge.py::test_the_declared_form_recovers_its_true_parameters_and_fits_excellently",
+    "name": "fitted_mean",
+    "value": [
+      7.99542482161297,
+      1.9983488827731624,
+      1.5020039267169352
+    ],
+    "units": null,
+    "bound": "each within 1% of theta_true"
+  },
+  {
+    "test": "tests/oracles/test_parameter_ridge.py::test_the_declared_form_recovers_its_true_parameters_and_fits_excellently",
+    "name": "fractional_bias_per_parameter",
+    "value": {
+      "k1": 0.0005718972983786985,
+      "k2_0": 0.0008255586134188198,
+      "exponent": 0.0013359511446233707
+    },
+    "units": null,
+    "bound": "each < 0.01"
+  },
+  {
+    "test": "tests/oracles/test_parameter_ridge.py::test_the_declared_form_recovers_its_true_parameters_and_fits_excellently",
+    "name": "injected_relative_noise",
+    "value": 0.02,
+    "units": null,
+    "bound": "narrative only, not asserted"
+  },
+  {
+    "test": "tests/oracles/test_parameter_ridge.py::test_the_declared_form_recovers_its_true_parameters_and_fits_excellently",
+    "name": "in_envelope_relative_residual",
+    "value": 0.002801667853025871,
+    "units": null,
+    "bound": "< 0.02"
+  },
+  {
+    "test": "tests/oracles/test_parameter_ridge.py::test_the_parameter_posterior_is_a_ridge_not_a_ball",
+    "name": "parameter_covariance_eigenvalues",
+    "value": [
+      0.0004465449302186828,
+      0.0001223274353297461,
+      1.02245570717292e-06
+    ],
+    "units": null,
+    "bound": "descending; lambda_1 >> lambda_min"
+  },
+  {
+    "test": "tests/oracles/test_parameter_ridge.py::test_the_parameter_posterior_is_a_ridge_not_a_ball",
+    "name": "fractional_sd_per_parameter",
+    "value": {
+      "k1": 0.008512248652667495,
+      "k2_0": 0.013860092058724259,
+      "exponent": 0.017419375501155767
+    },
+    "units": null,
+    "bound": "narrative only"
+  },
+  {
+    "test": "tests/oracles/test_parameter_ridge.py::test_the_parameter_posterior_is_a_ridge_not_a_ball",
+    "name": "condition_number",
+    "value": 436.73767683626625,
+    "units": null,
+    "bound": "> 50"
+  },
+  {
+    "test": "tests/oracles/test_parameter_ridge.py::test_the_parameter_posterior_is_a_ridge_not_a_ball",
+    "name": "ridge_direction",
+    "value": [
+      -0.3556411883686038,
+      -0.5579280943977737,
+      0.7498237036913652
+    ],
+    "units": null,
+    "bound": "narrative only, not asserted"
+  },
+  {
+    "test": "tests/oracles/test_parameter_ridge.py::test_the_ridge_rotates_toward_the_extrapolation_direction_but_never_aligns_with_it",
+    "name": "alignment_curve",
+    "value": [
+      [
+        1.0,
+        0.04358049276795573
+      ],
+      [
+        1.5,
+        0.08951995187998901
+      ],
+      [
+        2.0,
+        0.12657411080027756
+      ],
+      [
+        3.0,
+        0.17889861959840625
+      ],
+      [
+        4.0,
+        0.21059815608520638
+      ],
+      [
+        6.0,
+        0.24019816205055017
+      ]
+    ],
+    "units": null,
+    "bound": "monotone non-decreasing in gamma"
+  },
+  {
+    "test": "tests/oracles/test_parameter_ridge.py::test_the_ridge_rotates_toward_the_extrapolation_direction_but_never_aligns_with_it",
+    "name": "alignment_in_envelope",
+    "value": 0.04358049276795573,
+    "units": null,
+    "bound": "< 0.15 (ridge is invisible in-envelope)"
+  },
+  {
+    "test": "tests/oracles/test_parameter_ridge.py::test_the_ridge_rotates_toward_the_extrapolation_direction_but_never_aligns_with_it",
+    "name": "alignment_far",
+    "value": 0.24019816205055017,
+    "units": null,
+    "bound": "> 2x in-envelope AND < 0.5 (leans, does not align)"
+  },
+  {
+    "test": "tests/oracles/test_parameter_ridge.py::test_the_ridge_rotates_toward_the_extrapolation_direction_but_never_aligns_with_it",
+    "name": "alignment_growth",
+    "value": 5.5115981209640035,
+    "units": null,
+    "bound": "> 2.0"
+  },
+  {
+    "test": "tests/oracles/test_parameter_ridge.py::test_the_extrapolated_response_is_less_determined_than_the_fit_residual_suggests",
+    "name": "response_relative_spread_in_envelope",
+    "value": 0.00349817496038031,
+    "units": null,
+    "bound": "narrative only"
+  },
+  {
+    "test": "tests/oracles/test_parameter_ridge.py::test_the_extrapolated_response_is_less_determined_than_the_fit_residual_suggests",
+    "name": "response_relative_spread_far",
+    "value": 0.013310526913477408,
+    "units": null,
+    "bound": "> 2x in-envelope; < 0.10"
+  },
+  {
+    "test": "tests/oracles/test_parameter_ridge.py::test_the_extrapolated_response_is_less_determined_than_the_fit_residual_suggests",
+    "name": "spread_growth_along_axis",
+    "value": 3.804991764056973,
+    "units": null,
+    "bound": "> 2.0"
+  },
+  {
+    "test": "tests/oracles/test_parameter_ridge.py::test_the_extrapolated_response_is_less_determined_than_the_fit_residual_suggests",
+    "name": "far_spread_over_in_envelope_fit_residual",
+    "value": 4.750929664664463,
+    "units": null,
+    "bound": "> 2.0"
+  },
+  {
+    "test": "tests/oracles/test_parameter_ridge.py::test_the_extrapolated_response_is_less_determined_than_the_fit_residual_suggests",
+    "name": "saturation_relative_spread",
+    "value": 0.011272130859221697,
+    "units": null,
+    "bound": "narrative only; E-47's named quantity"
+  },
+  {
+    "test": "tests/oracles/test_parameter_ridge.py::test_the_declared_validity_report_is_not_clean_at_the_far_probe",
+    "name": "adr043_clean_fraction_at_far_strain",
+    "value": 0.5833333333333334,
+    "units": null,
+    "bound": "0 < f < 1"
+  },
+  {
+    "test": "tests/oracles/test_parameter_ridge.py::test_the_declared_validity_report_is_not_clean_at_the_far_probe",
+    "name": "adr043_binding_bound_at_far",
+    "value": "stored_density",
+    "units": null,
+    "bound": "== 'stored_density'"
+  },
+  {
+    "test": "tests/oracles/test_parameter_ridge.py::test_the_declared_validity_report_is_not_clean_at_the_far_probe",
+    "name": "declared_density_ceiling",
+    "value": 20.0,
+    "units": null,
+    "bound": "narrative only; the declared bound"
+  },
+  {
+    "test": "tests/oracles/test_parameter_ridge.py::test_the_ridge_geometry_is_a_property_of_the_design_not_of_the_noise_level",
+    "name": "alignment_growth_seed_0",
+    "value": 5.5115981209640035,
+    "units": null,
+    "bound": "both > 2.0 and within 2x of each other"
+  },
+  {
+    "test": "tests/oracles/test_parameter_ridge.py::test_the_ridge_geometry_is_a_property_of_the_design_not_of_the_noise_level",
+    "name": "alignment_growth_seed_1",
+    "value": 4.889982621984763,
+    "units": null,
+    "bound": "both > 2.0 and within 2x of each other"
+  },
+  {
+    "test": "tests/oracles/test_parameter_ridge.py::test_the_ridge_geometry_is_a_property_of_the_design_not_of_the_noise_level",
+    "name": "condition_number_seed_0",
+    "value": 436.73767683626625,
+    "units": null,
+    "bound": "both > 50"
+  },
+  {
+    "test": "tests/oracles/test_parameter_ridge.py::test_the_ridge_geometry_is_a_property_of_the_design_not_of_the_noise_level",
+    "name": "condition_number_seed_1",
+    "value": 412.0946976593694,
+    "units": null,
+    "bound": "both > 50"
+  },
+  {
+    "test": "tests/oracles/test_part6_sweep.py::test_the_sweep_evaluates_the_registered_contrast_and_no_other",
+    "name": "part6_registered_contrast",
+    "value": [
+      "insufficient",
+      "noisy"
+    ],
+    "units": null,
+    "bound": "insufficient vs noisy"
+  },
+  {
+    "test": "tests/oracles/test_part6_sweep.py::test_the_sweep_evaluates_the_registered_contrast_and_no_other",
+    "name": "part6_noise_inflation",
+    "value": 1.16,
+    "units": null,
+    "bound": "the registered value, unchanged"
+  },
+  {
+    "test": "tests/oracles/test_part6_sweep.py::test_each_registered_criterion_is_met",
+    "name": "part6_1_criterion",
+    "value": 2.825113940563079,
+    "units": null,
+    "bound": ">= 2.0"
+  },
+  {
+    "test": "tests/oracles/test_part6_sweep.py::test_each_registered_criterion_is_met",
+    "name": "part6_2_criterion",
+    "value": 6.709348717436628,
+    "units": null,
+    "bound": ">= 2.0"
+  },
+  {
+    "test": "tests/oracles/test_part6_sweep.py::test_each_registered_criterion_is_met",
+    "name": "part6_3_criterion",
+    "value": 0.4672821068708995,
+    "units": null,
+    "bound": "< 1.0"
+  },
+  {
+    "test": "tests/oracles/test_part6_sweep.py::test_each_registered_criterion_is_met",
+    "name": "part6_unmet_criteria",
+    "value": [],
+    "units": null,
+    "bound": "empty at 12, 16 and 24 replicates"
+  },
+  {
+    "test": "tests/oracles/test_part6_sweep.py::test_the_framework_statistic_separates_the_two_nuisance_arms",
+    "name": "part6_framework_z_insufficient_far",
+    "value": 4.112782251109261,
+    "units": null,
+    "bound": "> noisy arm's"
+  },
+  {
+    "test": "tests/oracles/test_part6_sweep.py::test_the_framework_statistic_separates_the_two_nuisance_arms",
+    "name": "part6_framework_z_noisy_far",
+    "value": 1.504344284291216,
+    "units": null,
+    "bound": "near the null arm's"
+  },
+  {
+    "test": "tests/oracles/test_part6_sweep.py::test_the_framework_statistic_separates_the_two_nuisance_arms",
+    "name": "part6_framework_z_null_far",
+    "value": 1.2975342861308097,
+    "units": null,
+    "bound": "reference E|Z| = 0.798"
+  },
+  {
+    "test": "tests/oracles/test_part6_sweep.py::test_the_comparator_s_two_separations_are_reported_side_by_side",
+    "name": "part6_comparator_separation_registered",
+    "value": 0.4672821068708995,
+    "units": null,
+    "bound": "< 1.0 (criterion 3)"
+  },
+  {
+    "test": "tests/oracles/test_part6_sweep.py::test_the_comparator_s_two_separations_are_reported_side_by_side",
+    "name": "part6_comparator_separation_null_contrast",
+    "value": 1.574384793199154,
+    "units": null,
+    "bound": "companion reading; not a criterion"
+  },
+  {
+    "test": "tests/oracles/test_part6_sweep.py::test_the_comparator_s_two_separations_are_reported_side_by_side",
+    "name": "part6_comparator_separation_ratio",
+    "value": 3.369238346706317,
+    "units": null,
+    "bound": "> 1 \u2014 post-hoc"
+  },
+  {
+    "test": "tests/oracles/test_part6_sweep.py::test_the_comparator_s_two_separations_are_reported_side_by_side",
+    "name": "part6_comparator_reading",
+    "value": "ATTRIBUTION-BLIND: the comparator separates insufficiency from nothing (1.5744 sigma) and not from noise (0.4673 sigma)",
+    "units": null,
+    "bound": "recorded verbatim, whatever it says"
+  },
+  {
+    "test": "tests/oracles/test_part6_sweep.py::test_the_comparator_s_two_separations_are_reported_side_by_side",
+    "name": "part6_comparator_fitted_noise_by_arm",
+    "value": {
+      "insufficient": 1.1324906715874932,
+      "noisy": 1.0187512648094779,
+      "null": 0.9369895694530461
+    },
+    "units": null,
+    "bound": "insufficient and noisy close together, null below both"
+  },
+  {
+    "test": "tests/oracles/test_part6_sweep.py::test_the_calibration_holds_on_the_sweep_s_own_seeds",
+    "name": "part6_calibration_variance_insufficient",
+    "value": 0.005282389102306293,
+    "units": null,
+    "bound": "target"
+  },
+  {
+    "test": "tests/oracles/test_part6_sweep.py::test_the_calibration_holds_on_the_sweep_s_own_seeds",
+    "name": "part6_calibration_variance_noisy",
+    "value": 0.0045533916667551836,
+    "units": null,
+    "bound": "matched to it"
+  },
+  {
+    "test": "tests/oracles/test_part6_sweep.py::test_the_calibration_holds_on_the_sweep_s_own_seeds",
+    "name": "part6_calibration_relative_mismatch_signed",
+    "value": 0.13800525130434424,
+    "units": null,
+    "bound": "positive means the noise arm is the weaker nuisance \u2014 a bias toward the claim"
+  },
+  {
+    "test": "tests/oracles/test_share_threshold_degeneracy.py::test_contrasts_share_is_an_exact_rational_predicted_before_it_is_computed",
+    "name": "spec_criterion_quoted",
+    "value": "a direction is observed if a single near-diagonal term (j ~ k) dominates, and inferred if information accrues only through sum_{j > k}",
+    "units": null,
+    "bound": "narrative; the text being operationalised"
+  },
+  {
+    "test": "tests/oracles/test_share_threshold_degeneracy.py::test_contrasts_share_is_an_exact_rational_predicted_before_it_is_computed",
+    "name": "contrast_share_ladder",
+    "value": {
+      "12": 0.0833333333656281,
+      "14": 0.10000000003299758,
+      "16": 0.12500000003384576,
+      "18": 0.16666666670131533,
+      "20": 0.250000000013127,
+      "22": 0.4999999999856102
+    },
+    "units": null,
+    "bound": "== 1/(24-k) to 1e-9"
+  },
+  {
+    "test": "tests/oracles/test_share_threshold_degeneracy.py::test_contrasts_share_is_an_exact_rational_predicted_before_it_is_computed",
+    "name": "contrast_share_as_fractions",
+    "value": {
+      "12": "1/12",
+      "14": "1/10",
+      "16": "1/8",
+      "18": "1/6",
+      "20": "1/4",
+      "22": "1/2"
+    },
+    "units": null,
+    "bound": "small rationals"
+  },
+  {
+    "test": "tests/oracles/test_share_threshold_degeneracy.py::test_contrasts_share_is_an_exact_rational_predicted_before_it_is_computed",
+    "name": "contrast_predicted_vs_measured_max_error",
+    "value": 3.4648672819770354e-11,
+    "units": null,
+    "bound": "< 1e-9"
+  },
+  {
+    "test": "tests/oracles/test_share_threshold_degeneracy.py::test_contrasts_share_is_an_exact_rational_predicted_before_it_is_computed",
+    "name": "contrast_margins_at_depth_minus_two",
+    "value": [
+      5.961564575329703e-11,
+      1.4389822666771579e-11
+    ],
+    "units": null,
+    "bound": "< 1e-9"
+  },
+  {
+    "test": "tests/oracles/test_share_threshold_degeneracy.py::test_the_two_contributing_gramian_terms_are_exactly_equal",
+    "name": "gramian_term_contributions_at_flip_index",
+    "value": [
+      0.0,
+      225.13015206396238,
+      225.13015201027724
+    ],
+    "units": null,
+    "bound": "first == 0; last two equal"
+  },
+  {
+    "test": "tests/oracles/test_share_threshold_degeneracy.py::test_the_two_contributing_gramian_terms_are_exactly_equal",
+    "name": "gramian_term_shares_at_flip_index",
+    "value": [
+      0.0,
+      0.5000000000596156,
+      0.49999999994038435
+    ],
+    "units": null,
+    "bound": "0, ~0.5, ~0.5"
+  },
+  {
+    "test": "tests/oracles/test_share_threshold_degeneracy.py::test_the_two_contributing_gramian_terms_are_exactly_equal",
+    "name": "relative_difference_between_the_two_terms",
+    "value": 2.3846269004709316e-10,
+    "units": null,
+    "bound": "< 1e-9"
+  },
+  {
+    "test": "tests/oracles/test_share_threshold_degeneracy.py::test_the_label_moves_across_its_whole_range_with_the_declared_window",
+    "name": "label_by_near_diagonal_window",
+    "value": {
+      "0": [
+        [
+          0.0,
+          "inferred"
+        ],
+        [
+          0.0,
+          "inferred"
+        ]
+      ],
+      "1": [
+        [
+          0.50000000006,
+          "observed"
+        ],
+        [
+          0.499999999986,
+          "inferred"
+        ]
+      ],
+      "2": [
+        [
+          1.0,
+          "observed"
+        ],
+        [
+          1.0,
+          "observed"
+        ]
+      ]
+    },
+    "units": null,
+    "bound": "window 0 -> inferred; 2 -> observed; 1 -> split"
+  },
+  {
+    "test": "tests/oracles/test_share_threshold_degeneracy.py::test_flagship_is_degenerate_at_the_opposite_extreme",
+    "name": "flagship_declared_shares",
+    "value": [
+      0.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "units": null,
+    "bound": "each 0.0 or 1.0"
+  },
+  {
+    "test": "tests/oracles/test_share_threshold_degeneracy.py::test_flagship_is_degenerate_at_the_opposite_extreme",
+    "name": "flagship_declared_min_margin",
+    "value": 0.5,
+    "units": null,
+    "bound": "== 0.5"
+  },
+  {
+    "test": "tests/oracles/test_share_threshold_degeneracy.py::test_flagship_is_degenerate_at_the_opposite_extreme",
+    "name": "flagship_lengthened_shares",
+    "value": [
+      0.9999546000702376,
+      0.9999546000702376,
+      0.9999546000702376,
+      0.9999546000702376,
+      0.9999546000704248,
+      0.9999546041921705
+    ],
+    "units": null,
+    "bound": "all far above the threshold"
+  },
+  {
+    "test": "tests/oracles/test_share_threshold_degeneracy.py::test_flagship_is_degenerate_at_the_opposite_extreme",
+    "name": "flagship_lengthened_min_margin",
+    "value": 0.4999546000702376,
+    "units": null,
+    "bound": "> 0.4 -- eleven orders of magnitude above contrast's"
+  },
+  {
+    "test": "tests/oracles/test_share_threshold_degeneracy.py::test_flagship_is_degenerate_at_the_opposite_extreme",
+    "name": "observed_share_threshold",
+    "value": 0.5,
+    "units": null,
+    "bound": "narrative; ADR-020's declared value"
+  },
+  {
+    "test": "tests/oracles/test_share_threshold_degeneracy.py::test_the_constitutive_chain_lands_at_flagships_extreme_because_it_declares_an_erasure",
+    "name": "constitutive_shares",
+    "value": [
+      0.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "units": null,
+    "bound": "each 0.0 or 1.0"
+  },
+  {
+    "test": "tests/oracles/test_share_threshold_degeneracy.py::test_the_constitutive_chain_lands_at_flagships_extreme_because_it_declares_an_erasure",
+    "name": "constitutive_min_margin",
+    "value": 0.5,
+    "units": null,
+    "bound": "== 0.5"
+  },
+  {
+    "test": "tests/oracles/test_share_threshold_degeneracy.py::test_the_constitutive_chain_lands_at_flagships_extreme_because_it_declares_an_erasure",
+    "name": "constitutive_erasure_flags",
+    "value": [
+      true,
+      false
+    ],
+    "units": null,
+    "bound": "first True -- the property the degeneracy tracks"
+  },
+  {
+    "test": "tests/oracles/test_share_threshold_degeneracy.py::test_the_two_domains_sit_at_opposite_degeneracies_by_eleven_orders_of_magnitude",
+    "name": "contrast_min_margin",
+    "value": 1.4389822666771579e-11,
+    "units": null,
+    "bound": "< 1e-9"
+  },
+  {
+    "test": "tests/oracles/test_share_threshold_degeneracy.py::test_the_two_domains_sit_at_opposite_degeneracies_by_eleven_orders_of_magnitude",
+    "name": "flagship_min_margin",
+    "value": 0.5,
+    "units": null,
+    "bound": "== 0.5"
+  },
+  {
+    "test": "tests/oracles/test_share_threshold_degeneracy.py::test_the_two_domains_sit_at_opposite_degeneracies_by_eleven_orders_of_magnitude",
+    "name": "margin_ratio_flagship_over_contrast",
+    "value": 34746779830.34361,
+    "units": null,
+    "bound": "> 1e8"
+  },
+  {
+    "test": "tests/oracles/test_statistic_dry_run.py::test_the_axis_carries_signal_and_the_signal_grows",
+    "name": "axis_signal_near_noise_widths",
+    "value": 4.532450847834701,
+    "units": null,
+    "bound": "> 1.0"
+  },
+  {
+    "test": "tests/oracles/test_statistic_dry_run.py::test_the_axis_carries_signal_and_the_signal_grows",
+    "name": "axis_signal_far_noise_widths",
+    "value": 18.129803391338807,
+    "units": null,
+    "bound": "> near, and > 1.0"
+  },
+  {
+    "test": "tests/oracles/test_statistic_dry_run.py::test_the_sufficiency_deficit_detects_perfectly_and_cannot_be_scored_for_divergence",
+    "name": "deficit_verdict",
+    "value": "SEPARATION_UNBOUNDED",
+    "units": null,
+    "bound": "== SEPARATION_UNBOUNDED"
+  },
+  {
+    "test": "tests/oracles/test_statistic_dry_run.py::test_the_sufficiency_deficit_detects_perfectly_and_cannot_be_scored_for_divergence",
+    "name": "deficit_separation_near",
+    "value": Infinity,
+    "units": null,
+    "bound": "not finite (null arm has no scatter)"
+  },
+  {
+    "test": "tests/oracles/test_statistic_dry_run.py::test_the_sufficiency_deficit_detects_perfectly_and_cannot_be_scored_for_divergence",
+    "name": "deficit_growth_ratio",
+    "value": NaN,
+    "units": null,
+    "bound": "nan -- criterion unevaluable"
+  },
+  {
+    "test": "tests/oracles/test_statistic_dry_run.py::test_the_sufficiency_deficit_detects_perfectly_and_cannot_be_scored_for_divergence",
+    "name": "deficit_arm_i_mean_near",
+    "value": 4.4763187958126e-05,
+    "units": null,
+    "bound": "> arm_i_mean_far"
+  },
+  {
+    "test": "tests/oracles/test_statistic_dry_run.py::test_the_sufficiency_deficit_detects_perfectly_and_cannot_be_scored_for_divergence",
+    "name": "deficit_arm_i_mean_far",
+    "value": 3.782352493782683e-07,
+    "units": null,
+    "bound": "< arm_i_mean_near"
+  },
+  {
+    "test": "tests/oracles/test_statistic_dry_run.py::test_the_sufficiency_deficit_detects_perfectly_and_cannot_be_scored_for_divergence",
+    "name": "deficit_arm_i_growth",
+    "value": 0.00844969419363274,
+    "units": null,
+    "bound": "< 1.0 -- the statistic falls"
+  },
+  {
+    "test": "tests/oracles/test_statistic_dry_run.py::test_the_innovation_bias_is_the_selected_candidate",
+    "name": "innovation_bias_verdict",
+    "value": "DISCRIMINATING",
+    "units": null,
+    "bound": "== DISCRIMINATING"
+  },
+  {
+    "test": "tests/oracles/test_statistic_dry_run.py::test_the_innovation_bias_is_the_selected_candidate",
+    "name": "innovation_bias_separation_near",
+    "value": 5.183693720940482,
+    "units": null,
+    "bound": "> 1.0 null-arm sigma"
+  },
+  {
+    "test": "tests/oracles/test_statistic_dry_run.py::test_the_innovation_bias_is_the_selected_candidate",
+    "name": "innovation_bias_separation_far",
+    "value": 52.39562270812163,
+    "units": null,
+    "bound": "> baseline separation"
+  },
+  {
+    "test": "tests/oracles/test_statistic_dry_run.py::test_the_innovation_bias_is_the_selected_candidate",
+    "name": "innovation_bias_growth_ratio",
+    "value": 10.107777490105153,
+    "units": null,
+    "bound": "> 2.0"
+  },
+  {
+    "test": "tests/oracles/test_statistic_dry_run.py::test_the_innovation_bias_is_the_selected_candidate",
+    "name": "innovation_bias_arm_i_growth",
+    "value": 7.032868823960772,
+    "units": null,
+    "bound": "> 1.0 in its own units too"
+  },
+  {
+    "test": "tests/oracles/test_statistic_dry_run.py::test_the_innovation_bias_is_the_selected_candidate",
+    "name": "baseline_separation_far",
+    "value": 21.317400339925396,
+    "units": null,
+    "bound": "narrative; the comparator"
+  },
+  {
+    "test": "tests/oracles/test_statistic_dry_run.py::test_the_innovation_bias_is_the_selected_candidate",
+    "name": "baseline_growth_ratio",
+    "value": 1.3352871716998544,
+    "units": null,
+    "bound": "narrative; the comparator's own divergence"
+  },
+  {
+    "test": "tests/oracles/test_statistic_dry_run.py::test_the_parameter_spread_is_beaten_by_the_tabular_baseline",
+    "name": "parameter_spread_verdict",
+    "value": "ADVERSE",
+    "units": null,
+    "bound": "== ADVERSE"
+  },
+  {
+    "test": "tests/oracles/test_statistic_dry_run.py::test_the_parameter_spread_is_beaten_by_the_tabular_baseline",
+    "name": "parameter_spread_separation_near",
+    "value": 0.3990015508711195,
+    "units": null,
+    "bound": "narrative"
+  },
+  {
+    "test": "tests/oracles/test_statistic_dry_run.py::test_the_parameter_spread_is_beaten_by_the_tabular_baseline",
+    "name": "parameter_spread_separation_far",
+    "value": 3.442578111118339,
+    "units": null,
+    "bound": "<= baseline separation"
+  },
+  {
+    "test": "tests/oracles/test_statistic_dry_run.py::test_the_parameter_spread_is_beaten_by_the_tabular_baseline",
+    "name": "parameter_spread_growth_ratio",
+    "value": 8.62798178002651,
+    "units": null,
+    "bound": "> 2.0 but adverse anyway"
+  },
+  {
+    "test": "tests/oracles/test_statistic_dry_run.py::test_the_parameter_spread_is_beaten_by_the_tabular_baseline",
+    "name": "parameter_spread_arm_i_growth",
+    "value": 1.3525519527356769,
+    "units": null,
+    "bound": "narrative; near 1 -- barely moves"
+  },
+  {
+    "test": "tests/oracles/test_statistic_dry_run.py::test_exactly_one_candidate_is_selected",
+    "name": "all_verdicts",
+    "value": {
+      "deficit": "SEPARATION_UNBOUNDED",
+      "innovation_bias": "DISCRIMINATING",
+      "parameter_spread": "ADVERSE"
+    },
+    "units": null,
+    "bound": "exactly one DISCRIMINATING"
+  },
+  {
+    "test": "tests/oracles/test_statistic_dry_run.py::test_exactly_one_candidate_is_selected",
+    "name": "selected_candidate",
+    "value": [
+      "innovation_bias"
+    ],
+    "units": null,
+    "bound": "== ['innovation_bias']"
+  },
+  {
+    "test": "tests/oracles/test_statistic_dry_run.py::test_exactly_one_candidate_is_selected",
+    "name": "dry_run_summaries",
+    "value": [
+      "deficit: axis signal 4.53 -> 18.13 noise-widths; separation inf -> inf (growth nan); arm-I mean 4.476e-05 -> 3.782e-07 (growth 0.008); baseline separation 15.965 -> 21.317 -> SEPARATION_UNBOUNDED",
+      "innovation_bias: axis signal 4.53 -> 18.13 noise-widths; separation 5.184 -> 52.396 (growth 10.108); arm-I mean 3.898 -> 27.42 (growth 7.033); baseline separation 15.965 -> 21.317 -> DISCRIMINATING",
+      "parameter_spread: axis signal 4.53 -> 18.13 noise-widths; separation 0.399 -> 3.443 (growth 8.628); arm-I mean 2.445 -> 3.307 (growth 1.353); baseline separation 15.965 -> 21.317 -> ADVERSE"
+    ],
+    "units": null,
+    "bound": "narrative; the full record"
+  },
+  {
+    "test": "tests/test_arity_stage1_additive.py::test_scope_declaration_reports_evidenced_and_undeclared_features_generically",
+    "name": "scope_evidenced_features",
+    "value": [
+      "control_axis",
+      "structure_mediated_response"
+    ],
+    "units": null,
+    "bound": "control_axis, structure_mediated_response"
+  },
+  {
+    "test": "tests/test_arity_stage1_additive.py::test_scope_declaration_reports_evidenced_and_undeclared_features_generically",
+    "name": "scope_undeclared_features",
+    "value": [
+      "hidden_state",
+      "recurring_decision_under_uncertainty"
+    ],
+    "units": null,
+    "bound": "hidden_state, recurring_decision_under_uncertainty"
+  },
+  {
+    "test": "tests/test_arity_stage1_additive.py::test_scope_declaration_default_is_all_undeclared_and_no_scope_exit",
+    "name": "empty_scope_evidenced",
+    "value": [],
+    "units": null,
+    "bound": "()"
+  },
+  {
+    "test": "tests/test_arity_stage1_additive.py::test_scope_declaration_default_is_all_undeclared_and_no_scope_exit",
+    "name": "empty_scope_undeclared_count",
+    "value": 4,
+    "units": null,
+    "bound": "4"
+  },
+  {
+    "test": "tests/test_arity_stage1_additive.py::test_scope_exit_criterion_reported_distinctly_from_the_four_features",
+    "name": "scope_exit_declared_with_no_features",
+    "value": true,
+    "units": null,
+    "bound": "True"
+  },
+  {
+    "test": "tests/test_arity_stage1_additive.py::test_scope_exit_criterion_reported_distinctly_from_the_four_features",
+    "name": "scope_exit_features_still_all_undeclared",
+    "value": 0,
+    "units": null,
+    "bound": "0"
+  },
+  {
+    "test": "tests/test_arity_stage1_additive.py::test_symmetry_group_action_constructs_when_fully_declared",
+    "name": "symmetry_group_action_group",
+    "value": "SO(3)",
+    "units": null,
+    "bound": "SO(3)"
+  },
+  {
+    "test": "tests/test_arity_stage1_additive.py::test_symmetry_group_action_constructs_when_fully_declared",
+    "name": "symmetry_group_action_n_components",
+    "value": 3,
+    "units": null,
+    "bound": "3"
+  },
+  {
+    "test": "tests/test_arity_stage1_additive.py::test_no_built_domain_declares_a_symmetry_group_action",
+    "name": "sdl_symmetry_group_actions",
+    "value": [],
+    "units": null,
+    "bound": "()"
+  },
+  {
+    "test": "tests/test_arity_stage1_additive.py::test_refines_none_does_not_require_a_note",
+    "name": "independent_form_refines",
+    "value": null,
+    "units": null,
+    "bound": "None"
+  },
+  {
+    "test": "tests/test_arity_stage1_additive.py::test_kocks_mecking_strain_windowed_declares_the_real_worked_case",
+    "name": "windowed_form_refines",
+    "value": "kocks_mecking_dislocation_evolution",
+    "units": null,
+    "bound": "== 'kocks_mecking_dislocation_evolution'"
+  },
+  {
+    "test": "tests/test_arity_stage1_additive.py::test_kocks_mecking_strain_windowed_declares_the_real_worked_case",
+    "name": "windowed_form_refinement_note_nonempty",
+    "value": true,
+    "units": null,
+    "bound": "True"
+  },
+  {
+    "test": "tests/test_arity_stage1_additive.py::test_conformance_report_carries_the_error_control_claim_unchanged",
+    "name": "carried_error_control_verdict",
+    "value": "CLAIMABLE",
+    "units": null,
+    "bound": "CLAIMABLE"
+  },
+  {
+    "test": "tests/test_arity_stage1_additive.py::test_error_control_claim_does_not_gate_any_omi_0_1_2_requirement",
+    "name": "requirements_identical_regardless_of_error_control_claim",
+    "value": true,
+    "units": null,
+    "bound": "True"
+  },
+  {
+    "test": "tests/test_arity_stage1_additive.py::test_error_control_claim_does_not_gate_any_omi_0_1_2_requirement",
+    "name": "highest_level_identical",
+    "value": true,
+    "units": null,
+    "bound": "True"
+  },
+  {
+    "test": "tests/test_arity_stage1_additive.py::test_error_control_claim_defaults_to_none_on_every_existing_call_site",
+    "name": "default_error_control_claim",
+    "value": null,
+    "units": null,
+    "bound": "None"
+  },
+  {
+    "test": "tests/test_arity_stage1_additive.py::test_sdl_declaration_evidences_all_four_scope_features",
+    "name": "sdl_scope_evidenced_features",
+    "value": [
+      "control_axis",
+      "hidden_state",
+      "recurring_decision_under_uncertainty",
+      "structure_mediated_response"
+    ],
+    "units": null,
+    "bound": "all four"
+  },
+  {
+    "test": "tests/test_arity_stage1_additive.py::test_sdl_declaration_evidences_all_four_scope_features",
+    "name": "sdl_scope_undeclared_features",
+    "value": [],
+    "units": null,
+    "bound": "()"
+  },
+  {
+    "test": "tests/test_arity_stage1_additive.py::test_sdl_declaration_evidences_all_four_scope_features",
+    "name": "sdl_declares_scope_exit",
+    "value": true,
+    "units": null,
+    "bound": "True"
+  },
+  {
+    "test": "tests/test_baseline_characterisation.py::test_harness_runs_and_produces_finite_scores_on_a_tiny_configuration",
+    "name": "ridge_rmse",
+    "value": 0.1532459213535425,
+    "units": null,
+    "bound": "finite, >= 0"
+  },
+  {
+    "test": "tests/test_baseline_characterisation.py::test_harness_runs_and_produces_finite_scores_on_a_tiny_configuration",
+    "name": "ridge_hit_rate",
+    "value": 1.0,
+    "units": null,
+    "bound": "finite, in [0, 1]"
+  },
+  {
+    "test": "tests/test_baseline_characterisation.py::test_harness_runs_and_produces_finite_scores_on_a_tiny_configuration",
+    "name": "gbt_rmse",
+    "value": 0.7290254192036526,
+    "units": null,
+    "bound": "finite, >= 0"
+  },
+  {
+    "test": "tests/test_baseline_characterisation.py::test_harness_runs_and_produces_finite_scores_on_a_tiny_configuration",
+    "name": "gbt_hit_rate",
+    "value": 0.25,
+    "units": null,
+    "bound": "finite, in [0, 1]"
+  },
+  {
+    "test": "tests/test_baseline_characterisation.py::test_harness_runs_and_produces_finite_scores_on_a_tiny_configuration",
+    "name": "deeponet_rmse",
+    "value": 0.6179378043173549,
+    "units": null,
+    "bound": "finite, >= 0"
+  },
+  {
+    "test": "tests/test_baseline_characterisation.py::test_harness_runs_and_produces_finite_scores_on_a_tiny_configuration",
+    "name": "deeponet_hit_rate",
+    "value": 0.75,
+    "units": null,
+    "bound": "finite, in [0, 1]"
+  },
+  {
+    "test": "tests/test_baseline_characterisation.py::test_contrasts_dendrite_risk_responds_to_the_declared_control",
+    "name": "dendrite_risk_at_0.2_1.0_3.0_5.0",
+    "value": [
+      0.1411846981659744,
+      0.7143571884149433,
+      2.0220787646317966,
+      3.1646770752113804
+    ],
+    "units": null,
+    "bound": "strictly increasing, not constant"
+  },
+  {
+    "test": "tests/test_baseline_characterisation.py::test_contrast_control_inverse_harness_runs_and_produces_finite_scores",
+    "name": "contrast_ridge_rmse_in_trust",
+    "value": 0.06063236932470831,
+    "units": null,
+    "bound": "finite, >= 0"
+  },
+  {
+    "test": "tests/test_baseline_characterisation.py::test_contrast_control_inverse_harness_runs_and_produces_finite_scores",
+    "name": "contrast_ridge_rmse_extrapolation",
+    "value": 0.1348286721630766,
+    "units": null,
+    "bound": "finite, >= 0"
+  },
+  {
+    "test": "tests/test_baseline_characterisation.py::test_contrast_control_inverse_harness_runs_and_produces_finite_scores",
+    "name": "contrast_gbt_rmse_in_trust",
+    "value": 0.0808600570776845,
+    "units": null,
+    "bound": "finite, >= 0"
+  },
+  {
+    "test": "tests/test_baseline_characterisation.py::test_contrast_control_inverse_harness_runs_and_produces_finite_scores",
+    "name": "contrast_gbt_rmse_extrapolation",
+    "value": 0.6781418774185516,
+    "units": null,
+    "bound": "finite, >= 0"
+  },
+  {
+    "test": "tests/test_baseline_characterisation.py::test_contrast_control_inverse_harness_runs_and_produces_finite_scores",
+    "name": "contrast_constrained_operator_rmse_in_trust",
+    "value": 0.044318324835239786,
+    "units": null,
+    "bound": "finite, >= 0"
+  },
+  {
+    "test": "tests/test_baseline_characterisation.py::test_contrast_control_inverse_harness_runs_and_produces_finite_scores",
+    "name": "contrast_constrained_operator_rmse_extrapolation",
+    "value": 0.5579281385384542,
+    "units": null,
+    "bound": "finite, >= 0"
+  },
+  {
+    "test": "tests/test_chain_rollout.py::test_flagship_chain_runs_end_to_end_and_erasure_takes_effect",
+    "name": "erased_std_before",
+    "value": 1.3195880147455838,
+    "units": null,
+    "bound": "narrative only, not asserted"
+  },
+  {
+    "test": "tests/test_chain_rollout.py::test_flagship_chain_runs_end_to_end_and_erasure_takes_effect",
+    "name": "erased_std_after",
+    "value": 0.008891314103984155,
+    "units": null,
+    "bound": "< 0.05 * erased_std_before"
+  },
+  {
+    "test": "tests/test_chain_rollout.py::test_flagship_chain_runs_end_to_end_and_erasure_takes_effect",
+    "name": "surviving_std_before",
+    "value": 3.0508587508982603,
+    "units": null,
+    "bound": "== surviving_std_after"
+  },
+  {
+    "test": "tests/test_chain_rollout.py::test_flagship_chain_runs_end_to_end_and_erasure_takes_effect",
+    "name": "surviving_std_after",
+    "value": 3.0508587508982603,
+    "units": null,
+    "bound": "== surviving_std_before"
+  },
+  {
+    "test": "tests/test_chain_rollout.py::test_contrast_chain_runs_end_to_end_with_no_erasure",
+    "name": "sei_thickness_before",
+    "value": 0.009620557007782608,
+    "units": null,
+    "bound": "< sei_thickness_after"
+  },
+  {
+    "test": "tests/test_chain_rollout.py::test_contrast_chain_runs_end_to_end_with_no_erasure",
+    "name": "sei_thickness_after",
+    "value": 0.8660807720453573,
+    "units": null,
+    "bound": "> sei_thickness_before"
+  },
+  {
+    "test": "tests/test_classb_competing_risks.py::test_oq3_a_single_pooled_tail_fit_badly_underestimates_the_design_point_risk",
+    "name": "true_probability",
+    "value": 0.027958078982639467,
+    "units": null,
+    "bound": "narrative only, not asserted"
+  },
+  {
+    "test": "tests/test_classb_competing_risks.py::test_oq3_a_single_pooled_tail_fit_badly_underestimates_the_design_point_risk",
+    "name": "naive_probability",
+    "value": 1.0765586147098993e-05,
+    "units": null,
+    "bound": "> 0.0"
+  },
+  {
+    "test": "tests/test_classb_competing_risks.py::test_oq3_a_single_pooled_tail_fit_badly_underestimates_the_design_point_risk",
+    "name": "ratio_true_over_naive",
+    "value": 2596.9862300691675,
+    "units": null,
+    "bound": "> 100"
+  },
+  {
+    "test": "tests/test_classb_competing_risks.py::test_the_rare_heavy_tailed_population_dominates_the_true_design_point_risk",
+    "name": "common_contribution",
+    "value": 3.2000000000000005e-05,
+    "units": null,
+    "bound": "< rare_contribution"
+  },
+  {
+    "test": "tests/test_classb_competing_risks.py::test_the_rare_heavy_tailed_population_dominates_the_true_design_point_risk",
+    "name": "rare_contribution",
+    "value": 0.0282842712474619,
+    "units": null,
+    "bound": "> common_contribution"
+  },
+  {
+    "test": "tests/test_classb_subset_simulation.py::test_subset_simulation_recovers_a_known_rare_exceedance_probability",
+    "name": "truth",
+    "value": 6.400000000000001e-11,
+    "units": null,
+    "bound": "< 1e-9 (rarity precondition)"
+  },
+  {
+    "test": "tests/test_classb_subset_simulation.py::test_subset_simulation_recovers_a_known_rare_exceedance_probability",
+    "name": "estimated_probability",
+    "value": 2.65217391304348e-11,
+    "units": null,
+    "bound": "> 0.0"
+  },
+  {
+    "test": "tests/test_classb_subset_simulation.py::test_subset_simulation_recovers_a_known_rare_exceedance_probability",
+    "name": "log10_ratio_to_truth",
+    "value": -0.3825779749907128,
+    "units": null,
+    "bound": "abs < 1.0"
+  },
+  {
+    "test": "tests/test_classb_subset_simulation.py::test_subset_simulation_uses_far_fewer_evaluations_than_direct_sampling_would",
+    "name": "n_evaluations",
+    "value": 5259,
+    "units": null,
+    "bound": "< direct_sampling_cost / 1000"
+  },
+  {
+    "test": "tests/test_classb_subset_simulation.py::test_subset_simulation_uses_far_fewer_evaluations_than_direct_sampling_would",
+    "name": "direct_sampling_cost",
+    "value": 15624999999.999998,
+    "units": null,
+    "bound": "narrative only, not asserted"
+  },
+  {
+    "test": "tests/test_classb_subset_simulation.py::test_subset_simulation_reports_its_level_thresholds",
+    "name": "level_thresholds",
+    "value": [
+      1.4733529037658604,
+      2.1166442564243604,
+      2.92332636336281,
+      4.1124244219629,
+      6.7391819706190255,
+      10.256030352183998,
+      14.179457652507512,
+      21.770225161713537,
+      31.94684237039949,
+      45.727346627952954
+    ],
+    "units": null,
+    "bound": "strictly increasing, non-empty"
+  },
+  {
+    "test": "tests/test_conformance.py::test_calibration_report_distinguishes_well_calibrated_from_overconfident_ensembles",
+    "name": "good_pit_uniformity_residual",
+    "value": 0.06099999999999994,
+    "units": null,
+    "bound": "< bad_pit_uniformity_residual"
+  },
+  {
+    "test": "tests/test_conformance.py::test_calibration_report_distinguishes_well_calibrated_from_overconfident_ensembles",
+    "name": "bad_pit_uniformity_residual",
+    "value": 0.34,
+    "units": null,
+    "bound": "> good_pit_uniformity_residual"
+  },
+  {
+    "test": "tests/test_conformance.py::test_calibration_report_distinguishes_well_calibrated_from_overconfident_ensembles",
+    "name": "good_empirical_coverage",
+    "value": 0.9,
+    "units": null,
+    "bound": "> bad_empirical_coverage"
+  },
+  {
+    "test": "tests/test_conformance.py::test_calibration_report_distinguishes_well_calibrated_from_overconfident_ensembles",
+    "name": "bad_empirical_coverage",
+    "value": 0.274,
+    "units": null,
+    "bound": "< good_empirical_coverage"
+  },
+  {
+    "test": "tests/test_conformance_flagship.py::test_flagship_matched_pair_deficit_is_at_noise_level",
+    "name": "deficit_squared",
+    "value": 0.0015345693656183546,
+    "units": null,
+    "bound": "< repeat_variance_term"
+  },
+  {
+    "test": "tests/test_conformance_flagship.py::test_flagship_matched_pair_deficit_is_at_noise_level",
+    "name": "repeat_variance_term",
+    "value": 0.493626655613166,
+    "units": null,
+    "bound": "> deficit_squared"
+  },
+  {
+    "test": "tests/test_constraints.py::test_positive_grad_matches_finite_difference",
+    "name": "max_abs_error",
+    "value": 1.4161869454909493e-09,
+    "units": "grad units",
+    "bound": "< 1e-6"
+  },
+  {
+    "test": "tests/test_constraints.py::test_simplex_jacobian_matches_finite_difference",
+    "name": "max_abs_error",
+    "value": 7.551433783836714e-11,
+    "units": null,
+    "bound": "< 1e-6"
+  },
+  {
+    "test": "tests/test_constraints.py::test_monotone_increasing_jacobian_matches_finite_difference",
+    "name": "max_abs_error",
+    "value": 1.166390595219724e-09,
+    "units": null,
+    "bound": "< 1e-6"
+  },
+  {
+    "test": "tests/test_constraints.py::test_conserve_total_jacobian_matches_finite_difference",
+    "name": "max_abs_error",
+    "value": 5.493603905115663e-10,
+    "units": null,
+    "bound": "< 1e-6"
+  },
+  {
+    "test": "tests/test_domain_triage.py::test_flagship_triage_with_bend_angle_does_not_materially_reorder_the_dangerous_set",
+    "name": "old_target_labels",
+    "value": [
+      "unresolved",
+      "unresolved",
+      "dangerous",
+      "inferred",
+      "unresolved",
+      "dangerous",
+      "dangerous"
+    ],
+    "units": null,
+    "bound": "== new_target_labels, same order"
+  },
+  {
+    "test": "tests/test_domain_triage.py::test_flagship_triage_with_bend_angle_does_not_materially_reorder_the_dangerous_set",
+    "name": "new_target_labels",
+    "value": [
+      "unresolved",
+      "unresolved",
+      "dangerous",
+      "inferred",
+      "unresolved",
+      "dangerous",
+      "dangerous"
+    ],
+    "units": null,
+    "bound": "== old_target_labels, same order"
+  },
+  {
+    "test": "tests/test_domain_triage.py::test_flagship_triage_with_bend_angle_does_not_materially_reorder_the_dangerous_set",
+    "name": "old_dangerous_set_size",
+    "value": 3,
+    "units": null,
+    "bound": "== new_dangerous_set_size"
+  },
+  {
+    "test": "tests/test_domain_triage.py::test_flagship_triage_with_bend_angle_does_not_materially_reorder_the_dangerous_set",
+    "name": "new_dangerous_set_size",
+    "value": 3,
+    "units": null,
+    "bound": "== old_dangerous_set_size"
+  },
+  {
+    "test": "tests/test_domain_triage.py::test_flagship_triage_with_bend_angle_does_not_materially_reorder_the_dangerous_set",
+    "name": "danger_score_ratio_new_over_old",
+    "value": [
+      1.9999999949504854,
+      1.9999999992996655,
+      1.9999999938484827
+    ],
+    "units": null,
+    "bound": "nearly constant across directions"
+  },
+  {
+    "test": "tests/test_domain_triage.py::test_full_triage_classification_is_asserted_for_both_domains",
+    "name": "flagship_label_set",
+    "value": [
+      "dangerous",
+      "inferred",
+      "unresolved"
+    ],
+    "units": null,
+    "bound": "subset of {inferred, dangerous}; see docstring"
+  },
+  {
+    "test": "tests/test_domain_triage.py::test_full_triage_classification_is_asserted_for_both_domains",
+    "name": "contrast_label_set",
+    "value": [
+      "dangerous",
+      "inferred",
+      "unresolved"
+    ],
+    "units": null,
+    "bound": "subset of {inferred, dangerous}; see docstring"
+  },
+  {
+    "test": "tests/test_domain_triage.py::test_full_triage_classification_is_asserted_for_both_domains",
+    "name": "flagship_influence_median",
+    "value": 0.0,
+    "units": null,
+    "bound": "== 0.0 (collapses OBSERVED_BUT_IRRELEVANT/MARGINALISABLE)"
+  },
+  {
+    "test": "tests/test_domain_triage.py::test_full_triage_classification_is_asserted_for_both_domains",
+    "name": "contrast_influence_median",
+    "value": 0.0,
+    "units": null,
+    "bound": "== 0.0 (same mechanism)"
+  },
+  {
+    "test": "tests/test_domain_triage.py::test_full_triage_classification_is_asserted_for_both_domains",
+    "name": "flagship_abstained_fraction",
+    "value": 0.42857142857142855,
+    "units": null,
+    "bound": "> 0 -- ADR-061's required output"
+  },
+  {
+    "test": "tests/test_domain_triage.py::test_full_triage_classification_is_asserted_for_both_domains",
+    "name": "contrast_abstained_fraction",
+    "value": 0.2857142857142857,
+    "units": null,
+    "bound": "> 0 -- ADR-061's required output"
+  },
+  {
+    "test": "tests/test_domain_triage.py::test_full_triage_classification_is_asserted_for_both_domains",
+    "name": "contrast_inferred_danger_scores_adr061",
+    "value": [
+      0.0,
+      0.0
+    ],
+    "units": null,
+    "bound": "present (len > 0); ~zero, per docstring -- not evidence of a dangerous inferred direction"
+  },
+  {
+    "test": "tests/test_domain_triage.py::test_full_triage_classification_is_asserted_for_both_domains",
+    "name": "flagship_inferred_danger_scores_adr061",
+    "value": [
+      0.0
+    ],
+    "units": null,
+    "bound": "present (len > 0); ALL ZERO under ADR-061 -- see below"
+  },
+  {
+    "test": "tests/test_domain_triage.py::test_full_triage_classification_is_asserted_for_both_domains",
+    "name": "flagship_unresolved_danger_scores_adr061",
+    "value": [
+      7.999999979801942,
+      4.308568691817097,
+      0.0
+    ],
+    "units": null,
+    "bound": "narrative; contains flagship's two largest danger scores"
+  },
+  {
+    "test": "tests/test_domain_triage.py::test_contrasts_poor_observation_suite_leaves_more_target_variance_dangerous",
+    "name": "flagship_unresolved_danger_fraction",
+    "value": 0.007810805806728086,
+    "units": null,
+    "bound": "< contrast_unresolved_danger_fraction"
+  },
+  {
+    "test": "tests/test_domain_triage.py::test_contrasts_poor_observation_suite_leaves_more_target_variance_dangerous",
+    "name": "contrast_unresolved_danger_fraction",
+    "value": 0.9999999920678353,
+    "units": null,
+    "bound": "> flagship_unresolved_danger_fraction"
+  },
+  {
+    "test": "tests/test_erasure_two_quantities.py::test_the_two_clauses_of_the_erasure_definition_come_apart",
+    "name": "erasure_effective_rank",
+    "value": 1,
+    "units": null,
+    "bound": "== 1"
+  },
+  {
+    "test": "tests/test_erasure_two_quantities.py::test_the_two_clauses_of_the_erasure_definition_come_apart",
+    "name": "erasure_state_dimension",
+    "value": 7,
+    "units": null,
+    "bound": "== 7"
+  },
+  {
+    "test": "tests/test_erasure_two_quantities.py::test_the_two_clauses_of_the_erasure_definition_come_apart",
+    "name": "erasure_surviving_gain",
+    "value": 14.630438890538048,
+    "units": null,
+    "bound": "> 1.0"
+  },
+  {
+    "test": "tests/test_erasure_two_quantities.py::test_the_two_clauses_of_the_erasure_definition_come_apart",
+    "name": "erasure_erased_gain",
+    "value": 0.021456213024158628,
+    "units": null,
+    "bound": "<< 1"
+  },
+  {
+    "test": "tests/test_erasure_two_quantities.py::test_the_two_clauses_of_the_erasure_definition_come_apart",
+    "name": "erasure_completeness_summary",
+    "value": "rank 1 of 7 at tol 0.1463 (dimension collapsed: True); surviving-subspace gain L = 14.6304 (gain contracted: False); erased-subspace gain 0.02146",
+    "units": null,
+    "bound": "states both clauses"
+  },
+  {
+    "test": "tests/test_erasure_two_quantities.py::test_a_decaying_erasure_satisfies_both_clauses",
+    "name": "flagship_erasure_rank",
+    "value": 5,
+    "units": null,
+    "bound": "< 7"
+  },
+  {
+    "test": "tests/test_erasure_two_quantities.py::test_a_decaying_erasure_satisfies_both_clauses",
+    "name": "flagship_erasure_surviving_gain",
+    "value": 1.0000000000287557,
+    "units": null,
+    "bound": "<= ~1"
+  },
+  {
+    "test": "tests/test_erasure_two_quantities.py::test_a_decaying_erasure_satisfies_both_clauses",
+    "name": "flagship_erasure_summary",
+    "value": "rank 5 of 7 at tol 0.01 (dimension collapsed: True); surviving-subspace gain L = 1.0000 (gain contracted: False); erased-subspace gain 0.006738",
+    "units": null,
+    "bound": "both clauses stated"
+  },
+  {
+    "test": "tests/test_erasure_two_quantities.py::test_condition_a_is_refused_when_the_declared_state_is_untested",
+    "name": "condition_a_verdict_calcination",
+    "value": "REFUSED_GAIN_NOT_CONTRACTED",
+    "units": null,
+    "bound": "REFUSED_GAIN_NOT_CONTRACTED"
+  },
+  {
+    "test": "tests/test_erasure_two_quantities.py::test_condition_a_is_refused_when_the_declared_state_is_untested",
+    "name": "condition_a_reason_calcination",
+    "value": "the surviving subspace has gain L = 14.6304 >= 1 in the declared metric, so error in the directions that survive is amplified rather than bounded; destroying the other directions does not bound it (E-56)",
+    "units": null,
+    "bound": "names the gain, not the deficit"
+  },
+  {
+    "test": "tests/test_erasure_two_quantities.py::test_a_contracting_erasure_is_still_refused_without_a_deficit",
+    "name": "condition_a_verdict_untested",
+    "value": "REFUSED_STATE_UNTESTED",
+    "units": null,
+    "bound": "REFUSED_STATE_UNTESTED"
+  },
+  {
+    "test": "tests/test_erasure_two_quantities.py::test_a_contracting_erasure_is_still_refused_without_a_deficit",
+    "name": "condition_a_verdict_tested",
+    "value": "CLAIMABLE",
+    "units": null,
+    "bound": "CLAIMABLE"
+  },
+  {
+    "test": "tests/test_erasure_two_quantities.py::test_a_contracting_erasure_is_still_refused_without_a_deficit",
+    "name": "condition_a_verdict_insufficient",
+    "value": "REFUSED_DEFICIT_ABOVE_THRESHOLD",
+    "units": null,
+    "bound": "REFUSED_DEFICIT_ABOVE_THRESHOLD"
+  },
+  {
+    "test": "tests/test_error_compounding.py::test_perturbation_before_the_erasure_is_damped_at_the_terminal_state",
+    "name": "terminal_distance",
+    "value": 0.033689734995427344,
+    "units": "metric distance, injected perturbation = 5 sigma",
+    "bound": "< 0.5"
+  },
+  {
+    "test": "tests/test_error_compounding.py::test_perturbation_after_the_erasure_survives_to_the_terminal_state",
+    "name": "terminal_distance",
+    "value": 5.0,
+    "units": "metric distance, injected perturbation = 5 sigma",
+    "bound": "> 4.5"
+  },
+  {
+    "test": "tests/test_error_compounding.py::test_pre_erasure_damping_is_much_stronger_than_post_erasure_propagation",
+    "name": "pre_erasure_distance",
+    "value": 0.03368973499542733,
+    "units": null,
+    "bound": "narrative only, not asserted"
+  },
+  {
+    "test": "tests/test_error_compounding.py::test_pre_erasure_damping_is_much_stronger_than_post_erasure_propagation",
+    "name": "post_erasure_distance",
+    "value": 5.000000000000001,
+    "units": null,
+    "bound": "> 100 * pre_erasure_distance"
+  },
+  {
+    "test": "tests/test_error_compounding.py::test_pre_erasure_damping_is_much_stronger_than_post_erasure_propagation",
+    "name": "ratio_post_over_pre",
+    "value": 148.41315910257666,
+    "units": null,
+    "bound": "> 100"
+  },
+  {
+    "test": "tests/test_extended_boundary.py::test_report_carries_the_declared_version_through_unchanged",
+    "name": "report_version_V1_3",
+    "value": "v1.3",
+    "units": null,
+    "bound": "carried through from inputs, expected v1.3"
+  },
+  {
+    "test": "tests/test_extended_boundary.py::test_report_carries_the_declared_version_through_unchanged",
+    "name": "report_version_PROPOSED_CONSTITUTIVE_EXTENSION",
+    "value": "proposed-constitutive-extension",
+    "units": null,
+    "bound": "carried through from inputs, expected proposed-constitutive-extension"
+  },
+  {
+    "test": "tests/test_extended_boundary.py::test_report_carries_the_declared_version_through_unchanged",
+    "name": "report_version_PROPOSED_DECISION_EXTENSION",
+    "value": "proposed-decision-extension",
+    "units": null,
+    "bound": "carried through from inputs, expected proposed-decision-extension"
+  },
+  {
+    "test": "tests/test_extended_boundary.py::test_same_version_comparison_returns_the_requirement_level_diff",
+    "name": "same_version_report_diff",
+    "value": {
+      "rollout_length_error_curve_reported": [
+        false,
+        true
+      ]
+    },
+    "units": null,
+    "bound": "only the rollout-curve requirement should differ"
+  },
+  {
+    "test": "tests/test_extended_boundary.py::test_a_v13_claim_and_an_extension_claim_are_different_objects_on_one_domain",
+    "name": "one_domain_two_version_claims",
+    "value": [
+      "v1.3",
+      "proposed-constitutive-extension"
+    ],
+    "units": null,
+    "bound": "same declaration object, two distinct version-stamped claims"
+  },
+  {
+    "test": "tests/test_extended_boundary.py::test_v13_core_projection_diffs_exactly_as_the_v13_declaration_does",
+    "name": "v13_core_projection_diff_matches_direct",
+    "value": {
+      "identical": true,
+      "n_keys": 9
+    },
+    "units": null,
+    "bound": "wrapping must not change any item's diff verdict"
+  },
+  {
+    "test": "tests/test_extended_boundary.py::test_the_projection_still_holds_with_the_m11_2_extension_populated",
+    "name": "projection_diff_invariant_to_extension_content",
+    "value": {
+      "forms_declared": 1,
+      "identical_to_direct": true
+    },
+    "units": null,
+    "bound": "populating item 6d must not move any v1.3 item's diff verdict"
+  },
+  {
+    "test": "tests/test_flagship_classb_bend.py::test_bend_angle_returns_a_response_and_a_process_zone_volume",
+    "name": "outer_fibre_response",
+    "value": [
+      106.95238095238095
+    ],
+    "units": null,
+    "bound": "finite, positive"
+  },
+  {
+    "test": "tests/test_flagship_classb_bend.py::test_bend_angle_returns_a_response_and_a_process_zone_volume",
+    "name": "process_zone_volume",
+    "value": 0.6666666666666666,
+    "units": null,
+    "bound": "in [0, thickness]"
+  },
+  {
+    "test": "tests/test_flagship_classb_bend.py::test_bend_classb_campaign_runs_end_to_end",
+    "name": "correlation_length",
+    "value": 1.4000000000000001,
+    "units": null,
+    "bound": "> 0, reliable"
+  },
+  {
+    "test": "tests/test_flagship_classb_bend.py::test_bend_classb_campaign_runs_end_to_end",
+    "name": "correlation_length_reliable",
+    "value": true,
+    "units": null,
+    "bound": "True"
+  },
+  {
+    "test": "tests/test_flagship_classb_bend.py::test_bend_classb_campaign_runs_end_to_end",
+    "name": "domain_to_correlation_ratio",
+    "value": 35.71428571428571,
+    "units": null,
+    "bound": "reported"
+  },
+  {
+    "test": "tests/test_flagship_classb_bend.py::test_bend_classb_campaign_runs_end_to_end",
+    "name": "xi_a_hat",
+    "value": 0.5341766899882849,
+    "units": null,
+    "bound": "> 0 (measured from the defect population, not hand-supplied)"
+  },
+  {
+    "test": "tests/test_flagship_classb_bend.py::test_bend_classb_campaign_runs_end_to_end",
+    "name": "xi_d_hat",
+    "value": 0.5341766899882849,
+    "units": null,
+    "bound": "== xi_a_hat (beta=1.0, declared in item 4b)"
+  },
+  {
+    "test": "tests/test_flagship_classb_bend.py::test_bend_classb_campaign_runs_end_to_end",
+    "name": "p0_model_based",
+    "value": 0.04585244335613037,
+    "units": null,
+    "bound": "in (0, 1), fitted from join_driver_tail, not calibrated against sampling"
+  },
+  {
+    "test": "tests/test_flagship_classb_bend.py::test_bulk_regime_rung_4_is_empirical_and_p0_is_reported_not_reconciled",
+    "name": "bulk_thicknesses",
+    "value": [
+      1.7500000000000002,
+      2.8000000000000003,
+      5.6000000000000005
+    ],
+    "units": null,
+    "bound": "> ell_D"
+  },
+  {
+    "test": "tests/test_flagship_classb_bend.py::test_bulk_regime_rung_4_is_empirical_and_p0_is_reported_not_reconciled",
+    "name": "bulk_n_eff",
+    "value": [
+      15.943877551020407,
+      25.510204081632647,
+      51.020408163265294
+    ],
+    "units": null,
+    "bound": "grows with volume (bulk regime)"
+  },
+  {
+    "test": "tests/test_flagship_classb_bend.py::test_bulk_regime_rung_4_is_empirical_and_p0_is_reported_not_reconciled",
+    "name": "bulk_failure_probabilities",
+    "value": [
+      0.47533333333333333,
+      0.6706666666666666,
+      0.87
+    ],
+    "units": null,
+    "bound": "strictly increasing, empirical"
+  },
+  {
+    "test": "tests/test_flagship_classb_bend.py::test_bulk_regime_rung_4_is_empirical_and_p0_is_reported_not_reconciled",
+    "name": "p0_model_based",
+    "value": 0.04585244335613037,
+    "units": null,
+    "bound": "compare only, not reconciled with bulk_p0_implied"
+  },
+  {
+    "test": "tests/test_flagship_classb_bend.py::test_bulk_regime_rung_4_is_empirical_and_p0_is_reported_not_reconciled",
+    "name": "bulk_p0_implied",
+    "value": [
+      0.03964657087817158,
+      0.042604638473471845,
+      0.03919934667764302
+    ],
+    "units": null,
+    "bound": "compare only, not reconciled with p0_model_based"
+  },
+  {
+    "test": "tests/test_flagship_classb_bend.py::test_bulk_regime_rung_4_is_empirical_and_p0_is_reported_not_reconciled",
+    "name": "bulk_volume_scaling_residual",
+    "value": -0.018442833735233033,
+    "units": null,
+    "bound": "sampling-noise-sized, e.g. < 0.1 in magnitude (not ~0 \u2014 this is now an empirical comparison)"
+  },
+  {
+    "test": "tests/test_flagship_classb_bend.py::test_thin_regime_n_eff_formula_is_thickness_independent_at_fixed_footprint",
+    "name": "thin_thicknesses",
+    "value": [
+      0.21000000000000002,
+      0.42000000000000004,
+      0.7000000000000001
+    ],
+    "units": null,
+    "bound": "< ell_D"
+  },
+  {
+    "test": "tests/test_flagship_classb_bend.py::test_thin_regime_n_eff_formula_is_thickness_independent_at_fixed_footprint",
+    "name": "thin_failure_probabilities",
+    "value": [
+      0.45046651001704185,
+      0.45046651001704185,
+      0.45046651001704174
+    ],
+    "units": null,
+    "bound": "constant across thickness (formula identity, not sampled)"
+  },
+  {
+    "test": "tests/test_flagship_classb_bend.py::test_thin_regime_n_eff_formula_is_thickness_independent_at_fixed_footprint",
+    "name": "thin_volume_scaling_residual",
+    "value": -2.2263110462736245e-16,
+    "units": null,
+    "bound": "~0 (predicted_exponent=0.0; this is a formula-consistency check, not a physical validation)"
+  },
+  {
+    "test": "tests/test_flagship_classb_bend.py::test_validation_ladder_is_constructed_with_finite_rungs",
+    "name": "rung1_bulk_residual",
+    "value": 0.054,
+    "units": null,
+    "bound": "finite, in [0, 1] (KS statistic)"
+  },
+  {
+    "test": "tests/test_flagship_classb_bend.py::test_validation_ladder_is_constructed_with_finite_rungs",
+    "name": "rung3_fractography_residual",
+    "value": 0.42133333333333334,
+    "units": null,
+    "bound": "finite, in [0, 1] (KS statistic)"
+  },
+  {
+    "test": "tests/test_flagship_classb_bend.py::test_validation_ladder_is_constructed_with_finite_rungs",
+    "name": "rung3_voids_construction",
+    "value": true,
+    "units": null,
+    "bound": "bool"
+  },
+  {
+    "test": "tests/test_flagship_classb_bend.py::test_validation_ladder_is_constructed_with_finite_rungs",
+    "name": "rung4_volume_scaling_residual",
+    "value": 0.018442833735233033,
+    "units": null,
+    "bound": "worse of an empirical (bulk) and an arithmetic-identity (thin) residual \u2014 see classb_bend.py"
+  },
+  {
+    "test": "tests/test_flagship_constitutive.py::test_flagship_itself_is_untouched",
+    "name": "flagship_static_components_unchanged",
+    "value": {
+      "prior_grain_size": [
+        0.0,
+        0.0
+      ],
+      "inclusion_content": [
+        0.0,
+        0.0
+      ],
+      "accumulated_hardening": [
+        0.0,
+        0.0
+      ]
+    },
+    "units": null,
+    "bound": "all rates still 0.0 \u2014 E-29's defect is preserved, not repaired"
+  },
+  {
+    "test": "tests/test_flagship_constitutive.py::test_the_two_v13_cores_are_indistinguishable",
+    "name": "constitutive_vs_flagship_v13_diff",
+    "value": {
+      "state_schema": false,
+      "declared_parameters": false,
+      "control_space": false,
+      "erasure_inventory": false,
+      "readout_catalogue": false,
+      "observation_suite": false,
+      "invariants": false,
+      "scale_structure": false,
+      "invariants_structural": false
+    },
+    "units": null,
+    "bound": "every item False \u2014 v1.3 cannot see the difference"
+  },
+  {
+    "test": "tests/test_flagship_constitutive.py::test_two_of_the_three_static_components_acquire_real_kinetics",
+    "name": "static_components_under_both_chains",
+    "value": {
+      "prior_grain_size": {
+        "in": 20.255400297028054,
+        "flagship": 20.255400297028054,
+        "variant": 26.68413916215523
+      },
+      "inclusion_content": {
+        "in": 0.9449656645011751,
+        "flagship": 0.9449656645011751,
+        "variant": 0.9449656645011751
+      },
+      "accumulated_hardening": {
+        "in": 0.0,
+        "flagship": 0.0,
+        "variant": 0.4831486655083
+      }
+    },
+    "units": null,
+    "bound": "two move in the variant, one by design does not"
+  },
+  {
+    "test": "tests/test_flagship_constitutive.py::test_the_erasure_survives_the_substitution",
+    "name": "variant_substructure_retained_fraction",
+    "value": 0.7097252732454451,
+    "units": null,
+    "bound": "erasure still contracts (< 1)"
+  },
+  {
+    "test": "tests/test_flagship_constitutive.py::test_all_five_forms_declare_a_range_provenance_and_kind",
+    "name": "declared_forms_summary",
+    "value": {
+      "kocks_mecking_dislocation_evolution": {
+        "kind": "rate_law",
+        "spaces": [
+          "control",
+          "state"
+        ],
+        "n_bounds": 3,
+        "one_sided": []
+      },
+      "parabolic_grain_growth": {
+        "kind": "explicit_solution",
+        "spaces": [
+          "control"
+        ],
+        "n_bounds": 1,
+        "one_sided": []
+      },
+      "jmak_recrystallised_fraction": {
+        "kind": "explicit_solution",
+        "spaces": [
+          "state"
+        ],
+        "n_bounds": 1,
+        "one_sided": []
+      },
+      "koistinen_marburger_athermal_fraction": {
+        "kind": "explicit_solution",
+        "spaces": [
+          "control"
+        ],
+        "n_bounds": 1,
+        "one_sided": []
+      },
+      "hall_petch_with_forest_hardening": {
+        "kind": "algebraic",
+        "spaces": [
+          "state"
+        ],
+        "n_bounds": 1,
+        "one_sided": [
+          "grain_size"
+        ]
+      }
+    },
+    "units": null,
+    "bound": "five forms, each with a declared range"
+  },
+  {
+    "test": "tests/test_flagship_constitutive.py::test_both_window_rules_are_exercised_by_real_physics",
+    "name": "one_sided_windows_among_declared_forms",
+    "value": {
+      "hall_petch_with_forest_hardening": [
+        "grain_size"
+      ]
+    },
+    "units": null,
+    "bound": "Hall-Petch's fine-grain edge"
+  },
+  {
+    "test": "tests/test_flagship_constitutive.py::test_koistinen_marburger_declares_one_sharp_and_one_approximate_edge",
+    "name": "koistinen_marburger_edges",
+    "value": {
+      "below_is_approximate": true,
+      "above_is_approximate": false,
+      "factors_equal": true
+    },
+    "units": null,
+    "bound": "equal magnitudes, different edge kinds"
+  },
+  {
+    "test": "tests/test_flagship_constitutive.py::test_the_chain_reports_where_every_stage_sits_in_its_envelope",
+    "name": "constitutive_chain_envelope_report",
+    "value": {
+      "stage_0": {
+        "worst_factor": 0.8001800180018,
+        "action": "within_envelope",
+        "binding": null
+      },
+      "stage_1": {
+        "worst_factor": 0.14285714285714285,
+        "action": "within_envelope",
+        "binding": null
+      }
+    },
+    "units": null,
+    "bound": "every stage inside its declared windows"
+  },
+  {
+    "test": "tests/test_flagship_constitutive.py::test_an_off_recipe_soak_surfaces_a_buy_physics_signal",
+    "name": "off_recipe_soak_report",
+    "value": {
+      "worst_factor": 2.0,
+      "binding": "kocks_mecking",
+      "action": "control_inverse"
+    },
+    "units": null,
+    "bound": "outside the declared window, and still evaluable"
+  },
+  {
+    "test": "tests/test_flagship_constitutive.py::test_the_report_catches_koistinen_marburger_applied_at_the_soak_temperature",
+    "name": "km_at_soak_temperature_caught_by_validity_report",
+    "value": {
+      "soak_temperature": 950.0,
+      "ms_temperature": 620.0,
+      "extrapolation_factor": 5.714285714285714,
+      "action": "control_inverse",
+      "binding_space": "control",
+      "output_that_would_have_passed_unnoticed": 0.0
+    },
+    "units": null,
+    "bound": "outside the declared window, with a plausible output and the correct action"
+  },
+  {
+    "test": "tests/test_flagship_real_erasure.py::test_heating_and_soak_erasure_is_full_rank_at_default_tolerance_but_visible_in_the_spectrum",
+    "name": "rank",
+    "value": 7,
+    "units": null,
+    "bound": "7 at default (ADR-017) tolerance \u2014 full rank, not reduced"
+  },
+  {
+    "test": "tests/test_flagship_real_erasure.py::test_heating_and_soak_erasure_is_full_rank_at_default_tolerance_but_visible_in_the_spectrum",
+    "name": "spectrum",
+    "value": [
+      1.0000000000502793,
+      1.0000000000287557,
+      1.0,
+      0.9512294244283646,
+      0.7408182206569691,
+      0.006737946999031869,
+      0.006737946998954577
+    ],
+    "units": null,
+    "bound": "two values near exp(-5)~0.0067, rest >= 0.74"
+  },
+  {
+    "test": "tests/test_flagship_real_erasure.py::test_heating_and_soak_erasure_is_full_rank_at_default_tolerance_but_visible_in_the_spectrum",
+    "name": "tol",
+    "value": 1.5543122345533688e-15,
+    "units": null,
+    "bound": "machine-epsilon scale (ADR-017 default)"
+  },
+  {
+    "test": "tests/test_flagship_real_erasure.py::test_heating_and_soak_erasure_is_full_rank_at_default_tolerance_but_visible_in_the_spectrum",
+    "name": "smallest_two_singular_directions",
+    "value": [
+      "M.prior_deformation",
+      "Z.substructure_density"
+    ],
+    "units": null,
+    "bound": "== {prior_deformation, substructure_density} (Core \u00a77.1's own claim)"
+  },
+  {
+    "test": "tests/test_flagship_real_erasure.py::test_heating_and_soak_component_recoverability_cannot_see_the_erasure_at_all",
+    "name": "component_recoverability",
+    "value": {
+      "M.prior_deformation": 1.0,
+      "M.prior_grain_size": 1.0,
+      "Z.substructure_density": 1.0,
+      "Z.inclusion_content": 0.9999999999999996,
+      "Z.accumulated_hardening": 0.0,
+      "NU.levelling_field": 1.0,
+      "GAMMA.coating_thickness": 0.9999999999999998
+    },
+    "units": null,
+    "bound": "see docstring: R^2 uniform except one degenerate-input case"
+  },
+  {
+    "test": "tests/test_holdout_discrimination.py::test_the_check_refuses_m11_4_s_axis",
+    "name": "m11_4_axis_discrimination",
+    "value": {
+      "axis_signal": 0.0,
+      "disagreement_near": 0.3386487966070756,
+      "disagreement_far": 0.35387714766567147,
+      "divergence": 1.0449679762962951,
+      "candidate_error": 0.3160057096648168,
+      "baseline_error": 0.06919319911244715,
+      "verdict": "inert_axis"
+    },
+    "units": null,
+    "bound": "refused: the withheld-free truth is exactly constant along the strain-rate axis"
+  },
+  {
+    "test": "tests/test_holdout_discrimination.py::test_m11_4_s_axis_fails_every_criterion_not_only_the_first",
+    "name": "m11_4_axis_fails_all_three_criteria",
+    "value": {
+      "inert": true,
+      "parallel": true,
+      "adverse": true,
+      "content_ratio": 0.21896186365062673
+    },
+    "units": null,
+    "bound": "all three criteria fail independently"
+  },
+  {
+    "test": "tests/test_holdout_discrimination.py::test_the_check_admits_m11_5_s_axis",
+    "name": "m11_5_axis_discrimination",
+    "value": {
+      "axis_signal": 3.8055960652952714,
+      "disagreement_near": 0.032397433785626976,
+      "disagreement_far": 0.47192768665462015,
+      "divergence": 14.566823093994236,
+      "required_divergence": 2.0,
+      "candidate_error": 3.1111610866462403e-15,
+      "baseline_error": 0.4719276866546219,
+      "noise_floor": 0.028361630195371017,
+      "verdict": "discriminating"
+    },
+    "units": null,
+    "bound": "admitted: the truth varies along the axis and the two models diverge along it"
+  },
+  {
+    "test": "tests/test_holdout_discrimination.py::test_disagreement_magnitude_cannot_separate_the_two_axes",
+    "name": "magnitude_does_not_separate_but_divergence_does",
+    "value": {
+      "vacuous_axis_disagreement_far": 0.35387714766567147,
+      "usable_axis_disagreement_far": 0.47192768665462015,
+      "magnitude_ratio": 1.333591868725239,
+      "vacuous_axis_divergence": 1.0449679762962951,
+      "usable_axis_divergence": 14.566823093994236,
+      "divergence_ratio": 13.939970816736198
+    },
+    "units": null,
+    "bound": "magnitudes within a small factor; divergences separated by more than 10x"
+  },
+  {
+    "test": "tests/test_holdout_discrimination.py::test_the_check_refuses_a_probe_it_cannot_read",
+    "name": "holdout_check_refusals",
+    "value": 4,
+    "units": null,
+    "bound": "all four degenerate inputs raise"
+  },
+  {
+    "test": "tests/test_interface_diff.py::test_core_7_2s_published_rows_cover_fewer_items_than_the_interface_declares",
+    "name": "interface_item_count",
+    "value": 8,
+    "units": null,
+    "bound": "8 since ADR-071 split item 1 into 1a/1b"
+  },
+  {
+    "test": "tests/test_interface_diff.py::test_core_7_2s_published_rows_cover_fewer_items_than_the_interface_declares",
+    "name": "core_7_2_published_row_count",
+    "value": 7,
+    "units": null,
+    "bound": "7 -- a fact about the issued v1.3 text"
+  },
+  {
+    "test": "tests/test_interface_diff.py::test_core_7_2s_published_rows_cover_fewer_items_than_the_interface_declares",
+    "name": "core_7_2_distinct_items_covered",
+    "value": 6,
+    "units": null,
+    "bound": "fewer than the declared item count"
+  },
+  {
+    "test": "tests/test_interface_diff.py::test_core_7_2s_published_rows_cover_fewer_items_than_the_interface_declares",
+    "name": "interface_items_without_a_core_7_2_row",
+    "value": [
+      "1b",
+      "6"
+    ],
+    "units": null,
+    "bound": "item 6 never had a row; item 1b postdates the table"
+  },
+  {
+    "test": "tests/test_interface_diff.py::test_flagship_and_contrast_differ_on_every_item_core_7_2_names",
+    "name": "flagship_vs_contrast_per_item_diff",
+    "value": {
+      "state_schema": true,
+      "declared_parameters": true,
+      "control_space": true,
+      "erasure_inventory": true,
+      "readout_catalogue": true,
+      "observation_suite": true,
+      "invariants": true,
+      "scale_structure": true,
+      "invariants_structural": false
+    },
+    "units": null,
+    "bound": "every \u00a77.2-named item True; recorded under the eight-item criterion"
+  },
+  {
+    "test": "tests/test_interface_diff.py::test_invariants_literal_diff_and_structural_diff_disagree",
+    "name": "invariants_literal_differs",
+    "value": true,
+    "units": null,
+    "bound": "True (different names)"
+  },
+  {
+    "test": "tests/test_interface_diff.py::test_invariants_literal_diff_and_structural_diff_disagree",
+    "name": "invariants_structural_differs",
+    "value": false,
+    "units": null,
+    "bound": "False (same kind multiset)"
+  },
+  {
+    "test": "tests/test_interface_diff.py::test_item_1b_inverts_the_two_domains_in_the_opposite_direction_to_item_3",
+    "name": "item_1b_differs_flagship_vs_contrast",
+    "value": true,
+    "units": null,
+    "bound": "True"
+  },
+  {
+    "test": "tests/test_interface_diff.py::test_item_1b_inverts_the_two_domains_in_the_opposite_direction_to_item_3",
+    "name": "flagship_declared_parameter_count",
+    "value": 0,
+    "units": null,
+    "bound": "0 -- E-29 unrepaired"
+  },
+  {
+    "test": "tests/test_interface_diff.py::test_item_1b_inverts_the_two_domains_in_the_opposite_direction_to_item_3",
+    "name": "contrast_declared_parameter_count",
+    "value": 1,
+    "units": null,
+    "bound": ">= 1"
+  },
+  {
+    "test": "tests/test_inverse_decision_layer.py::test_probability_of_conformance_prefers_a_tighter_distribution_over_a_better_mean",
+    "name": "tight_poc",
+    "value": 0.999,
+    "units": null,
+    "bound": "> wide_poc"
+  },
+  {
+    "test": "tests/test_inverse_decision_layer.py::test_probability_of_conformance_prefers_a_tighter_distribution_over_a_better_mean",
+    "name": "wide_poc",
+    "value": 0.4935,
+    "units": null,
+    "bound": "< tight_poc"
+  },
+  {
+    "test": "tests/test_inverse_decision_layer.py::test_cvar_is_worse_than_the_mean_for_a_right_skewed_loss",
+    "name": "cvar",
+    "value": 3.2814837461092297,
+    "units": null,
+    "bound": "> mean"
+  },
+  {
+    "test": "tests/test_inverse_decision_layer.py::test_cvar_is_worse_than_the_mean_for_a_right_skewed_loss",
+    "name": "mean",
+    "value": 0.995485088965682,
+    "units": null,
+    "bound": "< cvar"
+  },
+  {
+    "test": "tests/test_inverse_decision_layer.py::test_select_best_candidate_picks_the_higher_conformance_probability",
+    "name": "probabilities_of_conformance",
+    "value": [
+      0.0,
+      1.0
+    ],
+    "units": null,
+    "bound": "best is the 'good' candidate"
+  },
+  {
+    "test": "tests/test_inverse_decision_layer.py::test_decision_sensitive_threshold_minimises_expected_cost_against_a_numerical_sweep",
+    "name": "closed_form_tau",
+    "value": 0.0010341418115680755,
+    "units": null,
+    "bound": "close to numerical_tau"
+  },
+  {
+    "test": "tests/test_inverse_decision_layer.py::test_decision_sensitive_threshold_minimises_expected_cost_against_a_numerical_sweep",
+    "name": "numerical_tau",
+    "value": 0.0010500000000000023,
+    "units": null,
+    "bound": "close to closed_form_tau"
+  },
+  {
+    "test": "tests/test_learning_gradient_check.py::test_multistep_pushforward_branch_gradient_matches_finite_difference",
+    "name": "max_abs_error",
+    "value": 5.273476100242647e-11,
+    "units": null,
+    "bound": "< 1e-8"
+  },
+  {
+    "test": "tests/test_learning_gradient_check.py::test_multistep_pushforward_trunk_gradient_matches_finite_difference",
+    "name": "max_abs_error",
+    "value": 1.3688827849023255e-11,
+    "units": null,
+    "bound": "< 1e-8"
+  },
+  {
+    "test": "tests/test_learning_gradient_check.py::test_multistep_pushforward_bias_gradient_matches_finite_difference",
+    "name": "max_abs_error",
+    "value": 9.718059690300151e-12,
+    "units": null,
+    "bound": "< 1e-8"
+  },
+  {
+    "test": "tests/test_learning_gradient_check.py::test_semigroup_consistency_branch_gradient_matches_finite_difference",
+    "name": "max_abs_error",
+    "value": 2.922752040390719e-10,
+    "units": null,
+    "bound": "< 1e-7"
+  },
+  {
+    "test": "tests/test_learning_oracle.py::test_learned_operator_matches_the_analytic_oracle_on_held_out_groups",
+    "name": "max_held_out_prediction_error",
+    "value": 0.0411373979341314,
+    "units": null,
+    "bound": "< 0.15"
+  },
+  {
+    "test": "tests/test_learning_oracle.py::test_learned_operator_beats_a_naive_identity_baseline_on_held_out_groups",
+    "name": "learned_error",
+    "value": 0.07515746920636075,
+    "units": null,
+    "bound": "< identity_error / 10"
+  },
+  {
+    "test": "tests/test_learning_oracle.py::test_learned_operator_beats_a_naive_identity_baseline_on_held_out_groups",
+    "name": "identity_error",
+    "value": 19.981147769290416,
+    "units": null,
+    "bound": "> learned_error * 10"
+  },
+  {
+    "test": "tests/test_learning_oracle.py::test_semigroup_consistency_training_reduces_the_learned_operators_own_residual",
+    "name": "untrained_residual",
+    "value": 1.2059666838662484,
+    "units": null,
+    "bound": "> trained_residual * 3"
+  },
+  {
+    "test": "tests/test_learning_oracle.py::test_semigroup_consistency_training_reduces_the_learned_operators_own_residual",
+    "name": "trained_residual",
+    "value": 0.2084435754440302,
+    "units": null,
+    "bound": "< untrained_residual / 3"
+  },
+  {
+    "test": "tests/test_learning_oracle.py::test_rollout_length_error_curve_reported_for_the_learned_operator",
+    "name": "rollout_length_error_curve",
+    "value": [
+      0.07413540836034813,
+      0.05174965501385096,
+      0.02462805485675226,
+      0.05128887723227398
+    ],
+    "units": "identity-metric distance",
+    "bound": "all finite, max < 1.0"
+  },
+  {
+    "test": "tests/test_m11_4_extrapolation.py::test_the_withheld_term_is_zero_in_envelope_and_active_outside",
+    "name": "withheld_term_magnitude_in_envelope",
+    "value": 0.0,
+    "units": null,
+    "bound": "identically zero in-envelope by construction; large outside"
+  },
+  {
+    "test": "tests/test_m11_4_extrapolation.py::test_the_withheld_term_is_zero_in_envelope_and_active_outside",
+    "name": "withheld_term_magnitude_held_out",
+    "value": 7.094770206477218,
+    "units": null,
+    "bound": "identically zero in-envelope by construction; large outside"
+  },
+  {
+    "test": "tests/test_m11_4_extrapolation.py::test_every_held_out_query_is_outside_the_declared_window",
+    "name": "held_out_extrapolation_factors",
+    "value": {
+      "min": 3.0229809734496933,
+      "median": 11.882228432311646,
+      "max": 38.337790326399556
+    },
+    "units": null,
+    "bound": "all > 1: every evaluation point is outside the declared range"
+  },
+  {
+    "test": "tests/test_m11_4_extrapolation.py::test_the_declared_form_is_constant_along_the_held_out_axis",
+    "name": "declared_form_spread_across_held_out_axis",
+    "value": {
+      "declared_form": 0.0,
+      "fitted_correct_form": 0.0,
+      "generator": 4.473912388140384
+    },
+    "units": null,
+    "bound": "declared and fitted spreads exactly zero; generator's is not"
+  },
+  {
+    "test": "tests/test_m11_4_extrapolation.py::test_the_null_is_uninformative_because_every_error_is_the_withheld_term",
+    "name": "null_is_uninformative",
+    "value": {
+      "withheld_magnitude": 7.178200470433539,
+      "free_form": {
+        "vs_full": 7.52090448474633,
+        "vs_drag_free": 0.07732668695978204
+      },
+      "correct_form": {
+        "vs_full": 7.597790954029683,
+        "vs_drag_free": 0.33897477320800684
+      },
+      "spread_vs_full": 0.07688646928335263
+    },
+    "units": null,
+    "bound": "spread << withheld magnitude; free-form wins the drag-free comparison"
+  },
+  {
+    "test": "tests/test_m11_4_extrapolation.py::test_generator_a_is_not_bare_kocks_mecking",
+    "name": "generator_departs_from_the_declared_form",
+    "value": 7.201265747540569,
+    "units": null,
+    "bound": "non-zero: the generator is not the contestant's own form"
+  },
+  {
+    "test": "tests/test_m11_5_extrapolation.py::test_the_withheld_term_is_zero_in_envelope_and_active_outside",
+    "name": "m11_5_withheld_term_magnitude",
+    "value": {
+      "in_envelope": 0.0,
+      "held_out": 6.4852090126497535
+    },
+    "units": null,
+    "bound": "identically zero in-envelope by construction; large outside"
+  },
+  {
+    "test": "tests/test_m11_5_extrapolation.py::test_every_held_out_point_is_outside_the_declared_window",
+    "name": "m11_5_held_out_extrapolation_factors",
+    "value": {
+      "min": 2.0,
+      "median": 3.5,
+      "max": 6.0
+    },
+    "units": null,
+    "bound": "all > 1: every held-out point is outside the declared strain window"
+  },
+  {
+    "test": "tests/test_m11_5_extrapolation.py::test_the_declared_form_is_not_constant_along_this_axis",
+    "name": "m11_5_declared_form_varies_along_the_axis",
+    "value": {
+      "declared_form_spread": 3.941633217693358,
+      "disagreement_at_nearest_held_out_strain": 1.222288222547499,
+      "disagreement_at_furthest": 4.888238936941722
+    },
+    "units": null,
+    "bound": "declared form varies along the axis, and diverges from the baseline across it"
+  },
+  {
+    "test": "tests/test_m11_5_extrapolation.py::test_the_free_form_contestant_is_an_operator_not_a_scaled_surface",
+    "name": "m11_5_free_form_is_sublinear_in_strain",
+    "value": {
+      "at_gamma_1": 10.920686741904149,
+      "at_gamma_6": 15.92263555793013,
+      "linear_would_give": 65.52412045142489,
+      "ratio": 0.2430041860651008
+    },
+    "units": null,
+    "bound": "far below a linear-in-strain extrapolation: the baseline saturates"
+  },
+  {
+    "test": "tests/test_m11_5_extrapolation.py::test_the_declared_forms_lose_by_cancellation_not_by_ignorance",
+    "name": "m11_5_ranking_inverts_between_the_two_truths",
+    "value": {
+      "withheld_term_signed_effect": -6.563607628614078,
+      "2_correct_form": {
+        "rmse_vs_full": 8.203659195273575,
+        "rmse_vs_withheld_free": 3.810652929283671e-11,
+        "bias_vs_withheld_free": 3.216163890762402e-11,
+        "bias_vs_full": 6.56360762864624
+      },
+      "4_tabular_GradientBoostedTreeRegressor": {
+        "rmse_vs_full": 3.305244797729255,
+        "rmse_vs_withheld_free": 8.521426608990726,
+        "bias_vs_withheld_free": -7.487055229432147,
+        "bias_vs_full": -0.923447600818069
+      }
+    },
+    "units": null,
+    "bound": "declared form best on the physics it expresses, worse on the registered criterion"
+  },
+  {
+    "test": "tests/test_m11_5_extrapolation.py::test_a_missing_mechanism_is_far_worse_than_a_missing_dependence",
+    "name": "m11_5_misspecification_kind_matters",
+    "value": {
+      "pooled": {
+        "3a_missing_mechanism": 70.57260455714987,
+        "3b_missing_dependence": 6.8288374333005075
+      },
+      "per_strain": {
+        "3a_missing_mechanism": [
+          11.807212734075222,
+          31.028371608473478,
+          57.11033047024053,
+          124.73255426021746
+        ],
+        "3b_missing_dependence": [
+          3.332863000382071,
+          4.69126571321062,
+          6.716695637094996,
+          10.406831059892957
+        ]
+      },
+      "strains": [
+        2.0,
+        3.0,
+        4.0,
+        6.0
+      ]
+    },
+    "units": null,
+    "bound": "missing mechanism an order of magnitude worse, and growing with strain"
+  },
+  {
+    "test": "tests/test_observability_jvp_vjp.py::test_jvp_vjp_adjoint_identity_holds_for_a_partial_subinterval",
+    "name": "adjoint_identity_abs_diff",
+    "value": 0.0,
+    "units": null,
+    "bound": "< 1e-10"
+  },
+  {
+    "test": "tests/test_observability_voi.py::test_woodbury_voi_matches_brute_force_reinversion",
+    "name": "woodbury",
+    "value": 0.9803921571357909,
+    "units": null,
+    "bound": "abs(woodbury - brute_force) < 1e-9"
+  },
+  {
+    "test": "tests/test_observability_voi.py::test_woodbury_voi_matches_brute_force_reinversion",
+    "name": "brute_force",
+    "value": 0.980392157135791,
+    "units": null,
+    "bound": "abs(woodbury - brute_force) < 1e-9"
+  },
+  {
+    "test": "tests/test_observability_voi.py::test_placement_favours_the_unobserved_component_over_a_redundant_sensor",
+    "name": "ratios",
+    "value": {
+      "sensor_b": 0.9803921571357909,
+      "sensor_a_again": 0.0032784735438075633
+    },
+    "units": null,
+    "bound": "ratios['sensor_b'] > 10 * ratios['sensor_a_again']"
+  },
+  {
+    "test": "tests/test_readouts.py::test_weakest_link_distribution_grows_with_n_sub",
+    "name": "small_n_sub_mean",
+    "value": 1.4718089585848728,
+    "units": "n_sub=2",
+    "bound": "< large_n_sub_mean"
+  },
+  {
+    "test": "tests/test_readouts.py::test_weakest_link_distribution_grows_with_n_sub",
+    "name": "large_n_sub_mean",
+    "value": 4.518478501011575,
+    "units": "n_sub=50",
+    "bound": "> small_n_sub_mean"
+  },
+  {
+    "test": "tests/test_readouts.py::test_flagship_constitutive_operator_accrues_hardening_under_real_driving",
+    "name": "hardening_before",
+    "value": 0.0,
+    "units": null,
+    "bound": "< hardening_after"
+  },
+  {
+    "test": "tests/test_readouts.py::test_flagship_constitutive_operator_accrues_hardening_under_real_driving",
+    "name": "hardening_after",
+    "value": 3.0,
+    "units": null,
+    "bound": "> hardening_before"
+  },
+  {
+    "test": "tests/test_readouts.py::test_contrast_dendrite_risk_is_class_b_and_weakest_link_works",
+    "name": "base_mean",
+    "value": 1.1899503633642765,
+    "units": null,
+    "bound": "<= worst_mean"
+  },
+  {
+    "test": "tests/test_readouts.py::test_contrast_dendrite_risk_is_class_b_and_weakest_link_works",
+    "name": "worst_mean",
+    "value": 1.2130801257200914,
+    "units": null,
+    "bound": ">= base_mean"
+  },
+  {
+    "test": "tests/test_readouts.py::test_contrast_dendrite_risk_jacobian_is_analytic_not_finite_difference",
+    "name": "jacobian_max_abs_diff",
+    "value": 1.892885848064907e-10,
+    "units": null,
+    "bound": "< 1e-4"
+  },
+  {
+    "test": "tests/test_readouts.py::test_contrast_dendrite_risk_jacobian_is_analytic_not_finite_difference",
+    "name": "clamped_jacobian",
+    "value": [
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    ],
+    "units": null,
+    "bound": "all zero"
+  },
+  {
+    "test": "tests/test_sdl_declaration.py::test_the_declaration_differs_from_both_existing_domains_on_every_item",
+    "name": "sdl_vs_flagship_items_differing",
+    "value": [
+      "control_space",
+      "declared_parameters",
+      "erasure_inventory",
+      "invariants",
+      "invariants_structural",
+      "observation_suite",
+      "readout_catalogue",
+      "scale_structure",
+      "state_schema"
+    ],
+    "units": null,
+    "bound": "all"
+  },
+  {
+    "test": "tests/test_sdl_declaration.py::test_the_declaration_differs_from_both_existing_domains_on_every_item",
+    "name": "sdl_vs_contrast_items_differing",
+    "value": [
+      "control_space",
+      "declared_parameters",
+      "erasure_inventory",
+      "invariants",
+      "invariants_structural",
+      "observation_suite",
+      "readout_catalogue",
+      "scale_structure",
+      "state_schema"
+    ],
+    "units": null,
+    "bound": "all"
+  },
+  {
+    "test": "tests/test_sdl_declaration.py::test_the_declaration_carries_its_own_specification_version",
+    "name": "sdl_specification_version",
+    "value": "proposed-decision-extension",
+    "units": null,
+    "bound": "proposed-decision-extension"
+  },
+  {
+    "test": "tests/test_sdl_declaration.py::test_the_declaration_carries_its_own_specification_version",
+    "name": "sdl_decision_kind_declared",
+    "value": true,
+    "units": null,
+    "bound": "True"
+  },
+  {
+    "test": "tests/test_sdl_declaration.py::test_one_species_holds_two_different_roles_in_two_regions_of_one_chain",
+    "name": "promoter_roles_by_region",
+    "value": {
+      "bulk": "control",
+      "surface_layer": "state"
+    },
+    "units": null,
+    "bound": "control in bulk, state in surface"
+  },
+  {
+    "test": "tests/test_sdl_declaration.py::test_one_species_holds_two_different_roles_in_two_regions_of_one_chain",
+    "name": "declared_regions",
+    "value": [
+      "bulk",
+      "surface_layer"
+    ],
+    "units": null,
+    "bound": "narrative only"
+  },
+  {
+    "test": "tests/test_sdl_declaration.py::test_a_parameter_only_species_is_mechanically_identifiable",
+    "name": "parameter_only_species",
+    "value": [
+      "support"
+    ],
+    "units": null,
+    "bound": "== ('support',)"
+  },
+  {
+    "test": "tests/test_sdl_declaration.py::test_a_parameter_only_species_is_mechanically_identifiable",
+    "name": "declared_species",
+    "value": [
+      "metal_a",
+      "metal_b",
+      "promoter",
+      "support"
+    ],
+    "units": null,
+    "bound": "narrative only"
+  },
+  {
+    "test": "tests/test_sdl_declaration.py::test_the_composition_declaration_states_where_constancy_will_fail_and_why",
+    "name": "item_1b_parameter_names",
+    "value": [
+      "mean_composition"
+    ],
+    "units": null,
+    "bound": "== ('mean_composition',) since ADR-071"
+  },
+  {
+    "test": "tests/test_sdl_declaration.py::test_the_composition_declaration_states_where_constancy_will_fail_and_why",
+    "name": "mean_composition_constant_over",
+    "value": [
+      "bulk"
+    ],
+    "units": null,
+    "bound": "== ('bulk',)"
+  },
+  {
+    "test": "tests/test_sdl_declaration.py::test_the_composition_declaration_states_where_constancy_will_fail_and_why",
+    "name": "mean_composition_also_state_in_regions",
+    "value": [
+      "surface_layer"
+    ],
+    "units": null,
+    "bound": "== ('surface_layer',) -- E-46's dual-role clause, on a real domain"
+  },
+  {
+    "test": "tests/test_sdl_declaration.py::test_the_composition_declaration_states_where_constancy_will_fail_and_why",
+    "name": "invariant_quantities",
+    "value": [],
+    "units": null,
+    "bound": "== () -- relocated to item 1b by ADR-071"
+  },
+  {
+    "test": "tests/test_sdl_declaration.py::test_the_composition_declaration_states_where_constancy_will_fail_and_why",
+    "name": "depleted_by_quantities",
+    "value": [
+      "surface_promoter_enrichment"
+    ],
+    "units": null,
+    "bound": "non-empty -- ADR-050's corrective case declared"
+  },
+  {
+    "test": "tests/test_sdl_declaration.py::test_the_composition_declaration_states_where_constancy_will_fail_and_why",
+    "name": "determined_by_quantities",
+    "value": [
+      "pore_network_accessibility"
+    ],
+    "units": null,
+    "bound": "non-empty"
+  },
+  {
+    "test": "tests/test_sdl_declaration.py::test_the_nonlocal_quantity_is_declared_global_point_not_a_field",
+    "name": "accessibility_domain_kind",
+    "value": "global_point",
+    "units": null,
+    "bound": "global_point"
+  },
+  {
+    "test": "tests/test_sdl_declaration.py::test_the_nonlocal_quantity_is_declared_global_point_not_a_field",
+    "name": "accessibility_tracked",
+    "value": "none",
+    "units": null,
+    "bound": "none"
+  },
+  {
+    "test": "tests/test_sdl_declaration.py::test_every_tracked_dimension_declaration_carries_a_justification",
+    "name": "tracked_justification_lengths",
+    "value": {
+      "pore_network_accessibility": 417,
+      "surface_promoter_enrichment": 386
+    },
+    "units": null,
+    "bound": "each > 0"
+  },
+  {
+    "test": "tests/test_sdl_declaration.py::test_the_descriptor_basis_is_declared_with_its_underlying_space",
+    "name": "descriptor_basis",
+    "value": [
+      "valence_electron_count",
+      "mixing_enthalpy",
+      "support_acidity"
+    ],
+    "units": null,
+    "bound": "== ('valence_electron_count', 'mixing_enthalpy', 'support_acidity')"
+  },
+  {
+    "test": "tests/test_sdl_declaration.py::test_the_descriptor_basis_is_declared_with_its_underlying_space",
+    "name": "underlying_space",
+    "value": [
+      "metal_a",
+      "metal_b",
+      "promoter",
+      "support"
+    ],
+    "units": null,
+    "bound": "the raw fractions"
+  },
+  {
+    "test": "tests/test_sdl_declaration.py::test_the_attainable_region_certifies_each_kind_of_infeasibility_distinctly",
+    "name": "attainable_inside_verdict",
+    "value": "attainable",
+    "units": null,
+    "bound": "attainable"
+  },
+  {
+    "test": "tests/test_sdl_declaration.py::test_the_attainable_region_certifies_each_kind_of_infeasibility_distinctly",
+    "name": "attainable_inside_worst_factor",
+    "value": 0.5,
+    "units": null,
+    "bound": "<= 1.0"
+  },
+  {
+    "test": "tests/test_sdl_declaration.py::test_the_attainable_region_certifies_each_kind_of_infeasibility_distinctly",
+    "name": "attainable_outside_descriptor_verdict",
+    "value": "outside_descriptor_bounds",
+    "units": null,
+    "bound": "outside_descriptor_bounds"
+  },
+  {
+    "test": "tests/test_sdl_declaration.py::test_the_attainable_region_certifies_each_kind_of_infeasibility_distinctly",
+    "name": "attainable_outside_binding",
+    "value": "descriptor:valence_electron_count",
+    "units": null,
+    "bound": "the descriptor that bound"
+  },
+  {
+    "test": "tests/test_sdl_declaration.py::test_the_attainable_region_certifies_each_kind_of_infeasibility_distinctly",
+    "name": "attainable_unnormalised_verdict",
+    "value": "underlying_infeasible",
+    "units": null,
+    "bound": "underlying_infeasible"
+  },
+  {
+    "test": "tests/test_sdl_declaration.py::test_the_attainable_region_certifies_each_kind_of_infeasibility_distinctly",
+    "name": "attainable_excluded_pair_verdict",
+    "value": "excluded_pair",
+    "units": null,
+    "bound": "excluded_pair"
+  },
+  {
+    "test": "tests/test_sdl_declaration.py::test_the_validity_report_is_live_on_this_domain_and_dark_on_contrast",
+    "name": "sdl_declared_form_count",
+    "value": 2,
+    "units": null,
+    "bound": ">= 2, so a chain-level worst case aggregates"
+  },
+  {
+    "test": "tests/test_sdl_declaration.py::test_the_validity_report_is_live_on_this_domain_and_dark_on_contrast",
+    "name": "contrast_operator_is_constitutively_constrained",
+    "value": false,
+    "units": null,
+    "bound": "False -- the diagnostic stays dark there"
+  },
+  {
+    "test": "tests/test_sdl_declaration.py::test_the_validity_report_is_live_on_this_domain_and_dark_on_contrast",
+    "name": "composition_validity_interval_declared",
+    "value": [
+      "mixing_enthalpy",
+      "support_acidity",
+      "valence_electron_count"
+    ],
+    "units": null,
+    "bound": "ADR-054's second-order range, over the descriptor basis"
+  },
+  {
+    "test": "tests/test_sdl_declaration.py::test_the_erasure_inventory_is_non_empty_which_predicts_the_e48_extreme",
+    "name": "sdl_erasure_inventory",
+    "value": [
+      "CALCINATION"
+    ],
+    "units": null,
+    "bound": "non-empty"
+  },
+  {
+    "test": "tests/test_sdl_declaration.py::test_the_erasure_inventory_is_non_empty_which_predicts_the_e48_extreme",
+    "name": "contrast_erasure_inventory",
+    "value": [],
+    "units": null,
+    "bound": "empty -- the inversion"
+  },
+  {
+    "test": "tests/test_sdl_operators.py::test_calcination_erases_six_of_seven_directions_at_the_declared_tolerance",
+    "name": "sdl_calcination_erasure_rank",
+    "value": 1,
+    "units": null,
+    "bound": "== 1 of 7"
+  },
+  {
+    "test": "tests/test_sdl_operators.py::test_calcination_erases_six_of_seven_directions_at_the_declared_tolerance",
+    "name": "sdl_calcination_spectrum",
+    "value": [
+      14.788053082313528,
+      0.021474672622987818,
+      0.020000000000098068,
+      0.019999999989472883,
+      0.01999948899877054,
+      0.018850942559579618,
+      1.4193114955163956e-19
+    ],
+    "units": null,
+    "bound": "one value >> 1, six near feedthrough"
+  },
+  {
+    "test": "tests/test_sdl_operators.py::test_calcination_erases_six_of_seven_directions_at_the_declared_tolerance",
+    "name": "sdl_calcination_erasure_tol",
+    "value": 0.1478805308231353,
+    "units": null,
+    "bound": "declared rtol 0.01"
+  },
+  {
+    "test": "tests/test_sdl_operators.py::test_the_erasure_collapses_rank_while_amplifying_its_surviving_direction",
+    "name": "sdl_calcination_lipschitz",
+    "value": 14.788053082313525,
+    "units": null,
+    "bound": "> 1 \u2014 an erasure that amplifies"
+  },
+  {
+    "test": "tests/test_sdl_operators.py::test_calcination_conserves_the_declared_invariant",
+    "name": "sdl_calcination_mass_drift",
+    "value": 0.0,
+    "units": null,
+    "bound": "== 0 exactly"
+  },
+  {
+    "test": "tests/test_sdl_operators.py::test_evaluation_integrates_the_declared_coarsening_form_in_its_own_variable",
+    "name": "sdl_coarsening_increments_in_d_cubed",
+    "value": [
+      49.999999999999915,
+      49.999999999999886
+    ],
+    "units": null,
+    "bound": "equal to each other and > 0"
+  },
+  {
+    "test": "tests/test_sdl_operators.py::test_every_declared_readout_evaluates_on_a_real_trajectory",
+    "name": "sdl_readout_means",
+    "value": {
+      "turnover_frequency": 0.5236844301792706,
+      "selectivity": 0.016335598536330372,
+      "deactivation_onset": 0.15173013454676132
+    },
+    "units": null,
+    "bound": "all finite; turnover and selectivity strictly positive"
+  },
+  {
+    "test": "tests/test_semigroup.py::test_flagship_heating_and_soak_is_semigroup_exact[0.1]",
+    "name": "residual",
+    "value": 0.0,
+    "units": "t_mid=0.1",
+    "bound": "< 1e-09"
+  },
+  {
+    "test": "tests/test_semigroup.py::test_flagship_heating_and_soak_is_semigroup_exact[0.37]",
+    "name": "residual",
+    "value": 0.0,
+    "units": "t_mid=0.37",
+    "bound": "< 1e-09"
+  },
+  {
+    "test": "tests/test_semigroup.py::test_flagship_heating_and_soak_is_semigroup_exact[0.5]",
+    "name": "residual",
+    "value": 8.882326281544893e-16,
+    "units": "t_mid=0.5",
+    "bound": "< 1e-09"
+  },
+  {
+    "test": "tests/test_semigroup.py::test_flagship_heating_and_soak_is_semigroup_exact[0.9]",
+    "name": "residual",
+    "value": 8.882326281544893e-16,
+    "units": "t_mid=0.9",
+    "bound": "< 1e-09"
+  },
+  {
+    "test": "tests/test_semigroup.py::test_flagship_transfer_is_semigroup_exact[0.05]",
+    "name": "residual",
+    "value": 0.0,
+    "units": "t_mid=0.05",
+    "bound": "< 1e-09"
+  },
+  {
+    "test": "tests/test_semigroup.py::test_flagship_transfer_is_semigroup_exact[0.15]",
+    "name": "residual",
+    "value": 0.0,
+    "units": "t_mid=0.15",
+    "bound": "< 1e-09"
+  },
+  {
+    "test": "tests/test_semigroup.py::test_flagship_transfer_is_semigroup_exact[0.25]",
+    "name": "residual",
+    "value": 4.440892098500626e-16,
+    "units": "t_mid=0.25",
+    "bound": "< 1e-09"
+  },
+  {
+    "test": "tests/test_semigroup.py::test_contrast_cycling_step_is_semigroup_exact[0.2]",
+    "name": "residual",
+    "value": 2.7755575615628914e-17,
+    "units": "t_mid=0.2",
+    "bound": "< 1e-09"
+  },
+  {
+    "test": "tests/test_semigroup.py::test_contrast_cycling_step_is_semigroup_exact[0.5]",
+    "name": "residual",
+    "value": 0.0,
+    "units": "t_mid=0.5",
+    "bound": "< 1e-09"
+  },
+  {
+    "test": "tests/test_semigroup.py::test_contrast_cycling_step_is_semigroup_exact[0.8]",
+    "name": "residual",
+    "value": 0.0,
+    "units": "t_mid=0.8",
+    "bound": "< 1e-09"
+  },
+  {
+    "test": "tests/test_sketches.py::test_device_yield_diffs_against_flagship",
+    "name": "device_yield_vs_flagship_diff",
+    "value": {
+      "state_schema": true,
+      "declared_parameters": true,
+      "control_space": true,
+      "erasure_inventory": true,
+      "readout_catalogue": true,
+      "observation_suite": true,
+      "invariants": true,
+      "scale_structure": true,
+      "invariants_structural": false
+    },
+    "units": null,
+    "bound": "recorded, not asserted against a pattern"
+  },
+  {
+    "test": "tests/test_sketches.py::test_device_yield_diffs_against_contrast",
+    "name": "device_yield_vs_contrast_diff",
+    "value": {
+      "state_schema": true,
+      "declared_parameters": true,
+      "control_space": true,
+      "erasure_inventory": true,
+      "readout_catalogue": true,
+      "observation_suite": true,
+      "invariants": true,
+      "scale_structure": true,
+      "invariants_structural": false
+    },
+    "units": null,
+    "bound": "recorded, not asserted against a pattern"
+  },
+  {
+    "test": "tests/test_sketches.py::test_layerwise_additive_diffs_against_flagship",
+    "name": "layerwise_additive_vs_flagship_diff",
+    "value": {
+      "state_schema": true,
+      "declared_parameters": true,
+      "control_space": true,
+      "erasure_inventory": true,
+      "readout_catalogue": true,
+      "observation_suite": true,
+      "invariants": true,
+      "scale_structure": true,
+      "invariants_structural": false
+    },
+    "units": null,
+    "bound": "recorded, not asserted against a pattern"
+  },
+  {
+    "test": "tests/test_sketches.py::test_layerwise_additive_diffs_against_contrast",
+    "name": "layerwise_additive_vs_contrast_diff",
+    "value": {
+      "state_schema": true,
+      "declared_parameters": true,
+      "control_space": true,
+      "erasure_inventory": true,
+      "readout_catalogue": true,
+      "observation_suite": true,
+      "invariants": true,
+      "scale_structure": true,
+      "invariants_structural": false
+    },
+    "units": null,
+    "bound": "recorded, not asserted against a pattern"
+  },
+  {
+    "test": "tests/test_sketches.py::test_crystallisation_formulation_diffs_against_flagship",
+    "name": "crystallisation_formulation_vs_flagship_diff",
+    "value": {
+      "state_schema": true,
+      "declared_parameters": true,
+      "control_space": true,
+      "erasure_inventory": true,
+      "readout_catalogue": true,
+      "observation_suite": true,
+      "invariants": true,
+      "scale_structure": true,
+      "invariants_structural": false
+    },
+    "units": null,
+    "bound": "recorded, not asserted against a pattern"
+  },
+  {
+    "test": "tests/test_sketches.py::test_crystallisation_formulation_diffs_against_contrast",
+    "name": "crystallisation_formulation_vs_contrast_diff",
+    "value": {
+      "state_schema": true,
+      "declared_parameters": true,
+      "control_space": true,
+      "erasure_inventory": true,
+      "readout_catalogue": true,
+      "observation_suite": true,
+      "invariants": true,
+      "scale_structure": true,
+      "invariants_structural": false
+    },
+    "units": null,
+    "bound": "recorded, not asserted against a pattern"
+  },
+  {
+    "test": "tests/test_sketches.py::test_catalyst_under_operation_diffs_against_flagship",
+    "name": "catalyst_under_operation_vs_flagship_diff",
+    "value": {
+      "state_schema": true,
+      "declared_parameters": true,
+      "control_space": true,
+      "erasure_inventory": true,
+      "readout_catalogue": true,
+      "observation_suite": true,
+      "invariants": true,
+      "scale_structure": true,
+      "invariants_structural": false
+    },
+    "units": null,
+    "bound": "recorded, not asserted against a pattern"
+  },
+  {
+    "test": "tests/test_sketches.py::test_catalyst_under_operation_diffs_against_contrast",
+    "name": "catalyst_under_operation_vs_contrast_diff",
+    "value": {
+      "state_schema": true,
+      "declared_parameters": true,
+      "control_space": true,
+      "erasure_inventory": true,
+      "readout_catalogue": true,
+      "observation_suite": true,
+      "invariants": true,
+      "scale_structure": true,
+      "invariants_structural": false
+    },
+    "units": null,
+    "bound": "recorded, not asserted against a pattern"
+  },
+  {
+    "test": "tests/test_sketches.py::test_every_sketch_fills_item_1b",
+    "name": "sketch_item_1b_parameter_counts",
+    "value": {
+      "device_yield": 2,
+      "layerwise_additive": 1,
+      "crystallisation_formulation": 1,
+      "catalyst_under_operation": 1
+    },
+    "units": null,
+    "bound": "every sketch >= 1"
+  },
+  {
+    "test": "tests/test_sketches.py::test_every_sketch_fills_item_1b",
+    "name": "sketch_item_1b_verdicts_changed",
+    "value": 0,
+    "units": null,
+    "bound": "0 -- no pre-existing fillability verdict moved under the re-charter"
+  },
+  {
+    "test": "tests/test_sketches.py::test_every_sketch_fills_item_1b",
+    "name": "flagship_item_1b_is_the_negative_case",
+    "value": 0,
+    "units": null,
+    "bound": "0 -- so item 1b is not filled by everything"
+  },
+  {
+    "test": "tests/test_sketches.py::test_device_yield_separates_an_index_from_a_state_on_one_physical_object",
+    "name": "device_yield_chamber_identity_is_a_parameter",
+    "value": true,
+    "units": null,
+    "bound": "True"
+  },
+  {
+    "test": "tests/test_sketches.py::test_device_yield_separates_an_index_from_a_state_on_one_physical_object",
+    "name": "device_yield_chamber_state_is_an_occupant",
+    "value": true,
+    "units": null,
+    "bound": "True"
+  },
+  {
+    "test": "tests/test_sketches.py::test_layerwise_additive_does_not_use_item_1b_to_paper_over_e21",
+    "name": "layerwise_item_1b_names",
+    "value": [
+      "feedstock_powder_batch"
+    ],
+    "units": null,
+    "bound": "feedstock only -- geometry deliberately absent"
+  },
+  {
+    "test": "tests/test_state_schema.py::test_metric_default_uses_aleatoric_sigma",
+    "name": "metric_scale",
+    "value": [
+      2.954867000432466,
+      2.9783669425574093,
+      3.006212131713862,
+      2.9831750012535685,
+      2.9599714047959402
+    ],
+    "units": null,
+    "bound": "all within 0.3 of 3.0 (true generating sigma)"
+  },
+  {
+    "test": "tests/test_state_schema.py::test_metric_distance_changes_when_a_component_is_rescaled",
+    "name": "d1",
+    "value": 3.9368375638426962,
+    "units": null,
+    "bound": "narrative only, not asserted"
+  },
+  {
+    "test": "tests/test_state_schema.py::test_metric_distance_changes_when_a_component_is_rescaled",
+    "name": "d2",
+    "value": 3.9368375638426962,
+    "units": null,
+    "bound": "< 5 * d1"
+  }
+]

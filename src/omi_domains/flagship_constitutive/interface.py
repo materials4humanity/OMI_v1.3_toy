@@ -2,7 +2,7 @@
 
 Two objects, and the relationship between them is the finding:
 
-- :data:`CONSTITUTIVE_V13_CORE` — the Core §4 seven items. **Byte-identical to
+- :data:`CONSTITUTIVE_V13_CORE` — the Core §4 items. **Byte-identical to
   `omi_domains.flagship`'s declaration**, and that is not laziness — see below.
 - :data:`CONSTITUTIVE_DECLARATION` — that core wrapped in
   `omi.proposed.ExtendedDeclaration` with the five declared forms
@@ -10,7 +10,7 @@ Two objects, and the relationship between them is the finding:
 
 **ADR-044 predicted the v1.3 diff would isolate item 6. Measured, the diff is
 EMPTY, and that is the stronger result.** The ADR expected the two domains'
-seven-item declarations to "come out near-identical except for item 6 and the
+item declarations to "come out near-identical except for item 6 and the
 constitutive declaration." Attempting it showed both available roads are closed:
 
 1. *Declare the forms inside item 6.* `omi.interface.classify_invariant` refuses
@@ -20,7 +20,7 @@ constitutive declaration." Attempting it showed both available roads are closed:
    declared forms in item 6 **cannot be diffed against any other domain at all**:
    `diff` raises. The comparative machinery Core §4 calls "what converts a
    collection of examples into evidence of generality" refuses the declaration.
-2. *Declare them outside the seven items* — the road taken here. Then the two
+2. *Declare them outside the item list* — the road taken here. Then the two
    v1.3 cores are **identical in every item**, while the domains differ by five
    declared constitutive forms, a real Hall-Petch exponent in place of a
    hyperbolic surrogate, and kinetics for two components flagship never
@@ -65,6 +65,6 @@ CONSTITUTIVE_DECLARATION = ExtendedDeclaration(
     v13_core=CONSTITUTIVE_V13_CORE,
     constitutive_forms=DECLARED_FORMS,
 )
-"""The proposed constitutive-extension declaration: the seven items plus item 6d (Core §4; ADR-043).
+"""The proposed constitutive-extension declaration: the Core §4 items plus item 6d (Core §4; ADR-043).
 `.v13_core` projects back to the object above, so v1.3's `omi.interface.diff`
 operates on it unchanged — and returns "no differences", which is the finding."""

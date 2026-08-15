@@ -6,13 +6,47 @@ outside both"; ROADMAP M10.1). Core §1.1 claims eight domain families; two
 are implemented (`flagship`, `contrast`) and both are physically adjacent
 (materials processing, electrochemistry — both metallurgical/electro-
 chemical, both apparatus-adjacent industrial processes). The generality
-claim rests on the seven-item interface (Core §4) being fillable outside
+claim rests on the instantiation interface (Core §4) being fillable outside
 that pair, and a filled declaration is evidence even with no code behind it
 (CLAUDE.md §5 invariant 11) — a sketch that fills too easily proves less
 than one that exposes a missing slot, so this document records strain
 honestly where it appears rather than smoothing it into a clean fill.
 
-Four sketches, one page each, Core §4's seven items in the Core's own
+**Live document (CLAUDE.md §10): the item count moved, and every verdict below was
+re-established rather than reformatted.** These sketches were written against v1.3's
+seven items. ADR-071 split item 1 into **1a** (state schema) and **1b** (declared
+parameters) per `docs/V1.4-EDITS.md` E-46, so the interface this document tests
+fillability against is now eight items. Each sketch's item-1b verdict was derived from
+its own physics, not pattern-matched from the others — see the per-sketch sections
+below and the summary immediately following this paragraph.
+
+### Item 1b's four verdicts, and what they are evidence of (ADR-071)
+
+| sketch | item 1b | verdict |
+|---|---|---|
+| Device yield | `design_rule_and_layout`, `tool_chamber_identity` | **fills**, and the strongest case: the layout was *already* declared as an operator-family index inside items 4 and 7's prose, because item 1 had nowhere to host it |
+| Layer-wise additive | `feedstock_powder_batch` | **fills.** The build geometry is deliberately *not* declared, though it would superficially qualify — declaring it would make E-21's unrepresentable body-indexed structure look declared |
+| Crystallisation and formulation | `compound_and_solvent_system` | **fills substantively**, the predicted hard case. The compound-plus-solvent system fixes *which polymorphs exist at all*, a stronger form of indexing than a rate-constant shift |
+| Catalyst under operation | `catalyst_formulation` | **fills**, and is the only one checkable against a *built* domain: the discovery domain declares the same structure |
+
+**No pre-existing verdict changed.** Not one component in any of the four schemas had to
+move out of item 1a, because every occupant in all four is genuinely transported by some
+operator — checked, not assumed (`tests/test_sketches.py`). So the re-charter changed what
+item 1a *means* without forcing any content across the boundary, and no sketch's
+established fill or strain was disturbed.
+
+**Four fills out of four is weaker evidence than it looks, and the honest reading is
+recorded here rather than in a footnote.** An item that everything fills may be well-posed
+or may be too loose to discriminate. What stops this from being vacuous is the negative
+case in the *implemented* pair: `flagship` — the domain E-29 was written about, flat-rolled
+steel, where composition-as-operator-index is the paradigm case — declares item 1b
+**empty**, because its three de-facto-static components sit in item 1a instead (E-29,
+measured). So the item does separate declarations. It also produces an inversion worth
+stating plainly: **the domain with the strongest claim to needing item 1b is the one whose
+declaration leaves it empty, and four domains outside the framework's implemented pair fill
+it without strain.**
+
+Four sketches, one page each, Core §4's items in the Core's own
 order: **Device yield** (this document's first entry — chosen to write
 first because Class B volume scaling recovering the classical defect-
 density model is independent confirmation of Core §3.6/Spec §4's
@@ -39,6 +73,19 @@ the comparison actually runs.
 ---
 
 ## Device yield
+
+**Item 1b (ADR-071): fills, and this sketch is where the missing item is most visible in
+its own prior text.** Declared parameters: `design_rule_and_layout` and
+`tool_chamber_identity`. The layout was already functioning as an operator-family index
+*before* item 1b existed — item 4 declares the Class B process-zone volume as "the die's
+declared critical area under its design rule", and item 7 declares critical-area analysis
+"a declared, fixed-per-design scalar". A quantity that has to be described inside two
+other items' free text is a quantity the interface had no home for, which is E-46's
+finding arriving from a direction E-46 did not look. The second parameter is declared
+because this domain separates an index from a state *on one physical object*: the
+chamber's identity is fixed and indexes the operator family, while the same chamber's
+seasoning state evolves run to run and is an item-1a `z` occupant. That pair is E-29's
+detectability finding made structural.
 
 **Why this sketch.** Semiconductor device fabrication has no historical
 contact with OMI, is not adjacent to either implemented domain (no
@@ -167,6 +214,19 @@ recorded.
 ---
 
 ## Layer-wise additive processing
+
+**Item 1b (ADR-071): fills, with a deliberate non-declaration that matters more than the
+fill.** Declared parameter: `feedstock_powder_batch` — alloy composition and powder
+particle-size distribution, fixed when the batch is loaded, indexing every melt-pool
+operator. This is a control case and it behaves like one.
+
+The build's whole-part **geometry** is *not* declared, and the omission is deliberate. It
+is fixed per build and indexes the operator family, so it would superficially qualify —
+but this sketch's standing finding (E-21) is that the geometry is precisely what
+`StateSchema` cannot represent, because the state is a field over a body under
+construction. Declaring it as a 1b parameter would make an unrepresentable structure look
+declared, converting an honest strain into a false clean fill. **Item 1b's split does not
+help with E-21, and this sketch is where claiming otherwise would have been easiest.**
 
 **Why this sketch.** Metal powder-bed-fusion additive manufacturing (laser
 or electron-beam powder bed fusion) is chosen because it exercises "hybrid
@@ -302,6 +362,21 @@ representation of the domain.
 ---
 
 ## Crystallisation and formulation
+
+**Item 1b (ADR-071): fills substantively — the predicted hard case, and it did not fail.**
+Declared parameter: `compound_and_solvent_system`. `docs/ARITY-REDESIGN-BRIEF.md` §4 named
+this sketch as the one most likely to force either a real new declaration or a stated
+inability, on the grounds that a formulation's composition is exactly the quantity E-46
+separates. It forced a real declaration.
+
+What makes it substantive rather than formal: the molecule's identity together with the
+solvent/antisolvent pair decides **which polymorphs exist at all**, which is a stronger
+form of operator-family indexing than shifting a rate constant — it fixes the discrete
+outcome set that this domain's bifurcating selection operator chooses among. And the split
+makes available a distinction item 1 alone could not state: the polymorph **landscape** is
+a fixed index (1b), while the polymorph **selected** on a given batch is an outcome of the
+evolution (item 1a's state, via supersaturation in `ν`). Those are two different claims
+that the same word carries.
 
 **Why this sketch.** Batch cooling/antisolvent crystallisation, chosen per
 ROADMAP M10.1 for "polymorph selection as a bifurcating evolution operator,
@@ -455,6 +530,19 @@ remains an anti-goal per CLAUDE.md §9.
 ---
 
 ## Catalyst under operation
+
+**Item 1b (ADR-071): fills, and is the only verdict checkable against a built domain.**
+Declared parameter: `catalyst_formulation` — support identity, active-phase metal, promoter
+loading, all fixed by manufacture. The discovery domain (`omi_domains/sdl`) declares the
+same structure independently, with `support` holding `SpeciesRole.PARAMETER` in both regions
+and mean composition as item 1b's occupant, so this sketch's fill can be compared against
+running code rather than only against prose — the one place among the four where that is
+possible.
+
+**What it does not rescue:** this sketch's declared strain is that `m` and `ν` are empty
+because the state is scoped to one pellet, raising whether the four slots are a partition or
+a convenience. Item 1b is orthogonal to that, by E-29's own argument that a fifth slot is
+the wrong fix — a parameter is not a slot. The empty-slot finding stands entirely unchanged.
 
 **Why this sketch, and why its purpose changed.** ROADMAP M10.1 reserves
 the fourth sketch as "deliberately awkward," originally framed (by this

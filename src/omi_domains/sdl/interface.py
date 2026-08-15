@@ -1,15 +1,20 @@
-"""The discovery domain's declaration: Core §4's seven items, plus the decision extension's refinements
+"""The discovery domain's declaration: Core §4's items, plus the decision extension's refinements
 (ADR-059, ADR-060).
 
-Machine-diffable against flagship and contrast through `omi.interface.diff`, because the
-v1.3 seven items are held whole inside the constitutive-extension carrier, which is held whole inside the
-decision-extension carrier (ADR-042 applied twice). Nothing here implements an operator or runs a
-campaign.
+Machine-diffable against flagship and contrast through `omi.interface.diff`, because the item
+declaration is held whole inside the constitutive-extension carrier, which is held whole inside
+the decision-extension carrier (ADR-042 applied twice). Nothing here implements an operator or
+runs a campaign.
+
+**This is the domain item 1b was split out for** (ADR-071; `docs/V1.4-EDITS.md` E-46). Mean
+composition indexes the operator family and is transported by nothing, and until Stage 2 the
+only available home for it was an `INVARIANT`-coupled entry on the decision extension. It is now
+item 1b's occupant on :data:`SDL_V13_CORE`, and is declared in exactly one place.
 """
 
 from __future__ import annotations
 
-from omi.interface import InstantiationDeclaration, ScopeDeclaration
+from omi.interface import InstantiationDeclaration, ParameterRole, ScopeDeclaration
 from omi.proposed.declaration import ExtendedDeclaration
 from omi.proposed.decision import (
     AttainableRegion,
@@ -23,11 +28,52 @@ from omi.proposed.decision import (
 )
 
 from omi_domains.sdl.forms import SDL_FORMS
-from omi_domains.sdl.state import DESCRIPTORS, SDL_SCHEMA
+from omi_domains.sdl.state import DESCRIPTORS, SDL_SCHEMA, SPECIES
 from omi.observability import ObservedInferredConvention
 
 SDL_V13_CORE = InstantiationDeclaration(
     state_schema=SDL_SCHEMA,
+    declared_parameters=(
+        ParameterRole(
+            name="mean_composition",
+            indexes=("Preparation", "Calcination", "Evaluation"),
+            justification=(
+                "The quantity item 1b was split out of item 1 for (docs/V1.4-EDITS.md E-46; "
+                "ADR-071), and this domain is where it was found. It fails all three of E-46's "
+                "state properties -- no operator transports bulk composition, no declared "
+                "modality assimilates it, and it carries no per-particle value in an ensemble "
+                "over one formulation -- and answers E-46's parameter question directly: it "
+                "decides WHICH member of the rate-law family applies, which is what "
+                "COMPOSITION_VALIDITY_INTERVAL declares a range over. src/omi_domains/sdl/"
+                "state.py already refused to put it in a slot, on exactly this reasoning, and "
+                "before ADR-071 the only available home was an INVARIANT-coupled entry in the "
+                "decision extension's coupled_quantities -- which SpeciesRole.PARAMETER's own "
+                "docstring describes as the parameter role realised through a coupling "
+                "direction, i.e. the workaround E-46 predicted would be needed. It has moved "
+                "here and is no longer declared there: two homes for one quantity is the "
+                "ambiguity the split exists to remove. "
+                "SCOPE CAVEAT, and it is a new finding rather than a caveat this domain "
+                "resolves (E-61): within one chain evaluation this is a fixed index, but ACROSS "
+                "the campaign the acquisition policy chooses it, which makes it item 2 content "
+                "at campaign scope and item 1b content at chain scope. Core §4 gives no way to "
+                "declare which scope a declaration is written at, so that distinction lives in "
+                "this free-text field and nowhere structural."
+            ),
+            constant_over=("bulk",),
+            descriptor_basis=DESCRIPTORS,
+            underlying_space=SPECIES,
+            also_state_in_regions=("surface_layer",),
+            # E-46's last clause, on a real domain: the promoter segregates into the
+            # surface layer during calcination, so the same chemistry that is a fixed
+            # index over the bulk is an evolving state variable there. ADR-050's
+            # corrective diagnosis is unchanged by the move -- the constancy check is
+            # still expected to FAIL over the surface layer, and that failure is still
+            # the diagnosis rather than a defect. The other half of it, the DEPLETED_BY
+            # surface_promoter_enrichment quantity, stays in coupled_quantities below,
+            # because it genuinely is coupled to the point states rather than indexing
+            # the operator family.
+        ),
+    ),
     control_space=(
         "Acquisition-determined: the preparation recipe (precursor fractions, calcination "
         "temperature and hold) plus the evaluation condition (temperature, partial pressure) "
@@ -61,8 +107,9 @@ SDL_V13_CORE = InstantiationDeclaration(
         "so it is declared as unmeasured rather than assumed small."
     ),
 )
-"""Core §4's seven items. Deliberately the same shape as the other two domains, so
-`omi.interface.diff` compares three declarations rather than two plus a special case."""
+"""Core §4's items — eight since ADR-071. Deliberately the same shape as the other two
+domains, so `omi.interface.diff` compares three declarations rather than two plus a special
+case."""
 
 
 SDL_EXTENDED = ExtendedDeclaration(v13_core=SDL_V13_CORE, constitutive_forms=SDL_FORMS)
@@ -72,9 +119,12 @@ SDL_EXTENDED = ExtendedDeclaration(v13_core=SDL_V13_CORE, constitutive_forms=SDL
 found structurally unavailable on contrast."""
 
 
-MEAN_COMPOSITION = CouplingDirection.INVARIANT
-"""Named so the role/coupling identification ADR-051 left for Part 3 to settle is visible
-at the point of declaration rather than only in prose."""
+# `MEAN_COMPOSITION = CouplingDirection.INVARIANT` stood here until ADR-071. It named the
+# role/coupling identification ADR-051 left for Part 3 to settle, and Stage 2 settled it:
+# mean composition is an operator-family index, so it is declared as item 1b's
+# `ParameterRole` on SDL_V13_CORE above rather than as an INVARIANT-coupled entry here.
+# Removed rather than re-pointed, because a constant naming the old home would be the
+# second declaration site the split exists to eliminate.
 
 
 SDL_DECLARATION = DecisionExtendedDeclaration(
@@ -86,31 +136,12 @@ SDL_DECLARATION = DecisionExtendedDeclaration(
         "material itself."
     ),
     coupled_quantities=(
-        CoupledQuantityDeclaration(
-            name="mean_composition",
-            domain_kind=DeclaredDomainKind.REGIONS,
-            coupling=CouplingDirection.INVARIANT,
-            tracked=TrackedDimensions.NONE,
-            tracked_justification=(
-                "Bulk composition is uniform by preparation: the precursor is a mixed solution, so "
-                "there is no gradient to track in the bulk region. The surface layer is declared "
-                "separately as its own region rather than as a through-thickness profile, because "
-                "the campaign resolves it as a single averaged enrichment (one surface-sensitive "
-                "measurement) and declaring a profile would claim a resolution the observation "
-                "suite does not supply."
-            ),
-            regions=("bulk", "surface_layer"),
-            descriptor_basis=DESCRIPTORS,
-            underlying_space=("metal_a", "metal_b", "promoter", "support"),
-            closure_note=(
-                "The BULK region is closed over a preparation-and-evaluation chain: no metal "
-                "leaves. The SURFACE_LAYER region is NOT closed — promoter segregates into it "
-                "from the bulk during calcination — so mean composition over the surface layer "
-                "must be declared DEPLETED_BY and not INVARIANT. Declared here as INVARIANT over "
-                "the bulk only; ADR-050's constancy check is expected to FAIL over the surface "
-                "layer, and that failure is the diagnosis rather than a defect."
-            ),
-        ),
+        # `mean_composition` was declared here, INVARIANT-coupled over the bulk, until
+        # ADR-071 gave item 1b a home for an operator-family index. It is now
+        # `SDL_V13_CORE.declared_parameters`, and this tuple keeps only the two quantities
+        # that are genuinely coupled to the point states -- which is E-46's own
+        # distinction, applied: nu-like quantities belong to item 1's state side, a fixed
+        # index does not.
         CoupledQuantityDeclaration(
             name="pore_network_accessibility",
             domain_kind=DeclaredDomainKind.GLOBAL_POINT,
@@ -239,7 +270,7 @@ SDL_DECLARATION = DecisionExtendedDeclaration(
             "decision_kind names this directly: 'campaign / discovery: deciding WHAT TO MAKE,' "
             "repeated over an acquisition policy's cycles under the epistemic uncertainty the "
             "attainable_region and species_roles declarations exist to bound. E-44 found this "
-            "feature has 'no interface item at all' under the seven items alone; the decision "
+            "feature has 'no interface item at all' under v1.3's seven items alone; the decision "
             "extension is what supplies it, and this domain is where ADR-048 built it to be "
             "exercised."
         ),

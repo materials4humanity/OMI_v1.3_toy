@@ -156,10 +156,18 @@ point).
 
 `docs/ARITY-REDESIGN-BRIEF.md` — Core §4's seven items under pressure from ten ledger entries,
 organised into **five decisions** (two restructure, three additive), with the re-baselining plan,
-the diff retirements, the sketch re-derivation and the three-stage sequencing. **A brief, not an
-execution**: nothing in it is implemented. It also records the one published comparability claim
-that cannot be honestly retired — Core §7.2's row-to-item mapping, whose replacement does not
-exist because the comparison itself ceases to be meaningful.
+the diff retirements, the sketch re-derivation and the three-stage sequencing. It also records the
+one published comparability claim that cannot be honestly retired — Core §7.2's row-to-item
+mapping, whose replacement does not exist because the comparison itself ceases to be meaningful.
+
+**Stages 1 and 2 are now executed; Stage 3 is not.** Stage 1 (ADR-070) added the scope, lineage
+and symmetry declarations on wrapper classes, leaving `omi.interface.diff` untouched. Stage 2
+(ADR-071) **split Core §4 item 1 into 1a and 1b**, so this repository's interface declares eight
+items where v1.3 issues seven, `diff` gained a `declared_parameters` key, `diff_result` was retired
+with no replacement, and the audit baseline moved to a second generation
+(`audit/baselines/redesign-items8.json`; see `audit/BASELINES.md`). Stage 3 — the `observe()`
+staleness lint (E-59) — remains unbuilt. Read the brief for the plan and ADR-070/ADR-071 for what
+was actually built, including two places where the brief's cost model was wrong.
 
 ## The reproduction path
 

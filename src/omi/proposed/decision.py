@@ -1,14 +1,14 @@
 """The proposed decision-extension declaration: the constitutive-extension declaration plus the coupled-quantity,
 role and attainability declarations Parts 2–4 designed.
 
-Cites Core §4 (the seven-item interface these refine rather than extend), Core §3.1
+Cites Core §4 (the interface these refine rather than extend), Core §3.1
 (the slot whose nonlocal member motivated the coupled-quantity construction), Core §5
 (the inverse-problem taxonomy the attainable region completes), Spec §2.2 (declared
 forms, whose validity region becomes a function over this space) and Spec §9.1 (the
 level claim that needs a version).
 
 **Composition, not modification, applied a second time** (ADR-042, ADR-059): a decision-extension
-declaration *holds* a constitutive-extension declaration whole, which itself holds the v1.3 seven items
+declaration *holds* a constitutive-extension declaration whole, which itself holds the item declaration
 whole. So `omi.interface.diff` keeps operating on the v1.3 object unchanged, M11's
 comparability evidence survives by construction, and two domains a version apart differ
 only in what the later version adds.

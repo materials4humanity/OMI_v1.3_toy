@@ -104,6 +104,7 @@ def test_the_other_road_is_closed_too_diff_refuses_an_honest_item_6() -> None:
     """
     honest = InstantiationDeclaration(
         state_schema=FLAGSHIP_DECLARATION.state_schema,
+        declared_parameters=FLAGSHIP_DECLARATION.declared_parameters,
         control_space=FLAGSHIP_DECLARATION.control_space,
         erasure_inventory=FLAGSHIP_DECLARATION.erasure_inventory,
         readout_catalogue=FLAGSHIP_DECLARATION.readout_catalogue,

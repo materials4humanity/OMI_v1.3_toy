@@ -26,7 +26,7 @@ scale; this sketch scopes state to one pellet, where they are not).
 
 from __future__ import annotations
 
-from omi.interface import InstantiationDeclaration
+from omi.interface import InstantiationDeclaration, ParameterRole
 from omi.state import Slot, StateSchema
 
 CATALYST_UNDER_OPERATION_SCHEMA = StateSchema(
@@ -45,6 +45,27 @@ this schema's five components; z has one; m and nu have none."""
 
 CATALYST_UNDER_OPERATION_DECLARATION = InstantiationDeclaration(
     state_schema=CATALYST_UNDER_OPERATION_SCHEMA,
+    declared_parameters=(
+        ParameterRole(
+            name="catalyst_formulation",
+            indexes=("surface_reaction_constitutive", "oxidative_regeneration"),
+            justification=(
+                "Fills item 1b, and this is the one sketch whose fill is checkable against a "
+                "BUILT domain rather than only against prose -- the discovery domain declares the "
+                "same structure, where `support` holds SpeciesRole.PARAMETER in both regions and "
+                "mean_composition is item 1b's occupant. The support identity, the active-phase "
+                "metal and the promoter loading are fixed by manufacture: no operator transports "
+                "them, the observation suite (bulk conversion, plus ex-situ surface "
+                "characterisation) does not assimilate them, no per-site value exists, and they "
+                "decide which surface-kinetics operator applies. "
+                "Note what this does NOT rescue: this sketch's declared strain is that m and nu "
+                "are empty because the state is scoped to one pellet (the four slots may be a "
+                "convenience rather than a partition). Item 1b is orthogonal to that -- a "
+                "parameter is not a slot, by E-29's own argument that a fifth slot is the wrong "
+                "fix -- so the empty-slot finding stands entirely unchanged."
+            ),
+        ),
+    ),
     control_space=(
         "Apparatus/process-controlled: feed composition, flow rate, "
         "reactor temperature and pressure as a time-dependent recipe. The "

@@ -1,5 +1,5 @@
 """The proposed constitutive-form interface extension, built alongside v1.3 rather than
-replacing it (Core §4's seven items; ADR-042, docs/DECISIONS.md).
+replacing it (Core §4's items; ADR-042, docs/DECISIONS.md).
 
 **Nothing in this package is part of OMI v1.3.** Every conformance result,
 oracle and audit finding this repository produced through M10 is a v1.3 result

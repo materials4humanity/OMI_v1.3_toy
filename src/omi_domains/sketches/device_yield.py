@@ -12,7 +12,7 @@ against.
 
 from __future__ import annotations
 
-from omi.interface import InstantiationDeclaration
+from omi.interface import InstantiationDeclaration, ParameterRole
 from omi.state import Slot, StateSchema
 
 DEVICE_YIELD_SCHEMA = StateSchema(
@@ -29,6 +29,41 @@ DEVICE_YIELD_SCHEMA = StateSchema(
 
 DEVICE_YIELD_DECLARATION = InstantiationDeclaration(
     state_schema=DEVICE_YIELD_SCHEMA,
+    declared_parameters=(
+        ParameterRole(
+            name="design_rule_and_layout",
+            indexes=("process_step_constitutive", "die_yield"),
+            justification=(
+                "Fills item 1b, and the evidence that this item was missing is in this same "
+                "declaration: item 4 already says the Class B process-zone volume is 'the die's "
+                "declared critical area under its design rule', and item 7 already says "
+                "critical-area analysis is 'a declared, fixed-per-design scalar'. So the layout "
+                "was ALREADY a declared operator-family index -- written into the prose of two "
+                "other items because item 1 had nowhere to host it. Against E-46's four "
+                "properties: no operator transports the layout, no inline inspection assimilates "
+                "it, it carries no per-die value in an ensemble over one design, and it decides "
+                "which critical-area function A_c(x) the yield map uses."
+            ),
+        ),
+        ParameterRole(
+            name="tool_chamber_identity",
+            indexes=("process_step_constitutive",),
+            justification=(
+                "Declared as a SECOND parameter specifically because this domain separates an "
+                "index from a state on one physical object, which is the sharpest available "
+                "illustration of what the item-1 split buys. The chamber's IDENTITY -- which "
+                "tool, which hardware set -- is fixed and indexes the operator family; the same "
+                "chamber's SEASONING STATE evolves run to run and is declared in item 1a's z "
+                "slot. Before ADR-071 both would have been item 1 content with nothing "
+                "distinguishing them, which is E-29's detectability finding exactly: 'static by "
+                "design' and 'should evolve but does not' had identical structural signatures."
+            ),
+        ),
+    ),
+    # `indexes` names operators this sketch declares but does not build (ADR-038:
+    # interface-only). So the falsifiable half of a ParameterRole -- a named operator
+    # either does or does not vary with the quantity -- is not checkable here, only
+    # stated. That is ADR-038's known scope limit, not a defect in the declaration.
     control_space=(
         "Apparatus-controlled: deposition/etch/CMP tool setpoints (pressure, "
         "RF power, flow rates, temperature) as time-dependent recipes. "

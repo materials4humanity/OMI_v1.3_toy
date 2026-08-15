@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import pytest
 
-from omi.interface import SpecificationVersion, diff
+from omi.interface import ParameterRole, SpecificationVersion, diff
 from omi.proposed.constitutive import ConstitutivelyConstrained
 from omi.proposed.decision import (
     AttainabilityVerdict,
@@ -40,8 +40,10 @@ def test_the_declaration_differs_from_both_existing_domains_on_every_item(
 
     A third domain that agreed with either existing one on several items would add little
     to the generality claim — the pair was chosen to *invert* each other, and a third
-    should be a third case rather than a variant. Every one of the seven items differs
-    from both.
+    should be a third case rather than a variant. Every one of the declared items differs
+    from both — eight since ADR-071 split item 1, and the new item 1b differs too: this
+    domain declares mean composition as an operator-family index where flagship declares no
+    parameter at all.
     """
     against_flagship = diff(SDL_V13_CORE, FLAGSHIP_DECLARATION)
     against_contrast = diff(SDL_V13_CORE, CONTRAST_DECLARATION)
@@ -118,27 +120,52 @@ def test_a_parameter_only_species_is_mechanically_identifiable(
 def test_the_composition_declaration_states_where_constancy_will_fail_and_why(
     observe: ObservationRecorder,
 ) -> None:
-    """ADR-050's diagnosis, declared in advance rather than discovered in Part 6.
+    """ADR-050's diagnosis, declared in advance rather than discovered in Part 6 —
+    **re-expressed at ADR-071, because the quantity it is about moved items.**
 
-    Mean composition is declared `INVARIANT` over the **bulk**, and the closure note says
-    plainly that the surface layer is *not* closed — promoter segregates into it — so the
-    constancy check is **expected to fail** there and the failure means the coupling should
-    have been `DEPLETED_BY`. That second quantity is declared `DEPLETED_BY` explicitly, so
-    the pair exhibits ADR-050's corrective diagnosis rather than merely permitting it.
+    Mean composition used to be declared here as an `INVARIANT`-coupled quantity on the
+    decision extension, which `SpeciesRole.PARAMETER`'s own docstring describes as the
+    parameter role realised through a coupling direction — i.e. the workaround
+    `docs/V1.4-EDITS.md` E-46 predicted would be needed while item 1 had nowhere to host an
+    operator-family index. Stage 2 gave it one, so it is now item 1b's `ParameterRole` on
+    `SDL_V13_CORE`, with `constant_over=("bulk",)` and `also_state_in_regions=("surface_layer",)`.
+
+    **ADR-050's diagnosis is unchanged by the move, and that is the point of this test.** The
+    bulk is closed; the surface layer is not, because promoter segregates into it during
+    calcination; so a constancy check over the surface layer is still *expected to fail*, and
+    the failure is still the diagnosis rather than a defect. The two halves are now declared
+    in two items — the constant-over-bulk half in 1b, the `DEPLETED_BY`
+    surface_promoter_enrichment half here — which is E-46's own distinction rather than a
+    dilution of ADR-050's.
     """
+    parameters = {p.name: p for p in SDL_V13_CORE.declared_parameters}
     invariant = SDL_DECLARATION.quantities_with_coupling(CouplingDirection.INVARIANT)
     depleted = SDL_DECLARATION.quantities_with_coupling(CouplingDirection.DEPLETED_BY)
     determined = SDL_DECLARATION.quantities_with_coupling(CouplingDirection.DETERMINED_BY)
-    notes = {q.name: q.closure_note for q in SDL_DECLARATION.coupled_quantities}
-    observe("invariant_quantities", invariant, "== ('mean_composition',)")
+
+    observe("item_1b_parameter_names", tuple(sorted(parameters)), "== ('mean_composition',) since ADR-071")
+    observe("mean_composition_constant_over", parameters["mean_composition"].constant_over, "== ('bulk',)")
+    observe(
+        "mean_composition_also_state_in_regions",
+        parameters["mean_composition"].also_state_in_regions,
+        "== ('surface_layer',) -- E-46's dual-role clause, on a real domain",
+    )
+    observe("invariant_quantities", invariant, "== () -- relocated to item 1b by ADR-071")
     observe("depleted_by_quantities", depleted, "non-empty -- ADR-050's corrective case declared")
     observe("determined_by_quantities", determined, "non-empty")
-    observe("mean_composition_closure_note_mentions_open_region", "not closed" in notes["mean_composition"].lower(), "True")
 
-    assert invariant == ("mean_composition",)
+    assert tuple(sorted(parameters)) == ("mean_composition",)
+    assert parameters["mean_composition"].constant_over == ("bulk",)
+    assert parameters["mean_composition"].also_state_in_regions == ("surface_layer",), (
+        "the surface layer is where constancy is expected to fail; E-46 requires the dual "
+        "role to be declared rather than left to the closure note's prose"
+    )
+    assert invariant == (), (
+        "mean_composition is item 1b's occupant since ADR-071; an INVARIANT-coupled entry "
+        "would be the second declaration site the split exists to remove"
+    )
     assert depleted, "no DEPLETED_BY quantity is declared, so E-25's refusal case is unexercised"
     assert determined, "no DETERMINED_BY quantity is declared, so the closure residual has no subject"
-    assert "not closed" in notes["mean_composition"].lower()
 
 
 def test_the_nonlocal_quantity_is_declared_global_point_not_a_field(
@@ -195,13 +222,31 @@ def test_the_descriptor_basis_is_declared_with_its_underlying_space(
     falsifiable exactly by varying the underlying space at fixed descriptors — which
     requires both to be declared. A declaration carrying only descriptors is refused at
     construction.
+
+    **Read from item 1b since ADR-071**, where mean composition now lives. ADR-052's rule
+    travelled with the quantity rather than staying behind with the carrier: `ParameterRole`
+    enforces the same descriptor-needs-its-underlying-space refusal that
+    `CoupledQuantityDeclaration` does, and both refusals are exercised below so the rule is
+    checked on the item that actually hosts the declaration *and* on the one that no longer
+    does.
     """
-    composition = next(q for q in SDL_DECLARATION.coupled_quantities if q.name == "mean_composition")
+    composition = next(p for p in SDL_V13_CORE.declared_parameters if p.name == "mean_composition")
     observe("descriptor_basis", composition.descriptor_basis, f"== {DESCRIPTORS}")
     observe("underlying_space", composition.underlying_space, "the raw fractions")
     assert composition.descriptor_basis == DESCRIPTORS
     assert composition.underlying_space == SPECIES
 
+    # Item 1b's own refusal, on the carrier that now hosts the declaration.
+    with pytest.raises(ValueError, match="underlying space"):
+        ParameterRole(
+            name="descriptors_without_truth",
+            indexes=("SomeOperator",),
+            justification="justified",
+            descriptor_basis=("some_descriptor",),
+        )
+
+    # And the decision extension's, unchanged -- ADR-052 applies wherever a descriptor
+    # basis is declarable, not only where mean composition happens to be declared.
     with pytest.raises(ValueError, match="underlying space"):
         CoupledQuantityDeclaration(
             name="descriptors_without_truth",

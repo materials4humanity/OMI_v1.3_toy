@@ -74,6 +74,7 @@ Use these terms exactly. They are defined in Core; do not coin synonyms.
 | **Type 0 / 1 / 2** | Functional readout / operator-valued (constitutive) / component readout requiring geometry |
 | **Class A / B** | Self-averaging (an RVE exists) / weakest-link extreme-value (no RVE exists) |
 | **Property vs performance** | Property is invariant under configuration within a test class, i.e. a functional of the constitutive operator alone. Performance requires geometry. |
+| **Slot occupant vs parameter** | Interface items 1a and 1b, split by ADR-071 (`docs/V1.4-EDITS.md` E-46, E-29). A **slot occupant** evolves under some operator, is assimilated from observations, and carries a per-particle value in `𝒫(𝒮)` — it answers *what is the material*. A **parameter** does none of the three and answers *which member of the operator family this is*. Declared as `omi.interface.ParameterRole`. Not a fifth slot: a slot would subject it to pushforward, Axiom S, erasure and assimilation, all vacuous for a quantity nothing transports. One physical quantity may hold both roles in different declared regions, but the dual declaration must say so. |
 | **Sufficiency deficit** `δ` | The bias term from matched-history pairs, **decomposed** to remove repeat noise and imperfect matching |
 | **Danger score** `𝒟ᵢ` | influence × residual uncertainty, per state direction, relative to *declared* targets |
 | **Observed / inferred / unresolved** | A direction is *observed* if a **single** near-diagonal Gramian term exceeds the largest downstream term by a **declared** dominance factor `ρ`; *inferred* if the near-diagonal contribution vanishes while the direction is identifiable from the total — the chain model, not any instrument, is doing the work; ***unresolved*** if the ratio sits within a declared band of `ρ`, or if nothing contributes at all. The dominance factor, the band and the near-diagonal window are declared **per domain** with justifications, and the **abstained fraction is a required output** (ADR-061; V1.4-EDITS E-48, E-53). Never cite the *size* of the inferred set as evidence of chain-specific recovery — cite the per-direction dominance ratio (E-55) |
@@ -161,13 +162,24 @@ Non-negotiable. Violating any of these produces non-conforming output.
     and observability triage are all defined relative to a *declared* readout
     set. If the target set changes, the analysis is invalid and must be re-run.
 11. **The generality claim is the paper's central bet, and its evidence is
-    that the seven-item interface is fillable by domains outside the two
+    that the instantiation interface is fillable by domains outside the two
     implemented.** Interface declarations without implementations behind them
-    — a sketch that fills, or fails to fill, Core §4's seven items for a
+    — a sketch that fills, or fails to fill, Core §4's items for a
     domain neither `flagship` nor `contrast` covers — count as evidence for
     this claim and are explicitly in scope (see M10, `docs/ROADMAP.md`). A
     sketch that cannot fill an item is not a failed exercise; it is a finding
     for `docs/V1.4-EDITS.md`.
+
+    **The item count is this repository's, not v1.3's, and it moves.** v1.3
+    issues seven items; `omi.interface.InstantiationDeclaration` declares
+    **eight** since ADR-071 split item 1 into 1a (state schema) and 1b
+    (declared parameters), per `docs/V1.4-EDITS.md` E-46. Never hardcode the
+    count: read `omi.interface.INTERFACE_ITEMS`, which is the single authority
+    for the numbering, the charters and the Core §7.2 row mapping. A test or
+    document that writes the count as a literal is the E-01 defect being
+    recreated. **A changed count re-opens every sketch verdict** — each is
+    evidence for this claim, so a new item means each verdict is
+    re-established rather than reformatted.
 
 ## 6. Architecture
 
