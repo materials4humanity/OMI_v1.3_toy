@@ -3563,7 +3563,7 @@ Three points make this more than an assurance.
    not merely in this repository's implementation of it.
 
 3. **The audit-preservation gate is the enforcement.** Every observation recorded
-   before M11 is byte-identical today (267 observations, `audit/pre-m11-observations.json`,
+   before M11 is byte-identical today (267 audited `(test, name)` pairs — ADR-069 — `audit/baselines/v13-items7.json`,
    ADR-042). The same discipline applies to v1.5: the purpose extension must not
    move a single pre-existing measured quantity, and if it does, that is the
    signal the extension was not the additive change this ADR claims. The gate is a
@@ -5472,7 +5472,7 @@ exemption until the run passed — is precisely how a gate becomes decorative.
 
 ### Alternatives rejected
 
-*Re-baseline at the E-53 commit.* Rejected: it discards the 267-observation invariance record
+*Re-baseline at the E-53 commit.* Rejected: it discards the 267-row invariance record
 that makes every M11 result citable, in exchange for convenience at a single commit.
 
 *A `--allow-label-changes` flag.* Rejected: a boolean cannot say *which* observations were
@@ -6115,6 +6115,92 @@ deficit would produce this repository's first `CLAIMABLE` verdict on real physic
 three domains does today — flagship's erasure contracts but no deficit is wired to it, and
 calcination fails the gain clause — so the `CLAIMABLE` branch is currently exercised only by a
 constructed case, and that limit is recorded in the test rather than smoothed over.
+
+---
+
+## ADR-069 — The audit gate is re-keyed on `(test, name)`; the baseline moves to a versioned scheme, and the trigger for it was ADR-062's own
+
+**Status.** Accepted **Gap.** none — this is a repository verification-tooling defect, not a framework gap **Track.** arity-redesign Stage 1, before any interface field is touched.
+**Pins.** `scripts/check_audit_gate.sh` (rewritten); `audit/BASELINES.md`; `audit/baselines/v13-items7.json`.
+
+### Two decisions, one commit, because the second was made possible by verifying the first
+
+E-60 found that the audit gate's `{name: row}` comparison silently drops any observation whose
+name is shared by more than one test — 44 of the v1.3 baseline's 267 rows, 16.5%, never
+compared. Fixing the keying and re-baselining are one piece of work: the repair has to be
+verified *before* a new baseline is frozen under it, or the freeze would just be trusting the
+same class of defect one level up.
+
+### The keying repair
+
+`before = {(o["test"], o["name"]): o for o in baseline}` — a tuple key, guarded: the script now
+refuses to run at all if either the baseline or the current run has a duplicate `(test, name)`
+pair, rather than silently keeping the last one. Declared exceptions (`audit/e53-label-changes.json`)
+stay named by `name` alone — ADR-061's format is unchanged — resolved to a `(test, name)` pair
+at gate time, and refused as **ambiguous** if the name resolves to more than one pair. No
+declared-exception file has needed to name a test explicitly so far, because no declared name is
+currently duplicated; the guard exists for the day one is.
+
+**Verified before trusting it.** All 44 previously-uncompared rows were checked against a fresh
+full-suite run, matched by the new key: **44 of 44 byte-identical, zero drift.** The full
+267-row baseline re-keyed the same way showed exactly the four `changed` / two `retired` rows
+E-53's own declared exceptions already name, and nothing else undeclared. So the repair changed
+*what was checked*, not *what the checks found* — every number this repository has reported
+under the old keying was correct; the guarantee behind it was 16% narrower than stated.
+
+### The versioned-baseline scheme
+
+`audit/pre-m11-observations.json` moves to `audit/baselines/v13-items7.json` — a `git mv`, not a
+copy, so the file's history is preserved — with a new `audit/BASELINES.md` naming the generation,
+the criterion it was produced under, and the commit it was frozen at.
+
+**Why now, and why this is the right trigger rather than a convenient one.** ADR-062 stated its
+own limit explicitly: *"A second declared-exception file arriving for an unrelated change would
+be the signal that label semantics are churning rather than being corrected once — at which
+point the right move is a versioned baseline per criterion rather than an accumulating exception
+list."* The arity redesign is that second file — its Decisions A and B will restructure Core §4
+item 1 and item 6, an interface change with nothing to do with E-53's observed/inferred
+criterion. Adding a second exception file for it, alongside `e53-label-changes.json`, would be
+exactly the churn ADR-062 named. A versioned baseline is the alternative it already specified.
+
+**What a versioned baseline means for a reader, concretely — see `audit/BASELINES.md`'s own
+statement, restated here because it is the operative content of this ADR.** A generation is
+never edited in place. A claim stated against `v13-items7` — "flagship and contrast differ on
+all seven items" — is checkable forever under exactly that criterion, at any commit that still
+carries the file, by running the gate against it. It is *not* comparable against a later
+generation's run; the generation label is what makes that mistake visible rather than silent,
+on the same principle ADR-061's `superseded_label()` already established for a changed criterion.
+
+The observation-count invariant becomes **per generation** rather than global: each generation's
+own row count is its reference point, and "current minus baseline" is only meaningful within one
+generation. Comparing today's run's total against `v13-items7`'s 267 and calling the gap
+"drift" would be exactly the error a versioned scheme exists to prevent.
+
+### Alternatives rejected
+
+*Fix the keying, keep one exception file, add E-60's fix to it.* Rejected: E-60 is not a label
+semantics change, it is a bug in the comparison mechanism itself. Filing it as a declared
+exception would misrepresent what happened — nothing about any observation's *meaning* changed,
+the *comparison* was wrong — and ADR-062's declared-exception machinery exists specifically for
+meaning changes.
+
+*Re-baseline at the current commit without checking the 44 first.* Rejected, and this was the
+most important call in this ADR: freezing a new baseline without first verifying the previously
+-shadowed rows would mean trusting the repaired keying on faith at the exact moment its own
+repair is what makes trust checkable. The verification runs *before* the freeze in this ADR's
+own ordering for that reason.
+
+*Leave `audit/pre-m11-observations.json`'s name unchanged, only move directories.* Rejected:
+the old name asserted "the M11 baseline," singular, which stops being true the moment a second
+generation exists. `v13-items7` names the criterion, which is what a reader needs to know to use
+it correctly, and what the old name never stated.
+
+### What would change this decision
+
+A `(test, name)` collision inside a future full-suite run — the same test recording the same
+observation name twice — would mean this key is not sufficient either, and the gate is written
+to fail loudly rather than silently in that case specifically so the next repair has the same
+evidence this one did.
 
 ---
 

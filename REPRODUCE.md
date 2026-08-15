@@ -190,11 +190,14 @@ today; M11 only *added* observations. This is what licenses calling the extensio
 composition-over-modification (ADR-042).
 
 The baseline — 267 observations from a full run at `57f7db8` (the last commit
-before `src/omi/` was touched by the proposed-v1.4 extension) — is committed at
-`audit/pre-m11-observations.json`, so the check is one step from a clean clone:
+before `src/omi/` was touched by the proposed constitutive extension) — is committed at
+`audit/baselines/v13-items7.json`, so the check is one step from a clean clone. **267
+audited `(test, name)` pairs, not a name-deduplicated subset** (ADR-069; `docs/V1.4-EDITS.md` E-60 found the gate previously keyed on `name` alone and silently
+dropped 44 of the 267 from comparison; verified zero drift before the keying was
+repaired, recorded in `audit/BASELINES.md`):
 
 ```bash
-scripts/check_audit_gate.sh audit/pre-m11-observations.json \\
+scripts/check_audit_gate.sh audit/baselines/v13-items7.json \\
     audit/e53-label-changes.json                               # ~570 s (runs the full suite)
 ```
 
@@ -218,7 +221,7 @@ git worktree add --detach /tmp/omi-57f7db8 57f7db8
 python3 -m venv /tmp/omi-57f7db8/.venv
 /tmp/omi-57f7db8/.venv/bin/pip install -e '/tmp/omi-57f7db8[dev]'
 (cd /tmp/omi-57f7db8 && .venv/bin/python -m pytest -q)   # -> 251 passed, 2 skipped
-# /tmp/omi-57f7db8/build/observations.json is the 267-observation baseline
+# /tmp/omi-57f7db8/build/observations.json is the 267-row baseline (267 audited (test, name) pairs)
 git worktree remove --force /tmp/omi-57f7db8
 ```
 
@@ -254,7 +257,7 @@ CI runs the suite twice to catch it.
 | M11.4 vacuous-axis diagnosis | `python scripts/run_m11_4_extrapolation.py` | ~4 min | §5 above |
 | hold-out gate retro-validation | `pytest tests/test_holdout_discrimination.py -q` | ~50 s | 5 passed |
 | E-38 validity catch | `pytest "…::test_the_report_catches_koistinen_marburger_applied_at_the_soak_temperature" -q` | <1 s | 1 passed |
-| audit-gate invariance | `scripts/check_audit_gate.sh audit/pre-m11-observations.json audit/e53-label-changes.json` | ~570 s | PASS: 0 undeclared, 4 declared label changes, 2 retirements, no numeric movement |
+| audit-gate invariance | `scripts/check_audit_gate.sh audit/baselines/v13-items7.json audit/e53-label-changes.json` | ~570 s | PASS: 0 undeclared, 4 declared label changes, 2 retirements, no numeric movement |
 | determinism | `scripts/check_determinism.sh` | ~220 s | passed |
 | v1.5 Part 5(1) figures | `python scripts/run_v15_part5_1.py` | ~10 min | `docs/V1.5-PART5-1.md` |
 | Part 5(1) §5.1 diagnostic trace | `pytest tests/oracles/test_contrast_diagnostic_trace.py -q` | ~60 s | 7 passed |

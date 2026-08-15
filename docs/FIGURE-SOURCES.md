@@ -160,9 +160,9 @@ analysis code.
 - **Shows.** Every observation recorded before M11 touched `src/omi/` is
   byte-identical after M11; M11 only added observations (267 → 306, 0 changed, 0
   missing). This is the evidence for composition-over-modification (ADR-042).
-- **Source.** baseline `audit/pre-m11-observations.json` (267 obs at `57f7db8`);
-  `docs/DECISIONS.md` ADR-042.
-- **Regenerate.** `scripts/check_audit_gate.sh audit/pre-m11-observations.json`
+- **Source.** baseline `audit/baselines/v13-items7.json` (267 rows, 267 audited `(test, name)` pairs, at `57f7db8`; ADR-069 re-keyed the comparison after `docs/V1.4-EDITS.md`
+  E-60 found the prior name-only keying silently dropped 44 of the 267 from comparison, verified zero drift before re-freezing); `docs/DECISIONS.md` ADR-042.
+- **Regenerate.** `scripts/check_audit_gate.sh audit/baselines/v13-items7.json`
   (~110 s; runs the full suite then compares).
 - **CAVEAT — the invariance is against the `57f7db8` baseline specifically** (the
   last commit before the extension touched `src/omi/`). It certifies the *extension*
