@@ -14,6 +14,7 @@ alongside the operator-level rank measurement in
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum, auto
 
 import numpy as np
 
@@ -52,6 +53,250 @@ class ErasureMeasurement:
     tol: float
     """The absolute singular-value threshold used for the rank cutoff
     (ADR-017) — reported, not hidden."""
+
+    @property
+    def surviving_gain(self) -> float:
+        """Largest singular value on the surviving subspace — Core §3.9's ``L``
+        (E-56; ADR-068). ``0.0`` when nothing survives."""
+        return float(self.spectrum[0]) if self.rank > 0 and self.spectrum.size else 0.0
+
+    @property
+    def erased_gain(self) -> float:
+        """Largest singular value on the erased subspace (Core §3.4; Spec §3.2): how
+        completely the destroyed directions were destroyed (E-56; ADR-068). ``0.0`` when
+        nothing is erased."""
+        return float(self.spectrum[self.rank]) if self.rank < self.spectrum.size else 0.0
+
+    def completeness(self) -> "ErasureCompleteness":
+        """Completeness as **two quantities that cannot be summarised as one** (Core §3.4's
+        two clauses; Spec §3.2's rank; E-56; ADR-068).
+
+        The rank alone has been this repository's erasure verdict since M2, and on the
+        first domain whose erasure is thermodynamic rather than decaying it was the wrong
+        one — rank 1 of 7 with a surviving-subspace gain of 14.4. Prefer this over reading
+        :attr:`rank` in isolation.
+        """
+        return ErasureCompleteness(
+            effective_rank=self.rank,
+            state_dimension=int(self.spectrum.size),
+            tolerance=self.tol,
+            surviving_gain=self.surviving_gain,
+            erased_gain=self.erased_gain,
+            metric=self.metric,
+        )
+
+
+@dataclass(frozen=True)
+class ErasureCompleteness:
+    """An erasure's completeness as **two independent quantities that may not be
+    summarised as one** (`docs/V1.4-EDITS.md` E-56; ADR-068).
+
+    Core §3.4 defines an erasure operator by an image of substantially lower effective
+    dimension **and** ``L ≪ 1``, joined as though they were one property. They are not:
+    the discovery domain's calcination collapses six of seven state directions while
+    *amplifying* the seventh by more than an order of magnitude, because the surviving
+    direction is that domain's own declared conservation invariant. An operator can
+    satisfy either clause and violate the other.
+
+    So this object reports both and **refuses to be reduced to one** — see
+    :meth:`__bool__`. A caller that wants a verdict must state which clause it means.
+    """
+
+    effective_rank: int
+    """Numerical rank of the metric-scaled Jacobian at :attr:`tolerance`."""
+    state_dimension: int
+    """The domain's dimension, so ``effective_rank`` is readable as ``r`` of ``n``."""
+    tolerance: float
+    """The absolute singular-value cutoff the rank was taken at (ADR-017) — reported,
+    because E-19's finding is that a finite-rate erasure's rank is a function of it."""
+    surviving_gain: float
+    """Largest singular value **on the surviving subspace**, in :attr:`metric`.
+
+    This is the ``L`` of Core §3.9's ``L ≪ 1``, and it is what decides whether the
+    erasure *bounds* error: a direction that survives with gain above one carries error
+    forward amplified, however many other directions were destroyed."""
+    erased_gain: float
+    """Largest singular value on the **erased** subspace — how completely the destroyed
+    directions were destroyed, which is a different question from how many there were."""
+    metric: Metric
+    """The declared metric both gains are quoted in (CLAUDE.md invariant 1). Neither gain
+    means anything without it."""
+
+    def __bool__(self) -> bool:
+        """Always raises. **This refusal is the point of the class** (ADR-068).
+
+        `if completeness:` is a caller collapsing two independent measurements into one
+        verdict, which is exactly the conflation E-56 records in Core §3.4's own
+        definition. The alternative — synthesising a combined score — would bake the
+        defect into this repository instead of surfacing it.
+        """
+        raise TypeError(
+            "ErasureCompleteness has no single truth value: dimension collapse and gain "
+            "contraction are independent properties (V1.4-EDITS E-56). Ask for "
+            "`dimension_collapsed` or `gain_contracted` explicitly, or read "
+            "`summary()`, which always states both."
+        )
+
+    @property
+    def dimension_collapsed(self) -> bool:
+        """Core §3.4's first clause: the image has lower effective dimension."""
+        return self.effective_rank < self.state_dimension
+
+    @property
+    def gain_contracted(self) -> bool:
+        """Core §3.4's second clause, and Core §3.9's condition (a): ``L < 1`` on the
+        directions that survive."""
+        return self.surviving_gain < 1.0
+
+    def summary(self) -> str:
+        """Both quantities, always together, in the order Core §3.4 states them."""
+        return (
+            f"rank {self.effective_rank} of {self.state_dimension} at tol "
+            f"{self.tolerance:.4g} (dimension collapsed: {self.dimension_collapsed}); "
+            f"surviving-subspace gain L = {self.surviving_gain:.4f} "
+            f"(gain contracted: {self.gain_contracted}); erased-subspace gain "
+            f"{self.erased_gain:.4g}"
+        )
+
+
+class ErrorControlVerdict(Enum):
+    """Whether Core §3.9's condition (a) is claimable for a measured erasure
+    (`docs/V1.4-EDITS.md` E-57; ADR-068)."""
+
+    CLAIMABLE = auto()
+    """Both clauses of §3.4 hold **and** the declared state has been tested for
+    sufficiency."""
+    REFUSED_STATE_UNTESTED = auto()
+    """No sufficiency deficit was supplied. **The default, and not a failure of the
+    operator**: a state-space erasure acts on a basis of `𝒮`, so it cannot bound error
+    arising from a quantity outside `𝒮`, and whether such a quantity exists is what a
+    deficit measures."""
+    REFUSED_DIMENSION_NOT_COLLAPSED = auto()
+    REFUSED_GAIN_NOT_CONTRACTED = auto()
+    """Measured on a real chain: rank collapse without gain contraction concentrates
+    error rather than bounding it."""
+    REFUSED_DEFICIT_ABOVE_THRESHOLD = auto()
+    """The declared state was tested and found insufficient at the declared threshold."""
+
+
+@dataclass(frozen=True)
+class StateSufficiencyEvidence:
+    """That the **declared state** has been tested for sufficiency, and with what result
+    (Spec §1.2's matched-pair deficit; ADR-068).
+
+    Deliberately a value plus its provenance rather than a `DeficitResult`: `omi.erasure`
+    does not depend on the deficit *estimator*, only on the fact that one was run. What
+    condition (a) needs is evidence, not a particular implementation of it.
+    """
+
+    deficit_squared: float
+    threshold: float
+    """The declared bound the deficit is judged against. Supplied by the caller, because
+    Spec §1 specifies no universal value and inventing one here would be the
+    improvisation CLAUDE.md §4 forbids."""
+    provenance: str
+    """What produced the deficit — the probe set, the matching depth, the domain. A
+    number with no provenance is not evidence."""
+
+    def __post_init__(self) -> None:
+        if not self.provenance.strip():
+            raise ValueError(
+                "a sufficiency deficit with no provenance is not evidence that the declared "
+                "state was tested; name what measured it"
+            )
+        if self.deficit_squared < 0.0:
+            raise ValueError(f"deficit_squared is non-negative by construction, got {self.deficit_squared}")
+
+    @property
+    def sufficient(self) -> bool:
+        """Whether the declared state passed at :attr:`threshold` (Spec §1.2's deficit;
+        Core §2.1's Axiom S is what it tests)."""
+        return self.deficit_squared <= self.threshold
+
+
+@dataclass(frozen=True)
+class ErrorControlClaim:
+    """Whether Core §3.9's condition (a) may be claimed, and why not where it may not
+    (E-57; ADR-068). Every field is reported whatever the verdict."""
+
+    verdict: ErrorControlVerdict
+    completeness: ErasureCompleteness
+    evidence: StateSufficiencyEvidence | None
+    reason: str
+
+    @property
+    def claimable(self) -> bool:
+        """Whether Core §3.9's condition (a) may be claimed on this evidence."""
+        return self.verdict is ErrorControlVerdict.CLAIMABLE
+
+
+def condition_a_claim(
+    completeness: ErasureCompleteness,
+    evidence: StateSufficiencyEvidence | None = None,
+) -> ErrorControlClaim:
+    """Whether a measured erasure supports Core §3.9's condition (a) (E-57; ADR-068).
+
+    **Condition (a) has a precondition and Core §3.9 does not state it.** The section
+    offers a dichotomy — error accumulation is controlled either by an erasure operator
+    or by observation density sufficient for assimilation to correct drift — and presents
+    the two as alternatives of equal standing. They are not. An erasure acts on a basis
+    of the declared state; a quantity outside that state is not in its Jacobian's domain,
+    so no amount of rank collapse says anything about it. Condition (b) *is* robust to an
+    under-declared state, because assimilation acts on the observation residual.
+
+    So condition (a) is conditional on Axiom S holding for the declared state — which is
+    precisely what Core §1 and Spec §1 exist to **measure rather than assume**. With no
+    *evidence* argument this function therefore **refuses** rather than assuming the bound
+    holds: that refusal is the repair, and it is the default because an unsupplied deficit
+    is the common case.
+
+    Checked in order, so the reported reason is the first thing that actually blocks
+    (Spec §7.3's ordered-diagnosis discipline, and E-06's finding that an unordered report
+    cannot say which term is responsible).
+    """
+    if not completeness.dimension_collapsed:
+        return ErrorControlClaim(
+            ErrorControlVerdict.REFUSED_DIMENSION_NOT_COLLAPSED,
+            completeness,
+            evidence,
+            f"the image is full rank ({completeness.effective_rank} of "
+            f"{completeness.state_dimension}) at the declared tolerance, so no subspace is "
+            "erased and Core §3.4's first clause does not hold",
+        )
+    if not completeness.gain_contracted:
+        return ErrorControlClaim(
+            ErrorControlVerdict.REFUSED_GAIN_NOT_CONTRACTED,
+            completeness,
+            evidence,
+            f"the surviving subspace has gain L = {completeness.surviving_gain:.4f} >= 1 in "
+            "the declared metric, so error in the directions that survive is amplified "
+            "rather than bounded; destroying the other directions does not bound it (E-56)",
+        )
+    if evidence is None:
+        return ErrorControlClaim(
+            ErrorControlVerdict.REFUSED_STATE_UNTESTED,
+            completeness,
+            None,
+            "no sufficiency deficit was supplied for the declared state, so Axiom S is "
+            "untested and condition (a)'s precondition is unverified; an erasure cannot "
+            "bound error from a variable outside the state space it acts on (E-57)",
+        )
+    if not evidence.sufficient:
+        return ErrorControlClaim(
+            ErrorControlVerdict.REFUSED_DEFICIT_ABOVE_THRESHOLD,
+            completeness,
+            evidence,
+            f"the declared state was tested and found insufficient: deficit_squared "
+            f"{evidence.deficit_squared:.6g} exceeds the declared threshold "
+            f"{evidence.threshold:.6g} ({evidence.provenance})",
+        )
+    return ErrorControlClaim(
+        ErrorControlVerdict.CLAIMABLE,
+        completeness,
+        evidence,
+        f"both clauses of Core §3.4 hold and the declared state was tested sufficient "
+        f"({evidence.provenance})",
+    )
 
 
 def measure_erasure(

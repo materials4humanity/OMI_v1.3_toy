@@ -44,6 +44,10 @@ reused). §1 holds the authoritative counts and the entry locator. The groups:
   publication consequence**: the framework's differentiator against a tabular baseline must be
   cited as a per-direction dominance ratio, never as a count of inferred directions.
 - **§10 — confirmations** (E-07 found nothing wrong; E-38 a proposal that worked).
+- **§13 — not a framework finding at all** (E-59): an `observe()` bound string is free text no
+  lint checks, so a recorded value and its stated bound can diverge silently. Segregated from
+  every framework total on purpose, so the count a paper cites is not inflated by a defect in
+  this repository's own tooling.
 - **§11** re-reads every entry by *which practitioner intervention it blocks* (buy
   sensing / characterisation / data / physics / run experiments / declare out of
   scope), and finds the framework prices only one of six.

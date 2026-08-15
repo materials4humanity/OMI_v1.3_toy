@@ -6014,6 +6014,110 @@ retire-and-reissue discipline ADR-062 applies to observations.
 
 ---
 
+## ADR-068 — Erasure completeness is **two quantities**, and Core §3.9's condition (a) is **refused** without a sufficiency deficit
+
+**Status.** Accepted **Gap.** none in Spec's own text — both targets are SPEC-marked, which is what makes this a *correction* rather than a gap fill **Track.** the E-56/E-57 repair, after v1.5 planning closed.
+**Pins.** `tests/test_erasure_two_quantities.py` (6 checks). `tests/test_sdl_operators.py` and `tests/test_flagship_real_erasure.py` are unchanged and still pass — the repair is additive.
+
+### Two independent repairs, one commit, because they are one finding read twice
+
+`docs/V1.4-EDITS.md` E-56 and E-57 are §1's seventh headline finding. They are separate defects
+and the code changes do not depend on each other, but both concern what an erasure measurement
+licenses, so splitting the commit would put half a repair in the tree.
+
+### E-56 — `ErasureCompleteness`, and a `__bool__` that raises
+
+Core §3.4 defines an erasure operator by an image of substantially lower effective dimension
+**and** `L ≪ 1`, joined as one definition. Measured on the discovery domain's calcination: rank
+**1 of 7** at a declared tolerance, surviving-subspace gain **14.44**. The first clause holds as
+completely as the rank criterion admits; the second is violated by more than an order of
+magnitude, because the surviving direction is the domain's own declared conservation invariant —
+which is exactly where a mass-conserving operator's gain must live.
+
+So `ErasureMeasurement.completeness()` returns an `ErasureCompleteness` carrying
+`effective_rank`, `state_dimension`, `tolerance`, `surviving_gain`, `erased_gain` and the
+`metric`, with `dimension_collapsed` and `gain_contracted` as **two separate** booleans and a
+`summary()` that always states both.
+
+**`__bool__` raises `TypeError`, and that refusal is the substance of the repair.** The brief was
+explicit: where a caller expects a single verdict it must receive both or refuse, and no combined
+score may be synthesised. A combined score would bake Core §3.4's own conflation into this
+repository, where it would then be mistaken for the framework's position — CLAUDE.md §4's
+standing objection to plausible-looking implementations of underspecified things. Raising is the
+only enforcement that survives a later caller who has not read this ADR.
+
+**No existing caller had to change.** Surveyed before writing: `conformance.py` has no erasure
+line item at all, and `EvolutionOperator.is_erasure` is a *declaration* (a domain saying what it
+believes) rather than a measurement, so it stays a bool. Every consumer in `tests/` and
+`scripts/` already read `rank` and `spectrum` separately. So this repair adds a safer reading and
+removes none — and the fact that nothing consumed a single verdict is itself worth recording,
+because it means the conflation lived in the *definition* and in the prose, never in a call site.
+
+### E-57 — `condition_a_claim` refuses by default
+
+Core §3.9 offers a dichotomy: error accumulation is controlled either by an erasure operator, or
+by observation density sufficient for assimilation to correct drift. Condition (a) is stated as a
+property of the operators. It is not. An erasure acts on a basis of the **declared** state; a
+quantity outside that state is not in its Jacobian's domain, so no amount of rank collapse says
+anything about it. Measured: a chain declaring the rank-1-of-7 erasure above still has unbounded
+campaign error, `z_n` growing `1.72 → 4.00`.
+
+`condition_a_claim(completeness, evidence=None)` therefore returns an `ErrorControlClaim` whose
+verdict is one of five, checked **in order** so the reported reason is the first thing that
+actually blocks (Spec §7.3's ordered diagnosis, and E-06's finding that an unordered report
+cannot say which term is responsible):
+
+| verdict | when |
+|---|---|
+| `REFUSED_DIMENSION_NOT_COLLAPSED` | §3.4's first clause fails |
+| `REFUSED_GAIN_NOT_CONTRACTED` | §3.4's second clause fails — E-56's case |
+| `REFUSED_STATE_UNTESTED` | **the default**: no deficit supplied |
+| `REFUSED_DEFICIT_ABOVE_THRESHOLD` | the state was tested and found insufficient |
+| `CLAIMABLE` | both clauses hold and the state was tested sufficient |
+
+**Refusing by default rather than assuming is the whole repair.** The common case is that nobody
+supplied a deficit, and under the old reading that silently meant "the bound holds". It now means
+"the precondition is unverified", which is what CLAUDE.md §4 says a framework that knows when to
+refuse is worth more for.
+
+### `StateSufficiencyEvidence` takes a value and a provenance, not a `DeficitResult`
+
+`omi.erasure` does **not** import `omi.sufficiency`, and that is deliberate rather than a
+dependency-cycle workaround (there is no cycle — checked). What condition (a) needs is *evidence
+that the declared state was tested*, not a particular estimator's output type. A caller using a
+different deficit estimator, or a published number from a prior campaign, can supply it. The
+`threshold` is caller-supplied because Spec §1 specifies no universal value and inventing one
+here would be improvisation; `provenance` is validated non-empty, on ADR-043's reasoning that a
+number without a source is an assertion rather than a measurement.
+
+### Alternatives rejected
+
+*Return a single `is_complete` bool computed as `dimension_collapsed and gain_contracted`.*
+Rejected — that *is* the combined score, and it would make an operator that collapses six of
+seven directions indistinguishable from one that collapses none.
+
+*Default `condition_a_claim` to claimable when no deficit is given, with a warning.* Rejected: a
+warning is not a refusal, and the failure mode E-57 documents is precisely a reader taking the
+bound as established.
+
+*Put the claim in `conformance.py` instead.* Rejected for now, and the reason is sequencing: the
+arity redesign restructures what the declaration items are and therefore what OMI-0/1/2 certify.
+Wiring a new conformance line item before that lands would be work done twice. The claim object
+exists and is unwired, which is stated rather than hidden.
+
+*Edit Core §3.4 and Core §3.9.* Refused, as throughout: they are the v1.3 specification under
+audit. The proposed wording is already in E-56 and E-57.
+
+### What would change this decision
+
+A domain declaring an erasure that is complete in **both** senses *and* carrying a measured
+deficit would produce this repository's first `CLAIMABLE` verdict on real physics. None of the
+three domains does today — flagship's erasure contracts but no deficit is wired to it, and
+calcination fails the gain clause — so the `CLAIMABLE` branch is currently exercised only by a
+constructed case, and that limit is recorded in the test rather than smoothed over.
+
+---
+
 ## Open questions
 
 Not decisions — hypotheses the code should settle. Full statements in
