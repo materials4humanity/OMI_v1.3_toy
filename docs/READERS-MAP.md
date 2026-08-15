@@ -44,10 +44,12 @@ reused). §1 holds the authoritative counts and the entry locator. The groups:
   publication consequence**: the framework's differentiator against a tabular baseline must be
   cited as a per-direction dominance ratio, never as a count of inferred directions.
 - **§10 — confirmations** (E-07 found nothing wrong; E-38 a proposal that worked).
-- **§13 — not a framework finding at all** (E-59): an `observe()` bound string is free text no
-  lint checks, so a recorded value and its stated bound can diverge silently. Segregated from
-  every framework total on purpose, so the count a paper cites is not inflated by a defect in
-  this repository's own tooling.
+- **§13 — not framework findings at all** (E-59, E-60): an `observe()` bound string is free text
+  no lint checks, so a recorded value and its stated bound can diverge silently; and the audit
+  gate keys observations by *name alone*, so 44 of the 267 baseline rows share a name and have
+  never been compared — every reported PASS covers 223 of 267. Segregated from every framework
+  total on purpose, so the count a paper cites is not inflated by defects in this repository's
+  own tooling. Both are scheduled into `docs/ARITY-REDESIGN-BRIEF.md`.
 - **§11** re-reads every entry by *which practitioner intervention it blocks* (buy
   sensing / characterisation / data / physics / run experiments / declare out of
   scope), and finds the framework prices only one of six.
@@ -145,6 +147,15 @@ items and the decision-extension refinements with no operator behind them, which
 fillability and not for prediction) — and **no real neural-operator training at scale**:
 analytic operators are ground truth throughout (CLAUDE.md §2: the operators are not the
 point).
+
+## What is scoped but not built
+
+`docs/ARITY-REDESIGN-BRIEF.md` — Core §4's seven items under pressure from ten ledger entries,
+organised into **five decisions** (two restructure, three additive), with the re-baselining plan,
+the diff retirements, the sketch re-derivation and the three-stage sequencing. **A brief, not an
+execution**: nothing in it is implemented. It also records the one published comparability claim
+that cannot be honestly retired — Core §7.2's row-to-item mapping, whose replacement does not
+exist because the comparison itself ceases to be meaningful.
 
 ## The reproduction path
 
