@@ -17,30 +17,63 @@ most — **what remains open, by name**.
 
 ---
 
-## 1. The count is not stable, and this is the closeout's central statement
+## 1. The count is stable at eight — settled by ADR-073, after this section first said it was not
 
-**The interface declares eight items. That is a waypoint, not a resting point.** Three ledger
-entries propose *additional* items by their own proposed wording, and all three are currently
-parked on wrapper classes rather than in the item list:
+> **Correction, dated after ADR-073/ADR-074 (live document, corrected in place per CLAUDE.md §10).**
+> This section originally closed the milestone by stating the count was **not** stable and flagging an
+> inconsistency it declined to resolve. Both halves of that have now been settled and the section is
+> corrected rather than rewritten away — the table below is unchanged as a statement of each entry's
+> *content* status, and what follows it is the resolution.
+>
+> **The count is stable at eight**, by decision. ADR-073 supplies the principle the closeout was
+> missing: **content belongs in the item list where the existing items have a *competing* home for it,
+> and on a wrapper where they have none.** Under it, all three of E-30, E-32 and E-52 belong exactly
+> where they already are — each entry's own finding is that *no* item accepts its content (item 6
+> `classify_invariant`-refuses a constitutive form *by name*), so a wrapper creates no ambiguity and
+> spends no item number. Each entry's proposed framework wording still stands as proposed; ADR-073
+> decides only this repository's placement, declining to pre-empt the next specification's numbering.
+>
+> **The flagged inconsistency is resolved, not tolerated.** Item 1 was split at ADR-071 because its
+> charter demonstrably *covered* the parameter (E-46) — a competing home. These three have none. The
+> asymmetry is measured, not stylistic, so treating the four cases alike would have been consistency
+> bought by ignoring the measurement that separates them.
+>
+> **Two riders.** (i) E-32's item-6 role-scoping half (6a–6c plus a third `InvariantKind`) is decided
+> and scheduled — zero observations move, and it repairs a measured refusal — but lands with **no
+> occupant**, since no built domain declares an equilibrium-limited fraction. (ii) The count is stable
+> *against these three* and **not against E-61**, which finds items 1b and 2 both legitimately hosting
+> one quantity at different declaration scopes — a competing home by ADR-073's own criterion, and
+> therefore the live candidate to move the count again. **E-31 was never a count pressure**: its wording
+> replaces item 1's parenthetical, so it is content inside item 1a (ADR-074).
+
+### The three entries' content status, as recorded at closeout
+
+**The interface declares eight items.** Three ledger entries propose *additional* items by their own
+proposed wording, and all three live on wrapper classes. **Their placement is settled (ADR-073); the
+table records the state of each entry's content**, which is what remains partly open:
 
 | pressure | its proposed wording asks for | where it lives here | status |
 |---|---|---|---|
 | **E-30** — symmetry group | "Add a **new declaration item** — deliberately not a sub-item of item 6" | `DecisionExtendedDeclaration.symmetry_group_actions` (ADR-070) | **half-closed, measured.** A domain can declare a group; `omi.state.Metric` still does not quotient by one. The `1.414`-distance demonstration for a 90°-rotated orientation descriptor stands unrepaired, and no built domain declares a group, so the second half is untested on real content |
-| **E-32 / ADR-046** — declared constitutive form | ADR-046 chose "(b) a **new interface item**", noting it "makes the interface eight items" | `ExtendedDeclaration.constitutive_forms` (ADR-042/043) | **closed as content, open as placement.** Five real forms are declared and exercised; item 6 still *refuses* a constitutive form by name, so the framework-side role-scoping (6a/6b/6c) is unbuilt. ADR-046's own count assumed item 1 was whole — with the split, its option (b) lands at **nine**, not eight |
+| **E-32 / ADR-046** — declared constitutive form | ADR-046 chose "(b) a **new interface item**", noting it "makes the interface eight items" | `ExtendedDeclaration.constitutive_forms` (ADR-042/043) | **closed as content; placement settled on the wrapper (ADR-073).** Five real forms are declared and exercised; item 6 still *refuses* a constitutive form by name, and the role-scoping (6a–6c plus a third `InvariantKind`) is **decided and scheduled, not yet implemented** — zero observations move, but it lands with no occupant. ADR-046's own count assumed item 1 was whole — with the split, its option (b) lands at **nine**, not eight |
 | **E-52** — scope-exit criterion | "Add an **eighth item** to Core §4: 8. Scope-exit criterion" | `ScopeDeclaration.scope_exit_criterion` (ADR-070) | **half-closed, and the domain the evidence came from does not carry it.** SDL declares a criterion; `contrast` — whose terminal voltage goes negative within forty intervals, which is E-52's evidence — has no `DecisionExtendedDeclaration` at all, so the finding stands exactly as measured |
 
-**If all three land as framework items on top of the split, the interface is eleven items.**
+Had all three been promoted to items, the interface would have been **eleven**. ADR-073 decided none
+of them will be, on the measured asymmetry above, so the count stays at eight.
 
-**And the inconsistency this exposes is a finding in its own right.** This repository now holds
-three declarations on wrappers whose entries propose them as items, and one (the parameter role)
-*as* an item on the reasoning that a wrapper would leave it declarable in two places. Those
-treatments cannot both be right in general. The distinguishing argument is available and ADR-071
-rests on it — *a wrapper is safe where the content has no competing home in the item list, unsafe
-where it does* — but it is a **repository** argument the framework does not make. If the next
-issued specification adopts E-30, E-32 and E-52 as items while leaving item 1 whole, this
-repository will have split the one item the framework kept and wrapped the three it promoted.
-Exactly inverted. Flagged, not resolved: resolving it means deciding what the next specification
-does.
+**What each still leaves open is content, not placement.** E-30's metric half is now **OQ-6** (should
+`omi.state.Metric` quotient by a declared group, and is the quotient the metric's property or a
+wrapper's?) — unscheduled, with a blast radius covering every metric-dependent quantity here and no
+built domain to check a repair against. E-32's role-scoping half is **decided and scheduled** but
+unimplemented and will land with no occupant. E-52's evidence domain still carries no
+decision-extension declaration.
+
+**The residual risk this repository accepts, stated rather than dissolved.** If the next issued
+specification adopts E-30, E-32 and E-52 as numbered items while leaving item 1 whole, this repository
+will have split the one item the framework kept and wrapped the three it promoted. ADR-073 judges that
+acceptable — placement here is decided on measured asymmetry, and each entry's framework wording is
+carried forward unaltered so the specification's authors are not pre-empted — but the exposure is
+real and is not argued away.
 
 **A fourth pressure may exist and is not assessed here.** See §5.
 

@@ -6629,6 +6629,212 @@ is visible in the reported per-rule counts rather than needing to be inferred.
 
 ---
 
+## ADR-073 — The placement principle: an item exists where the item list has a *competing* home, a wrapper where it has none. E-30, E-32 and E-52 are settled on it, and the count stops at eight
+
+**Status.** Accepted **Gap.** none — settles the placement of three ledger entries whose proposed
+framework wording asks for new items. Framework wording stays proposed; Core and Spec unedited.
+**Track.** post-redesign settlement.
+**Pins.** No code change for E-30 or E-52. One decided-but-unimplemented code change for E-32's
+item-6 half (below). `docs/ARITY-REDESIGN-RECORD.md` §1 restated against this ADR.
+
+### Why this ADR exists
+
+`docs/ARITY-REDESIGN-RECORD.md` §1 closed the arity redesign by flagging an inconsistency rather
+than resolving it: **three declarations sit on wrapper classes whose ledger entries propose them as
+numbered items, while a fourth (the parameter role) was made an item at ADR-071.** Those treatments
+cannot both be right in general, and the closeout said so and stopped. This ADR supplies the
+principle that distinguishes them, and applies it.
+
+### The principle
+
+> **Content belongs in the item list when the existing items already have a competing home for it,
+> and on a wrapper when they have none.**
+
+The reasoning is ADR-071's, generalised. A wrapper's only failure mode is *ambiguity*: it creates a
+second legal place to declare something, so two domains that agree can be reported as differing and
+a mis-typing becomes undetectable. That failure requires a *first* place to compete with. Where the
+item list has no home at all, a wrapper adds a declaration site without creating a choice, and the
+comparison stays sound.
+
+**The asymmetry is measured, not asserted.** For item 1 versus the parameter role, `docs/V1.4-EDITS.md`
+E-46's whole finding is that item 1's charter *covered both* readings and distinguished them nowhere
+— a competing home, so ADR-071 split the item. For item 6 versus a constitutive form, E-32's
+finding is that item 6 **actively refuses** one:
+
+```
+classify_invariant("koistinen_marburger_martensite_kinetics")  -> ValueError (refuses to guess)
+classify_invariant("equilibrium_limited_phase_fraction")       -> ValueError (refuses to guess)
+classify_invariant("mass_conservation_across_transformation")  -> CONSERVATION
+```
+
+A category the item list refuses by name is the opposite of a competing home. The same holds for
+E-30's symmetry group and E-52's scope-exit criterion: E-52's entry checks all seven items one by
+one and finds no host, and E-30's checks the item list and finds none. **So all three belong where
+they already are.**
+
+### The three dispositions
+
+| entry | disposition | item count |
+|---|---|---|
+| **E-30** — symmetry group | Wrapper (`DecisionExtendedDeclaration.symmetry_group_actions`) is the **correct permanent home** for the declaration. Its unclosed half is not a placement question at all — see below | **+0** |
+| **E-32** — constitutive form | Wrapper (`ExtendedDeclaration.constitutive_forms`) is the **correct permanent home**. The item-6 role-scoping half (6a–6c) is a **separate, cheap, decided** change — below | **+0** |
+| **E-52** — scope-exit criterion | Wrapper (`ScopeDeclaration.scope_exit_criterion`) is the **correct permanent home** | **+0** |
+
+**The item count is therefore stable at eight**, by decision rather than by exhaustion. What each
+entry's *framework* wording proposes is untouched and still stands as proposed: this ADR decides
+where the content lives **in this repository**, and explicitly declines to pre-empt how the next
+issued specification numbers it. That distinction is the whole content of ADR-067's naming rule
+applied to placement.
+
+### E-32's two halves have completely different costs, and only one is worth paying
+
+**Half A — item 6 role-scoped into 6a/6b/6c, and `InvariantKind` gains a third member.** Decided:
+**do it.** Measured cost: **zero.** All fifteen invariants declared anywhere in this repository
+classify as `CONSERVATION` or `MONOTONICITY`, so no invariant reclassifies, `invariants_structural`
+does not move, and **no observation of 547 changes**. It repairs a *measured* refusal — Spec §7.1
+names three candidate certificate kinds and item 6 names two, so an equilibrium-limited-fraction
+invariant is refused today. And **6a–6c are sub-parts of item 6**, like item 4b, so the numbered
+count is unchanged.
+
+Stated honestly: **no built domain declares an equilibrium-limited fraction**, so the third kind
+lands with no occupant. That makes it half-closed in the same sense as `SymmetryGroupAction` — the
+repair is justified by the refusal it removes, not by an instance exercising it, and the code path
+stays untested on real content until some domain declares one. Recorded rather than glossed.
+
+**Half B — promoting constitutive forms out of the wrapper into a numbered item.** Decided: **do
+not.** Its cost was measured, and every element of it is a reason against:
+
+1. **It moves 12 observations of 547** — ten per-item diff dicts plus two item-name lists — which
+   opens a **third baseline generation** for a change that adds no expressive power (the forms are
+   already declared, already exercised, already diffable on their own terms).
+2. **It collapses `ExtendedDeclaration` to a pure alias.** Its fields become `['v13_core']` and
+   nothing else. ADR-042's composition boundary would exist as a name with no content.
+3. **It requires a decision nobody has taken**: what `SpecificationVersion.PROPOSED_CONSTITUTIVE_EXTENSION`
+   names once its only content sits in the core. Every option is bad — retire the member (destroying
+   the ADR-042 record and ten tests), or keep it naming nothing.
+4. **It retires E-32's own founding measurement.** `test_the_two_v13_cores_are_indistinguishable`
+   asserts that flagship and its constitutive variant diff to *nothing* — "v1.3 cannot see the
+   difference the extension is about", which is M11.3's headline result and the measurement ADR-046
+   rests on. Promote the forms into the diffable item list and that comparison inverts: the cores
+   differ, and the finding becomes unstatable under the new criterion. The versioned-baseline scheme
+   would preserve it (ADR-069), so nothing is lost from the record — but paying a generation to
+   retire the evidence for the change being paid for is the wrong trade.
+
+**On the goal this was meant to serve.** The authorisation's reasoning for landing E-32 now was
+"so the count stops moving for a known reason rather than an unknown one." That goal is met — but by
+deciding the count *does not move*, rather than by moving it once more. Half A does not move the
+count either, so landing it does not advance that goal; it is worth doing on its own merits.
+
+### E-30's unclosed half is a metric decision, not a placement decision
+
+E-30 has two findings and only the first is about declaration. The second is that
+`omi.state.Metric` — a schema plus a per-component scale vector, distance as a Euclidean norm of
+the scale-normalised displacement — **cannot respect a group even once one is declared**: two states
+related by a 90° rotation of a two-component orientation descriptor are reported at distance
+`1.414`, not `0`.
+
+**That is not settled here, and the decision it needs is named rather than guessed at:** *should
+`omi.state.Metric` be able to quotient by a declared symmetry group, and if so, is the quotient a
+property of the metric or of a wrapper around it?* Its blast radius is everything metric-dependent
+— every Lipschitz constant, every erasure measurement, every trust radius, every state distance,
+which is to say most of the numeric record — so it is its own milestone with its own baseline
+consequence, not a rider on a placement ADR. It is also **currently unexercised**: no built domain
+declares an orientation-like occupant, so there is no domain on which the repair could be checked.
+Filed as an open question rather than decided.
+
+### Alternatives rejected
+
+*Promote all three to items, matching each entry's proposed framework wording.* Rejected: it takes
+the interface to eleven items, opens a third generation, and — for E-32 — retires the measurement
+that justifies it. It also pre-empts the next specification's numbering, which ADR-067's rule
+exists to stop this repository doing.
+
+*Invert ADR-071 instead: move the parameter role back onto a wrapper so all four are treated alike.*
+Rejected, and this is the alternative the closeout's flagged inconsistency most invites. Uniformity
+is not the goal; correctness per case is. Item 1's charter demonstrably covered the parameter, so a
+wrapper there re-creates the ambiguity E-46 reports. Treating a case with a competing home the same
+as three cases without one would be consistency bought by ignoring the measurement that
+distinguishes them.
+
+*Leave all three unsettled and let the next specification decide.* Rejected: the closeout already
+did that once, and an unsettled count is what makes every downstream cost estimate provisional. A
+decision that can be reversed by a future specification is still a decision.
+
+### What would change this decision
+
+A domain whose content has a **competing** home in items 1a–7 — the E-46 shape, not the E-30/E-32/E-52
+shape. That is the test, and it is checkable per case rather than by counting entries.
+`docs/V1.4-EDITS.md` **E-61** is the live candidate: it finds items 1b and 2 both legitimately
+hosting one quantity at different declaration scopes, which is a competing home by this ADR's own
+criterion. E-61 is unresolved, so the count is stable **against the three entries settled here** and
+not against E-61.
+
+---
+
+## ADR-074 — E-31: the characterisation suite is declared now and enforced later, because the claim its enforcement would gate is not being made
+
+**Status.** Accepted **Gap.** none — implements the declaration half of `docs/V1.4-EDITS.md` E-31's
+proposed wording. Framework wording stays proposed. **Track.** post-redesign settlement.
+**Pins.** Decided, not yet implemented: a characterisation-method field per `m` occupant, reached
+through item 1a. No conformance-level change.
+
+### The decision, and it does not move the item count
+
+E-31 finds that Core §4 item 1 asks for "resolution limits" and the shared declaration object
+carries none, while `m` and `z` are separated by *observability* rather than physics — so `𝒮` is
+observer-relative and two implementations of one domain under different characterisation suites work
+in different state spaces.
+
+**E-31 is not one of the item-count pressures**, and this is worth stating plainly because it has
+been counted as one. Its proposed wording *replaces item 1's parenthetical*: the resolution limit and
+the characterisation method that establishes it are **content inside item 1a**, not a new item. The
+count is unaffected either way. (The three count pressures are E-30, E-32 and E-52, all settled in
+ADR-073.)
+
+**Decided: declare it, do not make it a conformance requirement yet.** Same shape as ADR-070's
+deliberately half-closed `SymmetryGroupAction` — build the destination, close the finding's
+declaration half, and leave enforcement as its own decision with its own blast radius. Making it a
+conformance requirement would mean a domain that has not declared its suite fails a level it
+previously passed, which moves published results.
+
+### The argument for deferring enforcement is stronger than "it would be disruptive"
+
+The disruption argument is real but it is the weaker one, because disruption alone is not a reason to
+leave a check unbuilt. Two stronger reasons:
+
+**1. The claim enforcement would gate is not currently made anywhere.** E-31's consequence is that
+operator reuse across implementations is unsound when the `m`/`z` boundary differs. Measured: this
+repository's chain-composition module **contains no reference to a schema at all** — no compatibility
+check of any kind gates composing one operator after another, and no cross-implementation reuse
+exists to gate. So the ordering is: the declaration is the precondition for the check, the check is
+the precondition for the claim, and *the claim is not being made*. Declaring now and enforcing when
+reuse arrives is not a compromise; it is the correct order. Enforcing first would add a gate with no
+traffic.
+
+**2. The entry itself leaves the enforcement *form* open, so enforcing now means picking a side of a
+question the ledger deliberately did not settle.** E-31's own confidence paragraph: "Medium on the
+proposed wording's final sentence: a hard prohibition on cross-boundary reuse may be stronger than
+practice can bear, and a disclosure requirement... may be the more implementable form — the authors
+would need to choose, and this entry has no evidence distinguishing them, since no two-suite
+instantiation of one domain exists here to test either against." Building enforcement now would
+choose between prohibition and disclosure on no evidence, which is the improvisation CLAUDE.md §4
+forbids — one level up from code, in a conformance requirement.
+
+**So the honest answer to "is reuse claimable at all without the check" is: it is not claimable
+today, and not because the check is missing.** It is unclaimable because nothing composes operators
+across implementations, and because the framework has not decided whether a differing boundary is a
+prohibition or a disclosure. The check is necessary for the claim and not sufficient, and building it
+before either of those is resolved would give the claim a false precondition to point at.
+
+### What would change this decision
+
+The first cross-implementation operator reuse in this repository, or a second instantiation of one
+domain under a different characterisation suite. Either supplies the evidence E-31 says is missing
+for choosing between prohibition and disclosure, and at that point enforcement becomes decidable
+rather than a coin toss.
+
+---
+
 ## Open questions
 
 Not decisions — hypotheses the code should settle. Full statements in
@@ -6641,6 +6847,7 @@ Not decisions — hypotheses the code should settle. Full statements in
 | OQ-3 | Class B under competing defect populations | M6 | answered — see COVERAGE.md Part IV |
 | OQ-4 | Does inverse design report which variance is binding? | M9 | answered — see COVERAGE.md Part IV |
 | OQ-5 | Metric dependence of reported `L` | M2 | answered — see COVERAGE.md Part IV |
+| OQ-6 | Should `omi.state.Metric` be able to quotient by a declared symmetry group, and is the quotient a property of the metric or of a wrapper around it? (`docs/V1.4-EDITS.md` E-30's second half; ADR-073 declines to decide it) | unscheduled | **open** — blast radius is every metric-dependent quantity in the repository, and no built domain declares an orientation-like occupant to check a repair against |
 
 When one resolves: record the evidence, update `COVERAGE.md`, and if it implies
 a framework edit, state the proposed wording so it can be carried to v1.4.
