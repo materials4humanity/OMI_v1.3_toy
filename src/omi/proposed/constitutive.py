@@ -546,6 +546,27 @@ class ConstitutiveForm:
     """The source establishing the form — a citation, not a claim (Spec §2.2)."""
     governs: tuple[tuple[Slot, str], ...]
     """Which state components (Core §3.1's slots) this form governs."""
+    refines: str | None = None
+    """The :attr:`name` of a previously published form this one **refines**
+    (`docs/V1.4-EDITS.md` E-40; ADR-069) — physics unchanged, what is claimed about it
+    narrowed or extended.
+
+    **The worked case this closes.** `KOCKS_MECKING_STRAIN_WINDOWED` was published
+    *alongside* `KOCKS_MECKING` rather than as an edit to it, because
+    `ValidityRange.report` requires a value for every declared bound and a form's
+    range therefore cannot be extended without breaking every caller that evaluates
+    the original with the original's keys. Before this field, `omi.interface.diff`
+    (and any cross-domain comparison of item 6d) saw two forms where the physics is
+    one — a refinement misread as a disagreement. Declaring `refines` lets a
+    consumer distinguish them without inventing a mutable range.
+
+    `None` is an **independent** declaration: two domains whose forms both leave
+    this unset genuinely disagree if their content differs, in the ordinary sense
+    `omi.interface.diff` already gives that word."""
+    refinement_note: str = ""
+    """What changed, required non-empty whenever :attr:`refines` is set — E-40's own
+    proposed wording: "stating which items changed." Not required when `refines` is
+    `None`, since there is nothing to explain."""
 
     def __post_init__(self) -> None:
         if not self.name:
@@ -564,6 +585,14 @@ class ConstitutiveForm:
                 "unbounded claim, which is the failure the validity range exists to prevent "
                 "(ADR-043) — declare the range the source actually establishes"
             )
+        if self.refines is not None and not self.refinement_note.strip():
+            raise ValueError(
+                f"form {self.name!r} declares refines={self.refines!r} with no refinement_note: "
+                "E-40's proposed wording requires stating WHICH ITEMS CHANGED, since a refinement "
+                "asserting nothing is indistinguishable from an unexplained edit"
+            )
+        if self.refines == self.name:
+            raise ValueError(f"form {self.name!r} cannot refine itself")
 
     def report(self, values: Mapping[str, float]) -> ExtrapolationReport:
         """Where the current evaluation sits relative to this form's validated

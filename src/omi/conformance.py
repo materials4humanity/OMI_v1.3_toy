@@ -21,6 +21,7 @@ import numpy as np
 from scipy import stats
 
 from omi.chain import Chain
+from omi.erasure import ErrorControlClaim
 from omi.gaps import NotSpecified
 from omi.interface import InstantiationDeclaration, SpecificationVersion
 from omi.inverse import ReachabilityCertificate
@@ -224,6 +225,19 @@ class ConformanceInputs:
     the honest, current state, not a placeholder standing in for a value."""
 
     class_b_volume_scaling_residual: float | None = None
+    error_control_claim: ErrorControlClaim | None = None
+    """Whether Core §3.9's condition (a) is claimable for a declared erasure
+    (`docs/V1.4-EDITS.md` E-57; ADR-068, ADR-069).
+
+    **Carried, not gated.** `None` means no erasure claim was assessed for this
+    report — which is the case for every report this repository has generated so
+    far — and is not read as a failure of any OMI-0/1/2 requirement below.
+    ADR-068 deferred wiring this in, on the stated reason that a new requirement
+    changing what OMI-0/1/2 certify belongs to the arity redesign's restructuring
+    decisions (A and B), not to Stage 1's additive ones. This field discharges only
+    the *carrying* half of that deferral: the claim can now travel with a report
+    and be read by whoever consumes it. Whether it should gate a level is
+    unchanged and unresolved by this field's existence."""
     reachability_certificates: tuple[ReachabilityCertificate, ...] | None = None
     """Typed against `omi.inverse.ReachabilityCertificate` (docs/V1.4-EDITS.md
     E-17), not a bare label — Core §5 is unconditional that "learned
@@ -414,6 +428,12 @@ class ConformanceReport:
     needs in order to evaluate the claim belongs in the report rather than in
     the repository state that surrounded it."""
     requirements: tuple[RequirementStatus, ...]
+    error_control_claim: ErrorControlClaim | None = None
+    """Carried through from :attr:`ConformanceInputs.error_control_claim` unchanged
+    (`docs/V1.4-EDITS.md` E-57; ADR-068, ADR-069) — see that field's docstring for
+    what carrying it does and does not mean. `None` on every report this repository
+    has generated so far, since no domain has both clauses of an erasure's
+    completeness and a wired sufficiency deficit at once (ADR-068's own note)."""
 
     def unmet(self, level: ConformanceLevel) -> tuple[RequirementStatus, ...]:
         """Requirements at or below *level* that are not satisfied (Spec §9.1)."""
@@ -531,4 +551,5 @@ def generate_report(inputs: ConformanceInputs) -> ConformanceReport:
         metric=inputs.metric,
         specification_version=inputs.specification_version,
         requirements=requirements,
+        error_control_claim=inputs.error_control_claim,
     )

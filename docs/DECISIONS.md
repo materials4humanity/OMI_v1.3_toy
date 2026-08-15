@@ -6204,6 +6204,139 @@ evidence this one did.
 
 ---
 
+## ADR-070 — Arity redesign Stage 1: Decisions C, D and E land on wrapper classes, not on `InstantiationDeclaration` — a correction of the brief's own prediction
+
+**Status.** Accepted **Gap.** none — declares how three already-decided repairs (E-30, E-40,
+E-44/E-52) and one deferred wiring (ADR-068) are placed. **Track.** arity-redesign Stage 1.
+**Pins.** `src/omi/interface.py` (`ScopeDeclaration`); `src/omi/proposed/decision.py`
+(`SymmetryGroupAction`, `DecisionExtendedDeclaration.scope` /
+`.symmetry_group_actions`); `src/omi/proposed/constitutive.py` (`ConstitutiveForm.refines` /
+`.refinement_note`); `src/omi/conformance.py` (`ConformanceInputs.error_control_claim`,
+`ConformanceReport.error_control_claim`); `src/omi_domains/sdl/interface.py` (`SDL_DECLARATION`
+populated); `tests/test_arity_stage1_additive.py`.
+
+### The correction, stated first because it changes what the rest of this ADR has to justify
+
+`docs/ARITY-REDESIGN-BRIEF.md` §7's staging table predicted: *"Decisions C, D, E: new items, no
+charter changes. `diff` gains keys; no existing key's value moves"* — i.e., that Stage 1 would
+add fields directly to `InstantiationDeclaration`, so `omi.interface.diff()`'s output dict would
+grow new entries (all `False`, since no domain populates them differently yet) without disturbing
+the seven existing ones.
+
+**That is not what was built, and the deviation was a deliberate design decision made during
+implementation, not an oversight.** All three additive pieces instead land on wrapper classes:
+
+- `ScopeDeclaration` (Decision C) is a new field on `DecisionExtendedDeclaration`, not on
+  `InstantiationDeclaration`.
+- `SymmetryGroupAction` (Decision E) is likewise a `DecisionExtendedDeclaration` field
+  (`symmetry_group_actions`).
+- `ConstitutiveForm.refines` / `.refinement_note` (Decision D) are fields on the *form* object
+  already carried inside `ExtendedDeclaration.constitutive_forms` — a tuple element's shape
+  changed, not the seven-item carrier.
+
+**Consequence: `omi.interface.diff()` is untouched — not "gains keys that are all `False`",
+literally unchanged, same nine keys it has always returned.** Every one of the nine `diff`-dict
+observations `tests/test_interface_diff.py` and `tests/test_sdl_declaration.py` record is
+identical after this stage to before it. Where the brief predicted Stage 1 would be "where the
+versioned baseline is *written* rather than an exception declared" because appended keys would
+move every diff-dict observation — that trigger did not fire, because nothing about `diff()`'s
+own field list moved. (The versioned baseline was adopted anyway, in ADR-069, for the unrelated
+E-60 keying repair; Stage 1 inherits it but did not need to invoke it a second time.)
+
+### Why wrapper placement, not the brief's predicted direct placement
+
+1. **ADR-042's precedent already answered this question once.** `ExtendedDeclaration` and
+   `DecisionExtendedDeclaration` exist specifically so a proposed extension's fields do not touch
+   `InstantiationDeclaration` — "composition, not modification" is that ADR's own name for the
+   mechanism. C, D and E are exactly the kind of proposed, unissued content that pattern was built
+   for; routing them around it would have meant maintaining two different answers to "how does a
+   proposed field get added" inside one milestone.
+
+2. **The seven items are Core §4's literal carrier, and Core is claims, not procedure (CLAUDE.md
+   §1).** A scope-exit criterion, a symmetry-group declaration, and a lineage note between two
+   constitutive forms are not among Core §4's seven named items — E-44 and E-52 say so explicitly
+   ("no item at all, not even a weak one"; "none of the seven items hosts the criterion"). Adding
+   them as an eighth, ninth and tenth field to `InstantiationDeclaration` would have made this
+   repository's implementation assert a Core §4 extension that Core §4 itself does not state E-52's
+   *proposed* wording does say "add an eighth item" — but that is a proposal for the next issued
+   specification, not licence for this repository's code to pre-empt it by editing the literal
+   carrier Core §4 defines today. Composing around it, the way `ExtendedDeclaration` already does
+   for item 6d, keeps the distinction between "what v1.3 declares" and "what this repository
+   proposes adding" visible in the type structure rather than only in prose.
+
+3. **Zero risk to the nine `diff`-dict baseline observations, as a consequence rather than a goal.**
+   Not the reason for the choice — (1) and (2) are — but it is the outcome the brief predicted
+   would cost a baseline rewrite, and this design pays nothing for it.
+
+### What this does and does not settle for Stage 2
+
+**This precedent does not extend to Decisions A and B.** A re-charters Core §4 item 1's contents
+and B splits item 6; both are stated *changes to what the seven items themselves mean*, which is
+a different kind of edit from adding a field beside them — A and B cannot be done by wrapping,
+because the thing being changed is the wrapped object itself. Nothing in this ADR should be read
+as evidence that Stage 2 can also avoid touching `InstantiationDeclaration` or `diff()`; §7's
+staging table's premise that A and B require the interface change stands unchanged. This ADR
+corrects Stage 1's *mechanism*, not Stage 2's.
+
+### The four pieces of Stage 1, briefly (full detail in the pinned modules' docstrings)
+
+- **`ScopeDeclaration`** (E-44, E-52): four scope-feature justification strings plus a
+  `scope_exit_criterion`, with `evidenced_features()` / `undeclared_features()` reporting which of
+  Core §1.1's features a domain's declaration evidences. Empty is a meaningful value throughout
+  (E-52's own wording: undeclared exit criterion is a claim of unlimited validity, not a missing
+  one).
+- **`SymmetryGroupAction`** (E-30, Decision E, deliberately half-closed): a domain can now name a group and the
+  components it acts on. `omi.state.Metric` is unchanged — this closes only "declare the group",
+  not "make the metric quotient by it"; the second half is out of scope for an additive stage
+  because it would change `Metric`'s own computation.
+- **`ConstitutiveForm.refines` / `.refinement_note`** (E-40, Decision D): `KOCKS_MECKING_STRAIN_WINDOWED` now
+  structurally declares `refines=KOCKS_MECKING.name` — the actual worked case E-40 documents,
+  exercised rather than only described in prose.
+- **`error_control_claim` on `ConformanceInputs` / `ConformanceReport`** (ADR-068's deferred half,
+  now Decision C's per the brief): carried through `generate_report()` unmodified. **Deliberately
+  not wired into `_LEVEL_REQUIREMENTS`** — whether condition (a)'s claimability should gate an
+  OMI-0/1/2 level is a restructuring question (it would be a new item in the level table, which is
+  what the brief's own §6 caveat on `test_conformance.py` names), not this stage's. Confirmed by
+  `tests/test_arity_stage1_additive.py`: `highest_claimable_level()` and every `RequirementStatus`
+  are byte-identical with and without a supplied `error_control_claim`.
+
+  **This closes a second predicted cost as well as the `diff` one.** The brief's §6 table flagged
+  `test_conformance.py`'s 9 tests as moving from mechanical to logic *"unless [this stage] adds an
+  item to the OMI level table."* It did not; the field is carried, not gated. So that file's 9
+  tests remain mechanical for this stage, contrary to the brief's conditional prediction — a second
+  place where implementation diverged from the plan's stated cost, in the direction of less cost
+  rather than more.
+
+### SDL's declaration, the fourth site
+
+`SDL_DECLARATION` is the only decision-extension declaration built so far, so it is Stage 1's one
+occupied test bed for `scope`: all four scope features are evidenced (`decision_kind` names the
+campaign decision directly; `z`'s two components are documented in `state.py` as unresolved by any
+declared modality — the strongest case among the three domains) and a scope-exit criterion is
+declared against the existing `attainable_region` bound. `symmetry_group_actions` is declared
+empty with a stated reason: no built domain declares an orientation-like field.
+
+### Alternatives rejected
+
+*Follow the brief literally: add the three fields to `InstantiationDeclaration`.* Rejected for the
+reasons in the "why wrapper placement" section above — it would have contradicted ADR-042's own
+established pattern and asserted a Core §4 extension the framework has not issued.
+
+*Wire `error_control_claim` into `_LEVEL_REQUIREMENTS` now, since the field already exists.*
+Rejected: gating a level is exactly the kind of "what OMI-0/1/2 certify" change ADR-068 named as
+belonging to the restructuring decisions, and doing it quietly inside an "additive" stage would
+misrepresent the stage boundary the user authorised.
+
+### What would change this decision
+
+If Stage 2's restructuring later needs to promote any of `ScopeDeclaration`,
+`SymmetryGroupAction`, or the `refines` lineage onto `InstantiationDeclaration` itself — e.g.
+because a future issued specification actually adopts E-52's proposed eighth item — that
+promotion is Stage 2 or Stage 3's decision to make explicitly, with its own baseline
+consequences, not a silent consequence of this ADR.
+
+---
+
 ## Open questions
 
 Not decisions — hypotheses the code should settle. Full statements in

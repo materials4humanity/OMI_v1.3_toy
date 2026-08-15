@@ -166,3 +166,97 @@ def diff(a: InstantiationDeclaration, b: InstantiationDeclaration) -> dict[str, 
     b_kinds = sorted(classify_invariant(name).name for name in b.invariants)
     result["invariants_structural"] = a_kinds != b_kinds
     return result
+
+
+_SCOPE_FEATURES: tuple[str, ...] = (
+    "control_axis",
+    "hidden_state",
+    "structure_mediated_response",
+    "recurring_decision_under_uncertainty",
+)
+"""Core §1.1's three scope features, plus the fourth ADR-048 proposes for the decision
+extension. Named here once so :class:`ScopeDeclaration` and its tests cannot drift apart
+on what the declarable set is (`docs/V1.4-EDITS.md` E-44)."""
+
+
+@dataclass(frozen=True)
+class ScopeDeclaration:
+    """Whether a domain evidences Core §1.1's scope test, and where it stops mattering
+    (`docs/V1.4-EDITS.md` E-44, E-52; ADR-069).
+
+    **Two findings, one object, because both are "the interface has nothing to say
+    about this."** E-44: Core §1.1 states a scope test and Core §4 states a
+    declaration, and nothing connects them — no item asks a domain to assert it is in
+    scope, so a domain that satisfies the test and a domain that does not produce
+    identical declarations. ADR-048 read flagship's and contrast's declarations for
+    scope evidence, found none, and concluded neither was in scope for the decision
+    extension; **both are**, and the declarations simply could not say so. E-52: none
+    of the seven items hosts the criterion under which an instantiation stops being
+    the right description — Core §3.9's "declare out of scope" reached *during*
+    operation rather than at design time.
+
+    **Not folded into item 6.** An invariant is a conservation statement the chain
+    *satisfies*; a scope-exit criterion is a decision about when to stop believing the
+    chain satisfies anything. Core §4's own text distinguishes the two, and hosting a
+    stopping rule among conservation laws would let a domain claim an end-of-life
+    criterion by listing a conservation law — the satisfiable-without-the-property
+    shape `docs/V1.4-EDITS.md` §4 documents nine times over.
+
+    **Additive, not a restructuring of any of Core §4's seven items** — this is a
+    field on the decision extension, not on :class:`InstantiationDeclaration`, so
+    `diff()` and every comparability result it has produced are untouched by this
+    class existing (ADR-069's own note on why C, D and E land here rather than on the
+    seven-item carrier).
+    """
+
+    control_axis_evidence: str = ""
+    """One-line justification naming which declared item evidences a control axis
+    (E-44's table: item 2, control space — "strong but implicit"). Empty means
+    undeclared, not absent; Core §1.1's test may still hold, the declaration simply
+    does not say so."""
+    hidden_state_evidence: str = ""
+    """Ditto for internal state not directly observable (E-44's table: items 1 and
+    5, jointly — "weak")."""
+    structure_mediated_response_evidence: str = ""
+    """Ditto for responses mediated by structure (E-44's table: item 4 — "weak", a
+    Type-0 readout is consistent with mediation and does not establish it)."""
+    recurring_decision_under_uncertainty_evidence: str = ""
+    """ADR-048's proposed fourth feature, specific to the decision extension. E-44's
+    finding is sharpest here: this feature "has no interface item at all, not even a
+    weak one" under v1.3's seven items alone."""
+    scope_exit_criterion: str = ""
+    """E-52's item: the declared bound — on a readout value, on accumulated state, or
+    on measured residual deficit — beyond which this instantiation MUST be reported
+    out of scope rather than evaluated.
+
+    **Empty is a meaningful value, not a missing one**, per E-52's own proposed
+    wording: "A domain that declares no scope-exit criterion is claiming its
+    instantiation is valid without limit." So this field is never required to be
+    non-empty; :meth:`declares_scope_exit` reports which case a reader is looking at
+    without editorialising on whether that is acceptable."""
+
+    def evidenced_features(self) -> tuple[str, ...]:
+        """Which of Core §1.1's scope features carry a non-empty justification
+        (E-44's own proposed wording: "MUST be able to point... to the item that
+        evidences it"). Sorted for determinism, not for any priority among them."""
+        evidence = {
+            "control_axis": self.control_axis_evidence,
+            "hidden_state": self.hidden_state_evidence,
+            "structure_mediated_response": self.structure_mediated_response_evidence,
+            "recurring_decision_under_uncertainty": self.recurring_decision_under_uncertainty_evidence,
+        }
+        return tuple(sorted(name for name in _SCOPE_FEATURES if evidence[name].strip()))
+
+    def undeclared_features(self) -> tuple[str, ...]:
+        """The complement of :meth:`evidenced_features` against Core §1.1's scope
+        features — what E-44's finding calls a domain "telling you something" by
+        silence, in the same sense an unfilled Core §4 item 3 or item 6 does."""
+        evidenced = set(self.evidenced_features())
+        return tuple(name for name in _SCOPE_FEATURES if name not in evidenced)
+
+    @property
+    def declares_scope_exit(self) -> bool:
+        """Whether :attr:`scope_exit_criterion` is non-empty (Core §3.9's "declare
+        out of scope"). `False` is not an error — it is the claim E-52's proposed
+        wording names: unlimited validity."""
+        return bool(self.scope_exit_criterion.strip())

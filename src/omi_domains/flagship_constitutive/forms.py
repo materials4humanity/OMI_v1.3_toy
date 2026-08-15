@@ -166,9 +166,18 @@ KOCKS_MECKING_STRAIN_WINDOWED = ConstitutiveForm(
         "KOCKS_MECKING; the only difference is one further declared bound."
     ),
     governs=((Slot.Z, "substructure_density"),),
+    refines=KOCKS_MECKING.name,
+    refinement_note=(
+        "Identical physics, identical (k1, k2). The only change is one further declared bound "
+        "(accumulated_strain, ValiditySpace.CONTROL) — the strain window the source's own "
+        "fitting range already implied, made explicit at M11.5. `docs/V1.4-EDITS.md` E-40's "
+        "worked case: this declared refinement is what lets a consumer of `omi.interface.diff` "
+        "read the two objects as one physics narrowed, not two domains disagreeing."
+    ),
 )
 """`KOCKS_MECKING` with one further declared bound, published **alongside** the
-original rather than amending it (ADR-047, docs/DECISIONS.md).
+original rather than amending it (ADR-047, docs/DECISIONS.md), and now **declared as
+a refinement of it** (`refines`/`refinement_note`, E-40; ADR-069).
 
 **Why a second object and not an edit.** `ValidityRange.report` requires a value
 for every declared bound and raises otherwise — deliberately, since silently
@@ -178,9 +187,15 @@ without breaking every existing caller**: M11.3's chain and M11.4's sweep both
 call `KOCKS_MECKING.report` with three keys and would raise against a
 four-bound form. Declaring a sibling leaves those artefacts byte-stable.
 
-The cost is that Core §4's item-6 comparison now sees two forms where the physics
-is one. That refinement path is missing from the extension's design and is filed
-as `docs/V1.4-EDITS.md` E-40; this constant is the worked instance behind it.
+**What `refines` closes and what it does not.** Before ADR-069, Core §4's item-6
+comparison saw two forms where the physics is one, with nothing distinguishing a
+refinement from a disagreement — filed as `docs/V1.4-EDITS.md` E-40, and this pair
+is the worked instance behind it. Declaring `refines=KOCKS_MECKING.name` closes
+that: a consumer can now tell the two objects are one physics narrowed. It does
+**not** retire the two-object structure `ValidityRange.report`'s strictness forces,
+and it does not make `KOCKS_MECKING_STRAIN_WINDOWED` interchangeable with
+`KOCKS_MECKING` at a call site expecting three keys — the refinement is declared
+information for a *reader* (or `omi.interface.diff`), not a compatibility shim.
 
 The lower edge is `UNBOUNDED` rather than `0.0`: accumulated strain is
 non-negative as a matter of the quantity's definition, not as a matter of where

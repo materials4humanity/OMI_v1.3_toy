@@ -33,8 +33,11 @@ a **test obligation** (§3 below), but it argues for no particular number.
 
 ### Why A and B restructure and C, D, E do not
 
-`omi.interface.diff` iterates `fields(InstantiationDeclaration)`. Appending a field adds keys and
-changes no existing key's value — that is C, D and E, and it is cheap.
+`omi.interface.diff` iterates `fields(InstantiationDeclaration)`. C, D and E do not touch that
+carrier at all — as built (ADR-070), each lands on a wrapper class instead, so `diff`'s output is
+untouched rather than merely stable. Either way the point below holds: additive work cannot
+surface a mis-typing *inside* an existing item, whether the addition appends a key or, as it
+turned out, doesn't touch the seven-item carrier at all.
 
 E-46's finding is a **mis-typing inside** item 1. Appending an item 8 "operator-family
 parameterisation" leaves item 1's charter still covering both things, so a domain could declare
@@ -277,7 +280,7 @@ indistinguishable — which is precisely the failure ADR-042's gate exists to pr
 
 | stage | contents | gate posture |
 |---|---|---|
-| **1 — additive** | Decisions **C, D, E**: new items, no charter changes. `diff` gains keys; no existing key's value moves | passes against the **existing** baseline with **no exception file** — appended keys make the nine `diff` dicts change, so this stage is where the versioned baseline is *written* rather than an exception declared |
+| **1 — additive** | Decisions **C, D, E**: new items, no charter changes | passed against a versioned baseline (`audit/baselines/v13-items7.json`, ADR-069) — the baseline moved for the unrelated E-60 keying repair that preceded this stage, **not** because Stage 1 disturbed `diff`; see the correction below |
 | **2 — restructure** | Decisions **A and B**: item 1 re-chartered, item 6 split. `test_interface_diff.py` rebuilt (§3) | passes against the **stage-1 baseline**, which is the new generation's first freeze |
 | **3 — evidence** | The four sketches re-derived (§4), the `observe()` lint switched on (§5) | passes against the stage-2 baseline; the lint's first-run failures are triaged in this stage, not suppressed |
 
@@ -285,24 +288,43 @@ Staging this way also means **the versioned baseline is created before the restr
 restructuring is audited against a generation that already has the new keying — E-60's repair lands
 in stage 1 and pays off in stage 2.
 
-## 8. Sequencing, updated for what commits 1 and 2 closed
+> **Correction, filed after Stage 1 executed (ADR-070; CLAUDE.md §10 — live document, corrected in
+> place).** This section's stage-1 row originally predicted *"`diff` gains keys; no existing key's
+> value moves"* and that the appended keys would be *"where the versioned baseline is written"*.
+> That is not what was built: all three of C, D and E's fields land on wrapper classes
+> (`DecisionExtendedDeclaration`, `ConstitutiveForm`) rather than on `InstantiationDeclaration`
+> itself, so `omi.interface.diff()` is **completely untouched** — not "gains keys that are all
+> `False`", literally the same nine keys as before. See ADR-070 for the reasoning (principally:
+> ADR-042's composition-over-modification precedent already answers this, and none of C/D/E is
+> among Core §4's seven items). §6's caveat that `test_conformance.py`'s 9 tests move to the logic
+> column "unless [Stage 1] adds an item to the OMI level table" also did not fire: the
+> `error_control_claim` wiring is carried, not gated, so those 9 tests stayed mechanical. Both
+> corrections reduce Stage 1's realised cost below what this section priced.
+
+## 8. Sequencing, updated for what commits 1, 2 and Stage 1 closed
 
 **Already closed, so no longer blocked by anything:**
 
 - the version tangle (**ADR-067**) — the carriers are named for what they propose, so the redesign
   does not have to rename them again;
 - **E-56 and E-57's repairs** (**ADR-068**) — done in `erasure.py` alone, and the sequencing
-  analysis held: nothing pulled in a declaration change. The one deliberate deferral is that
-  `condition_a_claim` is **not wired into `conformance.py`**, because a new item changes what
-  OMI-0/1/2 certify. **That wiring is now part of this milestone** — Decision C's stage.
+  analysis held: nothing pulled in a declaration change;
+- **Decision C** (**ADR-070**) — `ScopeDeclaration` is built and populated on `SDL_DECLARATION`,
+  and E-52's scope-exit criterion now has a home (`scope_exit_criterion`);
+- **Decision D** (**ADR-070**) — `ConstitutiveForm.refines` / `.refinement_note`, with
+  `KOCKS_MECKING_STRAIN_WINDOWED` exercising the real E-40 worked case;
+- **Decision E** (**ADR-070**) — `SymmetryGroupAction`, declaring a group without making
+  `omi.state.Metric` respect it (deliberately half-closed, stated in that class's own docstring);
+- **ADR-068's deferred `conformance.py` wiring** — `error_control_claim` is carried on
+  `ConformanceInputs` / `ConformanceReport`, deliberately **not** gating any OMI-0/1/2 requirement;
+  whether it should is left to Decisions A/B.
 
 **Still blocked by the redesign:**
 
 - the **composition inverse** — needs Decision A to read the parameterisation as decision variables;
-- the **decision loop's action set** — needs Decision C, and E-52's scope-exit criterion has no home
-  until then;
 - the **validity-report → buy-physics path** — needs Decision B's declared-form category;
-- **any conformance-level work**, including ADR-068's deferred wiring;
+- **whether `error_control_claim` should gate an OMI-0/1/2 level** — Stage 1 carries it; gating it
+  is a restructuring question for Decision A or B, deliberately left open by ADR-070;
 - **further fillability sketches** — adding one before the item list settles means rewriting it.
 
 **Not blocked, and available now if the redesign is deferred:**

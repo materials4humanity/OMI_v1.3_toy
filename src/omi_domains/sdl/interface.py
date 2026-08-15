@@ -9,7 +9,7 @@ campaign.
 
 from __future__ import annotations
 
-from omi.interface import InstantiationDeclaration
+from omi.interface import InstantiationDeclaration, ScopeDeclaration
 from omi.proposed.declaration import ExtendedDeclaration
 from omi.proposed.decision import (
     AttainableRegion,
@@ -214,14 +214,64 @@ SDL_DECLARATION = DecisionExtendedDeclaration(
             "constraints for the whole certificate."
         ),
     ),
+    scope=ScopeDeclaration(
+        control_axis_evidence=(
+            "Item 2 plus decision_kind jointly, and stronger than E-44's generic 'strong but "
+            "implicit' finding for the other two domains: control_space states directly that "
+            "'an acquisition policy decides what to make next,' and decision_kind names the same "
+            "axis as the object of the campaign decision itself, not merely its admissible set."
+        ),
+        hidden_state_evidence=(
+            "Item 1's z slot: active_site_density and defect_site_fraction, which state.py's own "
+            "docstring records as 'not resolved by any declared modality' — governing turnover "
+            "but absent from observation_suite (item 5). The clearest of the three domains on "
+            "this feature, because the unresolved variables are named rather than merely implied "
+            "by an incomplete observation_suite."
+        ),
+        structure_mediated_response_evidence=(
+            "The pore_network_accessibility coupled quantity (DETERMINED_BY, GLOBAL_POINT): "
+            "turnover_frequency and selectivity (item 4) depend on whether a site is reachable "
+            "through the connected pore network, a structural property with 'no local value even "
+            "in principle' per that declaration's own tracked_justification. Response is mediated "
+            "by network structure, not read directly off composition."
+        ),
+        recurring_decision_under_uncertainty_evidence=(
+            "decision_kind names this directly: 'campaign / discovery: deciding WHAT TO MAKE,' "
+            "repeated over an acquisition policy's cycles under the epistemic uncertainty the "
+            "attainable_region and species_roles declarations exist to bound. E-44 found this "
+            "feature has 'no interface item at all' under the seven items alone; the decision "
+            "extension is what supplies it, and this domain is where ADR-048 built it to be "
+            "exercised."
+        ),
+        scope_exit_criterion=(
+            "Outside attainable_region's declared bounds (descriptor_bounds, underlying_bounds, "
+            "the sums_to_one simplex, or inside an excluded_pairs corner) this instantiation MUST "
+            "be reported out of scope: the constitutive forms' validity range and the campaign's "
+            "own reachability certificate (ADR-053) are stated relative to that region, not "
+            "beyond it. route_note further narrows reachability inside the region without "
+            "widening it, so the attainable_region bound is the binding one."
+        ),
+    ),
+    symmetry_group_actions=(),
+    # Empty, not undeclared-by-omission: no built form here is a function of an oriented
+    # field (no crystallographic texture, no directional loading) for any declared group to
+    # act on. Composition is a simplex-valued fraction vector, permutation-symmetric in the
+    # species labels only in the trivial sense that the labels are already generic
+    # ("metal_a"/"metal_b") rather than a physical claim worth declaring a group over
+    # (docs/V1.4-EDITS.md E-30).
 )
 """The full decision-extension declaration.
 
-Three things this domain declares that neither existing domain does: **constitutive forms
+Four things this domain declares that neither existing domain does: **constitutive forms
 with composition-dependent validity** (making the validity report live), **species roles
 per region** (making ADR-051's one-species-two-roles claim exercised rather than asserted),
-and an **attainable region** (the object ADR-053 said no domain supplied, without which its
-composition-inverse infeasibility certificate could not be designed).
+an **attainable region** (the object ADR-053 said no domain supplied, without which its
+composition-inverse infeasibility certificate could not be designed), and — as of
+:class:`~omi.interface.ScopeDeclaration` (`docs/V1.4-EDITS.md` E-44, E-52; ADR-069, Stage 1
+Decision C) — the first declaration to evidence all four scope features with something
+stronger than an implicit reading, because ``decision_kind`` and ``z``'s named-but-unresolved
+variables give this domain the most direct textual evidence of the three built so far.
+``symmetry_group_actions`` is declared empty: nothing here is a function of an oriented field.
 """
 
 

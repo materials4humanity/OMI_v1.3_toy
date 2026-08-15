@@ -24,7 +24,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Mapping
 
-from omi.interface import SpecificationVersion
+from omi.interface import ScopeDeclaration, SpecificationVersion
 from omi.proposed.declaration import ExtendedDeclaration
 
 __all__ = [
@@ -37,6 +37,7 @@ __all__ = [
     "AttainabilityVerdict",
     "AttainabilityReport",
     "AttainableRegion",
+    "SymmetryGroupAction",
     "DecisionExtendedDeclaration",
 ]
 
@@ -400,6 +401,51 @@ _SIMPLEX_TOLERANCE = 1.0e-9
 """How far the declared simplex sum may drift before the point is not a composition at
 all. Tight because this is a normalisation, not a physical bound (CLAUDE.md invariant 5)."""
 
+@dataclass(frozen=True)
+class SymmetryGroupAction:
+    """A declared group acting on named state components (`docs/V1.4-EDITS.md` E-30;
+    Spec §2.2's symmetry category; ADR-069).
+
+    **What this closes, and what it deliberately does not.** E-30 found two things:
+    no interface item lets a domain declare which group acts on which state
+    components, and the state metric `d_𝒮` — a per-component scale vector, computed
+    as a Euclidean norm of the scale-normalised displacement — cannot respect a group
+    even once one is declared (a 90° rotation of a two-component orientation
+    descriptor is reported at distance `1.414`, not `0`). This class closes the
+    first: a domain can now name the group. **It does not close the second** — the
+    metric in `omi.state` is unchanged, and a declared group here does not make it
+    quotient by that group. Declaring a fact and a metric respecting it are different
+    repairs, and only the first is Stage 1's additive work; the second would change
+    `omi.state.Metric`'s own computation, which is a larger decision than this
+    milestone authorises.
+    """
+
+    group: str
+    """The group's name, in the domain's own words (e.g. a crystallographic point
+    group, `SO(3)`, or a permutation group over a discrete population — Spec §2.2
+    names all three as in scope)."""
+    components: tuple[str, ...]
+    """Which state-component names (as declared in item 1's schema) this group acts
+    on jointly. A tuple because a group typically acts on a *set* of components
+    together (e.g. the components of one vector-valued orientation field), not on
+    each independently."""
+    justification: str
+    """Why this group and not a coarser or finer one — the same discipline ADR-043
+    requires of a validity bound's `regime` field: an unexplained declaration is an
+    assertion, not a declaration."""
+
+    def __post_init__(self) -> None:
+        if not self.group.strip():
+            raise ValueError("a symmetry group action must name a group")
+        if not self.components:
+            raise ValueError(f"symmetry group {self.group!r} acts on no component, so it constrains nothing")
+        if not self.justification.strip():
+            raise ValueError(
+                f"symmetry group {self.group!r} declares no justification: an unexplained group "
+                "action is an assertion rather than a declaration (ADR-043's discipline, applied here)"
+            )
+
+
 def _interval_factor(value: float, low: float, high: float) -> float:
     """Violation factor for a closed interval: `≤ 1` inside, growing outside, on the same
     convention ADR-043's validity bounds use (Spec §2.2) so a practitioner reads one scale
@@ -431,6 +477,19 @@ class DecisionExtendedDeclaration:
     Declared because `docs/V1.4-EDITS.md` E-43 found that a conformance level plus a
     framework version is still not self-describing without the *purpose* the claim is made
     for, and because the third kind is what this domain exists to exercise."""
+    scope: ScopeDeclaration | None = None
+    """Whether the domain evidences Core §1.1's scope test, and its declared scope-exit
+    criterion (`docs/V1.4-EDITS.md` E-44, E-52; ADR-069). `None` means undeclared, which
+    E-44's finding says is itself informative: ADR-048 read two real declarations for
+    scope evidence, found none, and drew a false conclusion from the silence — this field
+    exists so the silence is at least visible rather than indistinguishable from
+    "evidenced but not recorded"."""
+    symmetry_group_actions: tuple[SymmetryGroupAction, ...] = ()
+    """Which groups act on which declared state components (`docs/V1.4-EDITS.md` E-30;
+    Spec §2.2's symmetry category; ADR-069). Empty means no group is declared — which is
+    honest on every domain this repository has built so far, none of which declares an
+    orientation-like field (E-30's own paradigm occupant); it is not a claim that no
+    symmetry exists, only that none is declared."""
 
     @property
     def specification_version(self) -> SpecificationVersion:
