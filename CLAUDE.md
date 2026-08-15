@@ -255,6 +255,19 @@ Two further rules:
   artefact, regenerated from scratch by every test-suite run, never hand-
   edited or committed.
 
+  **The bound is checked against the value at record time (ADR-072), and it
+  raises.** It used to be free text no consumer read, so a rename could leave a
+  bound claiming a literal that no longer existed while every check passed —
+  measured once, found by `grep` (`docs/V1.4-EDITS.md` E-59). Three narrow forms
+  are checked: a relational numeric (`"< 0.05"`), a bare literal naming the
+  expected value, and quoted literals where nothing alphabetic survives removing
+  them (`"== ('support',)"`). **Everything else is skipped, and skipping is the
+  documented default, not a defect** — a prose bound that reads correctly to a
+  human is the expected case. Never reword a bound into prose to silence the
+  check, and never rewrite one merely to raise the checker's coverage: coverage
+  is a reported quantity, and fitting bounds to the lint is the wrong direction
+  of fit (ADR-072 records one such edit made and deliberately reverted).
+
 ## 8. Conventions
 
 - Python ≥ 3.11, `src/` layout, `pyproject.toml`, no network at runtime.

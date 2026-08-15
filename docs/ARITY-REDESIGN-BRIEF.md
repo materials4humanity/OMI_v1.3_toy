@@ -1,7 +1,10 @@
 # The arity redesign — milestone brief
 
-**Live document** (CLAUDE.md §10). **A brief, not an execution.** Nothing here is implemented;
-executing it is a separate authorisation. Written after ADR-067 (the version rename) and ADR-068
+**Live document** (CLAUDE.md §10). **A brief — the plan, not the record.** All three stages are now
+executed (ADR-070, ADR-071, ADR-072); the closeout is `docs/ARITY-REDESIGN-RECORD.md`, which states
+what closed, what did not, and why the item count is still not stable. This document keeps its
+original pricing plus dated correction blocks, so the gap between what was planned and what was
+built stays legible — four of its prices were wrong, all in the same direction. Written after ADR-067 (the version rename) and ADR-068
 (E-56/E-57's repairs), both of which are already in the tree and have closed part of the
 sequencing.
 

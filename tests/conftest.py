@@ -9,6 +9,17 @@ later requires re-running code rather than reading a record.
 ``build/observations.json`` is the record. It is a git-ignored build
 artefact (see ``.gitignore``), regenerated from scratch by every test-suite
 run — never hand-edited, never committed.
+
+**The bound is checked at record time since ADR-072** (`docs/V1.4-EDITS.md` E-59). It used to
+be free text that nothing read, so a bound and a value could drift apart with every check
+still passing — measured once, on a bound that survived a rename beside a value that did not.
+:func:`tests.observation_bounds.check_observation` now runs on each call and **raises**, so a
+divergence fails the test that recorded it rather than sitting in the artefact.
+
+Checking here rather than in a lint test that reads the finished file is deliberate: the file
+is written at ``pytest_sessionfinish``, so any in-suite test reading it would be reading the
+*previous* run's artefact — exactly the ordering hazard ``scripts/check_audit_gate.sh`` exists
+to prevent, and one this repository has already been bitten by twice.
 """
 
 from __future__ import annotations
@@ -19,6 +30,8 @@ from typing import Any, Protocol
 
 import numpy as np
 import pytest
+
+from tests.observation_bounds import check_observation
 
 _OBSERVATIONS: list[dict[str, Any]] = []
 _OUTPUT_PATH = Path(__file__).resolve().parent.parent / "build" / "observations.json"
@@ -54,15 +67,24 @@ def observe(request: pytest.FixtureRequest) -> ObservationRecorder:
     """
 
     def _record(name: str, value: Any, bound: str, units: str | None = None) -> None:
-        _OBSERVATIONS.append(
-            {
-                "test": request.node.nodeid,
-                "name": name,
-                "value": _jsonable(value),
-                "units": units,
-                "bound": bound,
-            }
-        )
+        observation = {
+            "test": request.node.nodeid,
+            "name": name,
+            "value": _jsonable(value),
+            "units": units,
+            "bound": bound,
+        }
+        _, violation = check_observation(observation)
+        if violation is not None:
+            raise AssertionError(
+                f"observe() bound contradicts the recorded value (docs/V1.4-EDITS.md E-59; "
+                f"ADR-072): {violation}\n"
+                "Either the bound is stale — update it to what was actually checked — or the "
+                "measured quantity moved and the assertion below this call is about to fail "
+                "too. Do not silence this by rewording the bound into prose: a bound that "
+                "cannot be checked is the defect E-59 records."
+            )
+        _OBSERVATIONS.append(observation)
 
     return _record
 

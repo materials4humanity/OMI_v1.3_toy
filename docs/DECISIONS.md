@@ -6534,6 +6534,101 @@ make checkable: the pre-split comparability results remain verifiable under thei
 
 ---
 
+## ADR-072 — The `observe()` bound is checked at record time, by three narrow rules, with the checker's own coverage reported
+
+**Status.** Accepted **Gap.** none — repository verification discipline, not a framework gap
+(`docs/V1.4-EDITS.md` E-59 is filed in §13 for that reason). **Track.** arity-redesign Stage 3.
+**Pins.** `tests/observation_bounds.py`; `tests/conftest.py`'s `observe` fixture;
+`tests/lint/test_observation_bounds.py`.
+
+### The decision
+
+`observe(name, value, bound)`'s third argument was free text no consumer read, so a bound and a
+value could diverge with every check still passing. E-59 measured one instance and found it by
+`grep`. Three choices were open and each is decided here.
+
+**1. Where the check runs: at record time, inside the fixture, raising.** Rejected: a lint test
+that reads `build/observations.json`. That file is written at `pytest_sessionfinish`, so any
+in-suite reader gets the *previous* run's artefact — precisely the ordering hazard
+`scripts/check_audit_gate.sh` was written to prevent after it bit this repository twice. Checking
+at record time has no such hazard, cannot be run against a stale file, and fails the exact test
+that recorded the divergence rather than reporting it as a detached list.
+
+**2. What counts as checkable: three narrow rules, and everything else is skipped.**
+
+| rule | fires when | example |
+|---|---|---|
+| `relational_numeric` | the bound is an operator plus a number, or a bare number | `"< 0.05"`, `"== 1"`, `"0 -- nothing moved"` |
+| `bare_literal` | the bound is a single token naming the expected value, and the value is a string | `"proposed-decision-extension"` — E-59's own case |
+| `quoted_literal` | the bound quotes literals and **nothing alphabetic survives removing them** | `"== ('support',)"` |
+
+Everything else is skipped. **Skipping is the default, not a failure**: the alternative is
+guessing what a sentence asserts, and a checker that guesses produces false positives that get
+silenced by rewording bounds into prose — which would destroy the very record E-59 exists to
+protect.
+
+`<<` and `>>` are read as the plain inequalities. *How much* smaller is a judgement the bound does
+not quantify, and inventing a factor would be the improvisation CLAUDE.md §4 forbids.
+
+**3. Coverage is a reported quantity.** `BoundCheckReport` carries per-rule checked counts and the
+skipped total. A checker whose coverage is unstated reads as a guarantee it does not give — the
+same class of defect E-59 records. Measured on the two frozen generations: **20.6% of
+`v13-items7`'s 267 bounds and 23.4% of `redesign-items8`'s 547** are mechanically checkable. That
+number is deliberately **not asserted against a target**: raising it by rewriting bounds to please
+a lint is the wrong direction of fit.
+
+### The first run's one failure, and why the rule was narrowed rather than excepted
+
+`docs/ARITY-REDESIGN-BRIEF.md` §5 predicted first-run failures and required them triaged rather
+than suppressed. There was exactly one, on both frozen generations, and it was a **false
+positive**: `"best is the 'good' candidate"` flagged against a value of `[0.0, 1.0]`, because the
+bound quotes a word. The quoted word names a candidate in a sentence; it is not a claim that the
+string `good` appears in the value.
+
+Fixed by narrowing rule 3 — a quoted literal is a claim only when nothing alphabetic survives
+removing the quoted spans — **not** by adding an exception for that observation. An exception list
+would have made the lint's coverage depend on a hand-maintained set of forgiven cases, which is
+ADR-062's accumulating-exception failure mode arriving in a second place.
+
+**After the narrowing: zero violations on both frozen generations, and zero on the live suite.**
+Reported plainly rather than presented as a clean bill of health — E-59's own instance was already
+repaired at ADR-067, so there was nothing left for the lint to catch retroactively. **Its value is
+prospective**: what it bought today is one false positive found and designed out, and every future
+rename failing loudly at the point of divergence instead of surviving in the record.
+
+**A coverage-raising edit was made, then deliberately reverted, and the reversal is the point.**
+One bound of this repository's own — `item_1b_parameter_names`, written
+`"== ('mean_composition',) since ADR-071"` — is skipped, because the prose after the literal is not
+separated by the `--` convention. Rewriting it to `"== ('mean_composition',) -- since ADR-071"`
+makes it checkable and lifts coverage from 23.4% to 23.6%. That edit was made and then undone,
+for two reasons that outrank 0.2%:
+
+1. **It contradicts this ADR.** Point 3 above states that coverage must not be raised by rewriting
+   bounds to please the lint. Doing exactly that in the commit that establishes the rule would make
+   the rule false on arrival. Skipping is documented as the default and not a failure; a bound that
+   reads correctly to a human and is skipped by the checker is the *expected* case, not a defect to
+   be cleaned up.
+2. **It would have cost a declared exception for nothing.** The gate compares whole rows, `bound`
+   included, so the edit moves one observation in the `redesign-items8` generation. Stage 3 changes
+   no interface criterion, so re-freezing the generation would conflate two different reasons for a
+   generation to exist (ADR-069: one generation per *criterion*), and declaring an exception would
+   start a fresh exception list against a brand-new baseline — ADR-062's own failure mode, one
+   generation later.
+
+**With the revert, Stage 3 moves no observation at all**: 547 rows in, 547 rows out, byte-identical,
+zero declared exceptions. That is a stronger closeout property than the extra 0.2% would have been —
+a verification-discipline change that provably touches no recorded measurement.
+
+### What would change this decision
+
+A false positive that cannot be designed out by narrowing a rule — a bound that is genuinely a
+mechanical claim the checker misreads — would mean the rule set is wrong rather than incomplete,
+and the response is to remove that rule, not to except the bound. If coverage ever falls because
+contributors write prose bounds to avoid the check, that is the failure mode to watch for, and it
+is visible in the reported per-rule counts rather than needing to be inferred.
+
+---
+
 ## Open questions
 
 Not decisions — hypotheses the code should settle. Full statements in
