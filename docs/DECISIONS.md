@@ -7061,6 +7061,132 @@ deferring it.
 
 ---
 
+## ADR-077 — The composition inverse is built against SDL's existing declaration; no new domain, and the "enumerated recipe" framing this ADR was asked to evaluate does not describe anything in the repository
+
+**Status.** Accepted — design only. Implementation is a separate authorisation (Part C).
+**Track.** Composition milestone, post-closeout.
+
+### Grounding, before the decision
+
+The authorising message asked this ADR to derive, from `SDL_DECLARATION`'s own text, what "the
+three enumerated recipe labels" mean physically and why a `frozenset` was chosen over a continuous
+space. Neither object exists. `git grep` for `frozenset` and for recipe/enumeration language in
+`src/omi_domains/sdl/` and its tests returns nothing. What `SDL_DECLARATION.attainable_region`
+(`src/omi_domains/sdl/interface.py:208`) actually declares is a **continuous** `AttainableRegion`
+(`src/omi/proposed/decision.py:290`):
+
+- `descriptor_bounds` — three closed intervals over `valence_electron_count`, `mixing_enthalpy`,
+  `support_acidity`
+- `underlying_bounds` — closed intervals on all four species fractions
+- `sums_to_one` — the simplex constraint over those four species, structural per `AttainableRegion`'s
+  own docstring ("architecture rather than a penalty")
+- one `excluded_pairs` entry (`promoter` × `metal_b`, product budget `0.010`), with a declared
+  mechanism: "a promoter-rich, metal_b-rich precursor precipitates a mixed oxide during drying, so
+  the intended dispersed phase never forms"
+- a prose `route_note` marking the one non-machine-checkable constraint
+
+`AttainabilityVerdict` (`decision.py:237`) has four named failure modes
+(`OUTSIDE_DESCRIPTOR_BOUNDS`, `UNDERLYING_INFEASIBLE`, `EXCLUDED_PAIR`, `OUTSIDE_ROUTE`) plus
+`ATTAINABLE` — a certificate that says *which constraint bound*, not a lookup over discrete labels.
+`sample_attainable_compositions` (`sdl/build.py:126`) already draws uniformly from the underlying
+bounds and rejection-filters through this region. There is nothing enumerated to extend.
+
+This is not a new finding about the framework — it is a correction to the vehicle question's own
+premise, and it changes what "vehicle (a)" means: not "make SDL's region continuous" (already true)
+but "build the inverse against what SDL already declares."
+
+### The decision
+
+**Vehicle (a), reframed: the composition inverse is built against `SDL_DECLARATION` as it stands.**
+No new domain.
+
+### Reasoning
+
+1. **ADR-053 already named this vehicle**, before this ADR existed: "The Part 5 SDL domain is the
+   natural vehicle: a discovery campaign is a composition inverse run repeatedly under a decision."
+   Vehicle (a) is not a new choice so much as a confirmation of one already on record.
+
+2. **SDL's own declaration already frames composition as the campaign-scope decision variable.**
+   `decision_kind` states "campaign / discovery: deciding WHAT TO MAKE"; `MEAN_COMPOSITION_PARAMETER`'s
+   justification carries a `SCOPE CAVEAT` (the finding filed as E-61) stating explicitly that within
+   one chain composition is a fixed item-1b index, but "ACROSS the campaign the acquisition policy
+   chooses it, which makes it item 2 content at campaign scope." A composition inverse **is** that
+   campaign-scope choice, formalised. Vehicle (b)'s "composition declared as CONTROL rather than
+   parameter" would have to build this distinction from nothing; SDL has already named it and filed
+   the scope gap as a ledger entry.
+
+3. **SDL's `excluded_pairs` mechanism is already a phase-stability-shaped constraint**, evaluated
+   against Part A.3's suggestion below.
+
+4. **Vehicle (b), as stated, presupposes two things that do not exist.** "Stage 2's operator-family
+   machinery" does not exist: composition Stage C2 was authorised and surveyed but never executed —
+   `git log` shows no commit past `8035859` (C1). And "flagship's constitutive forms" carry no
+   composition dependence to reuse: `MS_TEMPERATURE = 620.0` in
+   `src/omi_domains/flagship_constitutive/forms.py` is a module-level float constant, not a function
+   of composition, and no form in that package takes a composition argument. Building (b) means
+   building a new domain's item 1/1b/2 declaration from nothing, *and* inventing a composition-
+   dependent phase-transition correlation for flagship with real metallurgical provenance (e.g., an
+   Andrews-type `Ms(composition)` relation) — categorically more design content than finishing what
+   SDL already declares. This is a cost finding, not a coherence objection to (b); see "what would
+   change this decision" below.
+
+5. **SDL's control axis is genuinely a different kind from flagship's** (state.py: apparatus-
+   determined vs. acquisition-determined), which is the reason the domain exists at all
+   (ADR-059/060). Composition-as-CONTROL is native to SDL's framing; it would be grafted onto
+   flagship's apparatus-determined axis under (b).
+
+### On Part A.3's phase-stability-boundary suggestion
+
+Evaluated against the grounded declaration, not adopted as literally proposed. Its content —
+"attainable if and only if the composition lies in the correct phase field at declared processing
+conditions" — targets flagship (vehicle b) and presupposes a composition-dependent phase-transition
+model that does not exist there.
+
+**The same mechanistic idea is already declared, in miniature, inside SDL's own region**: the
+`excluded_pairs` entry is precisely a precipitation/phase-formation boundary — a composition corner
+where a different (undesired) solid phase forms instead of the intended one, excluded by a declared
+mechanism rather than by a fitted property target. Recommendation: **generalise this existing
+mechanism** as Part B's physical basis — more exclusion regions, or a boundary expressed as a curve
+rather than a single product-budget inequality, still tied to a declared precipitation/segregation
+mechanism — rather than importing a new metallurgical Ms-type model into a domain that does not carry
+one. If a literal composition-dependent `Ms`/phase-diagram boundary is wanted specifically, that is
+vehicle (b), and should be re-proposed as such, priced at the cost in reasoning point 4.
+
+### Consequences
+
+- No new domain, no new schema, no new declaration package.
+- Composition Stage **C2 must actually be executed** before Part B's certificate can use ADR-053's
+  second infeasibility ground (leaving the declared mechanism set's composition-validity region,
+  ADR-054) — `COMPOSITION_VALIDITY_INTERVAL` is declared but its refusal is unbuilt, by its own
+  docstring's admission.
+- The nearest-attainable-composition (Core §5's other output, alongside the verdict) still needs a
+  declared tie-break: the attainable set is non-convex (box ∩ simplex ∩ complement of an excluded
+  corner), so "nearest" has no unique-projection guarantee without one. Not designed here.
+- Item count: unaffected. Nothing here touches Core §4's items — SDL already declares `c̄` under 1b
+  (ADR-071); the inverse itself has no competing home in Core §5's two-inverse taxonomy and lands in
+  `omi/proposed/` under ADR-073's placement principle, as the brief already scoped.
+
+### Alternatives rejected
+
+*Vehicle (b), a new domain with composition as CONTROL.* Not incoherent — rejected on cost and fit,
+per reasoning points 4–5. Available if the user specifically wants a metallurgical phase-boundary
+composition inverse rather than a catalytic-discovery one; that is a different physics claim and a
+larger build, not a refinement of this one.
+
+*Treat "three enumerated recipe labels" as a hypothetical to design toward, ignoring what
+`SDL_DECLARATION` already contains.* Rejected — CLAUDE.md's gap discipline and this session's
+standing instruction both require deriving from the repository, and inventing a frozenset-shaped
+object to match a stale premise would be exactly the improvisation §4 forbids.
+
+### What would change this decision
+
+A finding that SDL's descriptor space cannot represent a real attainability boundary at all — e.g.,
+if the descriptor→composition map is non-injective in a way that makes "which composition attains
+this descriptor point" ill-posed on the declared simplex (a version of Part B's own question, and
+one this ADR does not resolve). That would force either a fourth descriptor or vehicle (b).
+
+---
+
 ## Open questions
 
 Not decisions — hypotheses the code should settle. Full statements in
