@@ -6950,6 +6950,117 @@ declared without touching an existing schema, which is a physics claim no curren
 
 ---
 
+## ADR-076 — Composition stage C1: the simplex is architecture on the descriptor map, the constancy residual diagnoses an *open domain*, and resolved bands stay refused
+
+**Status.** Accepted. **Gap.** none — implements ADR-050 and ADR-052's declaration halves under
+ADR-075's placement. **Track.** composition milestone, stage C1.
+**Reads.** ADR-049 (construction, for `δc` only), ADR-050 (the decomposition and the constancy
+check), ADR-052 (descriptors and underlying space), ADR-075 (where `c̄` lives, where the work lands).
+**Pins.** `src/omi/proposed/composition.py`; `src/omi_domains/flagship_composition/`;
+`tests/oracles/known_composition_drift.py` and its test.
+
+### Four decisions
+
+**1. The simplex constraint is *architecture on the descriptor map*, not a check downstream.**
+
+CLAUDE.md invariant 5: hard constraints are architecture, never penalties. `omi.constraints.simplex`
+already gives the treatment phase fractions have — a softmax that is componentwise non-negative and
+sums to exactly one *for any real input*. `DescriptorMap` therefore takes **unconstrained**
+coordinates and passes them through `simplex()` before evaluating descriptors, so
+`descriptors_of_unconstrained()` cannot be handed a fraction vector off the simplex. The constraint is
+satisfied by construction rather than validated.
+
+**Why on the map rather than at a call site.** A descriptor tuple no real material attains is exactly
+what ADR-053's certificate exists to catch, and **the constraint is cheaper than the certificate**: it
+removes the *forward* failure mode entirely, at no runtime cost and with no verdict to interpret. What
+it does **not** remove is the *inverse* failure mode — given a target descriptor tuple, is there any
+composition mapping to it? That is genuinely ADR-053's certificate and remains stage C3's. Stated so
+the cheap half is not mistaken for the whole.
+
+**2. The constancy residual's verdict is a *specific diagnosis*, not a pass/fail.**
+
+ADR-050 is explicit and the code follows it: a mean over a **closed** domain is constant by
+conservation, so a violation "does not mean the declaration is arbitrary nonsense; it means **the
+declared domain is open**, and the coupling should have been `DEPLETED_BY` with a declared boundary
+flux." `ConstancyVerdict` therefore has three members — consistent-with-closed, open-domain-undeclared,
+and open-and-declared — and the refusal names the repair ADR-050 names (re-declare the domain as open
+and name the flux) rather than saying the declaration is wrong. A domain that declares its region open
+*and* drifts is **consistent**, which is the case a bare pass/fail cannot express.
+
+**3. `c̄` carries its projection scale, because operator reuse silently depends on it (E-45).**
+
+ADR-050's load-bearing paragraph: two chains can declare the same `c̄`, the same operators and the same
+readouts while having drawn the `c̄`/`δc` line at different length scales, in which case the operators
+are not the same operator and reuse is unsound — filed as **E-45**. ADR-050 requires the scale declared
+and **surfaced by comparison**, "visible without making it checkable — the honest position."
+
+`ProjectionScale` carries a length, its units, and the characterisation method that establishes it. It
+rides on `MeanComposition`, which rides on the item-1b `ParameterRole`, so two declarations differing
+only in projection scale differ in item 1b and `omi.interface.diff` reports it. **Visible, not
+checkable** — nothing here verifies that a declared scale is the scale the operators were actually
+fitted at, and E-45 stays open.
+
+**4. `δc` is sub-resolution in `z` only. Resolved bands stay declarable and unimplemented.**
+
+ADR-050's own scope line, carried verbatim: "`δc` in `z` is implementable now; resolved bands in `m`
+require `FIELD` domains, which ADR-049 refuses citing `C-2.5`." So the variant declares one
+sub-resolution `δc` occupant in `z` and no resolved band anywhere.
+
+**Can a flagship-derived composition declaration be honest under that restriction? Yes — and the
+reason is a scale argument, not a convenience.** Flagship declares Tier I, SVE-level operators. At SVE
+scale a centreline segregation band is *outside* the representative volume, not a resolved field
+within it; solute clustering below imaging resolution is *inside* it and is exactly a `z` occupant.
+So the restriction costs this declaration nothing it was entitled to claim. **What it does cost is
+stated rather than hidden**: a declaration wanting resolved through-thickness segregation — the real
+banding a plate actually has — cannot be made here at all, and that is C-2.5/Core §2.5's gap
+(`FIELD` domains, body-indexed state, an anti-goal under CLAUDE.md §9) rather than a shortfall of this
+stage. No new finding is filed, because E-21, E-22 and ADR-049's own refusal already record it; this
+is a third domain reaching the same wall, recorded in `docs/COMPOSITION-BRIEF.md`.
+
+### ADR-050's carrier reference is stale and this ADR does not follow it
+
+ADR-050 states `c̄` "is an ADR-049 coupled-quantity declaration with `coupling = INVARIANT`, and that
+is the whole content of 'constant along the chain by definition.'" **That carrier is superseded by
+ADR-075** (E-46's four-property test; ADR-071's item-1b placement): `c̄` is a `ParameterRole`, and
+routing it back through `CoupledQuantityDeclaration` is prohibited. What survives unchanged is
+ADR-050's *content* — the decomposition, the constancy residual, and the open-domain diagnosis. The
+`INVARIANT` coupling was the parameter role in disguise, so nothing is lost by dropping it.
+
+### Where the code lands, and why nothing existing moves
+
+Domain-neutral machinery in `src/omi/proposed/composition.py` — proposed-extension content, reachable
+only through `omi.proposed` (ADR-042's discipline). Domain content in a **new**
+`src/omi_domains/flagship_composition/` package, per ADR-075 Decision 2, so no existing schema changes
+and no existing observation moves. `flagship`'s own declaration, schema and operators are untouched.
+
+**Note on the vocabulary lint.** `src/omi/` bans "alloy" among other domain terms, so the
+domain-neutral module says "composition", "fraction" and "descriptor" throughout — which is Core's own
+vocabulary (Core §3.1's "composition fields", Core §6.2's "composition-parameterised").
+
+### Alternatives rejected
+
+*Validate the simplex at the call site.* Rejected — invariant 5. A validated constraint is a penalty
+with an exception instead of a gradient; an optimiser or an inverse would find exactly where the
+validation is not applied.
+
+*Put `δc` in `m` as a resolved band anyway, with a note that it is approximate.* Rejected: it would
+claim a `FIELD` domain ADR-049 refuses, and the layer-wise additive sketch already records what a
+forced Tier I approximation of an unrepresentable structure costs (E-21). Declaring the wall is worth
+more than crossing it badly.
+
+*Compute the constancy residual from the declared `c̄` alone.* Rejected as vacuous: `c̄` is a
+parameter, so it is trivially constant by construction and a residual over it measures nothing. The
+residual is computed over the **domain mean of `c̄ + δc`**, which is what conservation actually
+constrains and what an open boundary actually moves.
+
+### What would change this decision
+
+A domain whose composition fluctuation is resolved at the scale its operators are declared at. That
+makes decision 4's scale argument false for that domain and forces the `FIELD` question rather than
+deferring it.
+
+---
+
 ## Open questions
 
 Not decisions — hypotheses the code should settle. Full statements in

@@ -82,7 +82,18 @@ resolve E-61 by adding an item, it stops and reports rather than adding it.**
 
 ## 4. The staged design
 
-### Stage C1 — the decomposition, declared and made checkable
+### Stage C1 — the decomposition, declared and made checkable — **EXECUTED (ADR-076)**
+
+> **Gate reported.** Built: `omi/proposed/composition.py` (descriptor map with the simplex as
+> architecture, mean-composition declaration, composition metric, constancy residual);
+> `omi.interface.ProjectionScale` on item 1b; `omi_domains/flagship_composition/` (schema with one
+> sub-resolution `δc` occupant, two operators, the eight-item declaration); the
+> known-composition-drift oracle. **No existing schema touched, no existing observation moved.**
+> One thing landed differently from the plan below: `ProjectionScale` went into `omi/interface.py`
+> rather than the proposed module, because ADR-076's diff-visibility claim is false unless the scale
+> is reachable from item 1b — and it is the same object ADR-074 deferred for E-31, whose 1b half is
+> thereby built and whose 1a half now has a measured price.
+
 
 **Content.** `c̄` and `δc` declared on a domain, with ADR-050's constancy claim turned into a
 measurement.
@@ -141,6 +152,29 @@ or investigated. No re-freeze without the report.
 **Gate.** As C1, plus the oracle above, plus an explicit statement of whether the certificate
 discharges Core §5's output contract or only part of it.
 
+> **Disposition settled in advance, at the C1 authorisation: C3 stops at its gate and reports; it
+> does not build a composition inverse against the domain content that exists today.**
+>
+> The reason is not cost. SDL's attainable region is a bounded box over three declared descriptors
+> plus a simplex, one excluded pair and a prose route note — enough to *classify* a supplied
+> composition, which is what `AttainableRegion.report()` already does. It is not enough to *search*
+> over: an inverse built against it would in substance be a lookup over enumerated recipes, and
+> **it would pass.** A passing capability then reads as evidence for the third-inverse-problem
+> claim, which is the discovery claim the SDL framing rests on — so the pass would be worth less
+> than nothing, because it would be mistaken for support.
+>
+> Extending SDL (or any domain) to a genuinely continuous descriptor space is a domain-design
+> decision with real physics content — *which* descriptors, *what* attainability boundary, and
+> *why* — and it belongs in its own ADR rather than being absorbed into an implementation stage.
+> **This is the disposition ADR-053 already took one level up** when it declined to design the
+> certificate for want of a declared region, and the honest continuation of it: the blocker moved
+> from "no region is declared" to "no region is declared that an inverse could search", which is a
+> narrower gap and still a real one.
+>
+> What C3 may still do without that ADR: design `AttainabilityCertificate`'s *shape* — verdict,
+> binding constraint, and the nearest-attainable-composition that C1's metric now makes
+> computable — and report what it would take to exercise it. Building the search is what waits.
+
 ### Which stage the composition inverse belongs in, and whether it needs the certificate
 
 **C3, last, and the ordering is forced rather than chosen.** Two hard dependencies:
@@ -164,6 +198,24 @@ attainability returns beautiful, unmeltable alloys."
 whose declaration would need a ninth item (stop and report instead); resolving E-61; the metric
 quotient of OQ-6; and repairing `flagship`'s three de-facto-static components (E-29 part 2), which is
 its own decision and would entangle two findings if done here.
+
+### What C1 reached and did not cross: Core §2.5, for the third time
+
+ADR-050's scope line allows `δc` sub-resolution in `z` and refuses resolved bands, because those
+need a `FIELD` declared domain that ADR-049 refuses citing `C-2.5`. C1 honoured that, and the
+declaration is honest under it for a reason that is a scale argument rather than a convenience:
+flagship declares Tier I, SVE-level operators, and at SVE scale a resolved segregation band is
+*outside* the representative volume rather than a field within it.
+
+**What it costs is stated rather than hidden.** A declaration wanting genuine resolved
+through-thickness segregation — the banding a real plate has, and often the property-limiting one —
+cannot be made here at all. **That is the third independent domain to reach the same wall**: the
+layer-wise additive sketch (E-21, a body under construction), `ν`'s mis-typing (E-22), and now a
+composition field whose resolved part has no representable domain. No new ledger entry is filed,
+because E-21, E-22 and ADR-049's own refusal already record it and a fourth restatement would
+inflate the count without adding evidence. It is recorded here because *three* domains reaching one
+wall is a stronger statement about Core §2.5 than any of them alone, and that arithmetic belongs
+somewhere a reader will find it.
 
 **A note on what "chemistry" means in this milestone.** No claim is made that the declared forms,
 descriptors or attainable regions are calibrated against real materials data. They are toy physics

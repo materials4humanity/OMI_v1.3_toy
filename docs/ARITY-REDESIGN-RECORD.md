@@ -65,8 +65,8 @@ of them will be, on the measured asymmetry above, so the count stays at eight.
 **What each still leaves open is content, not placement.** E-30's metric half is now **OQ-6** (should
 `omi.state.Metric` quotient by a declared group, and is the quotient the metric's property or a
 wrapper's?) — unscheduled, with a blast radius covering every metric-dependent quantity here and no
-built domain to check a repair against. E-32's role-scoping half is **decided and scheduled** but
-unimplemented and will land with no occupant. E-52's evidence domain still carries no
+built domain to check a repair against. E-32's role-scoping half is **already implemented** in
+`omi.proposed.item6` (ADR-075's audit), with no occupant among the built domains. E-52's evidence domain still carries no
 decision-extension declaration.
 
 **The residual risk this repository accepts, stated rather than dissolved.** If the next issued

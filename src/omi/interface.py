@@ -35,6 +35,63 @@ from omi.state import StateSchema
 
 
 @dataclass(frozen=True)
+class ProjectionScale:
+    """A declared resolution limit and **the characterisation method that establishes it**
+    (Core §4 item 1's "with resolution limits"; `docs/V1.4-EDITS.md` E-31, E-45; ADR-050,
+    ADR-074, ADR-076).
+
+    **Two decisions converge on this object.** ADR-050 needs the length scale separating a mean
+    composition from its fluctuation, because two chains can declare the same parameter, the
+    same operators and the same readouts while having drawn that line at different scales — in
+    which case the operators are not the same operator and reuse between them is unsound
+    (E-45). ADR-074 decided E-31's characterisation-method declaration should be *built* and
+    not yet enforced. Both want a length, its units, and what fixes it.
+
+    **Scope, stated so this is not read as closing E-31.** This discharges the declaration on
+    the *parameter* side (item 1b, via :attr:`ParameterRole.projection_scale`). E-31's other
+    half — a resolution limit per `m` occupant, reached through item 1a's
+    :class:`~omi.state.StateSchema` — is **not** built here: `StateSchema` carries
+    ``(Slot, name, dimension)`` triples, so adding a fourth element would touch every schema
+    construction in the repository and move observations. That remains ADR-074's deferred work,
+    with a real baseline cost attached.
+
+    **Visible, not checkable.** Because this rides on item 1b, two declarations differing only
+    in projection scale differ under `omi.interface.diff`. Nothing here verifies that a declared
+    scale is the scale an operator was actually fitted at, so E-45 stays open — ADR-050 chose
+    that deliberately, on the reasoning ADR-049 applied to its own justification field.
+    """
+
+    length: float
+    """The scale, in :attr:`units`. Strictly positive: a non-positive scale separates nothing."""
+    units: str
+    """Required and never defaulted. A bare length is `docs/V1.4-EDITS.md` E-33's
+    unit-dependence defect in a new place."""
+    characterisation_method: str
+    """The instrument or technique whose resolution limit draws the line — E-31's "the
+    characterisation method that establishes it". Required: the boundary is observer-relative,
+    so a scale with no method behind it is not comparable between implementations, which is the
+    whole reason for declaring it."""
+
+    def __post_init__(self) -> None:
+        if not (self.length > 0.0):
+            raise ValueError(
+                f"projection scale must be positive, got {self.length}: a non-positive scale "
+                "separates no mean from any fluctuation (ADR-050)"
+            )
+        if not self.units.strip():
+            raise ValueError(
+                "a projection scale must declare its units — an undeclared unit is "
+                "docs/V1.4-EDITS.md E-33's defect in a new place (ADR-076)"
+            )
+        if not self.characterisation_method.strip():
+            raise ValueError(
+                "a projection scale must name the characterisation method that establishes it: "
+                "the boundary is observer-relative (docs/V1.4-EDITS.md E-31) and a scale with no "
+                "method behind it is not comparable between implementations (E-45)"
+            )
+
+
+@dataclass(frozen=True)
 class ParameterRole:
     """One quantity that **indexes the operator family** without being transported by
     any operator — item 1b's occupant (`docs/V1.4-EDITS.md` E-46, E-29; ADR-071).
@@ -85,6 +142,16 @@ class ParameterRole:
     descriptor basis is declared, for ADR-052's reason: the claim "the operator depends
     on this only through these functionals" is falsifiable exactly by varying the
     underlying space at fixed descriptors, which needs both to be declared."""
+
+    projection_scale: ProjectionScale | None = None
+    """The resolution limit separating this parameter from the fluctuation field beside it, and
+    the method that establishes it (:class:`ProjectionScale`; ADR-050, ADR-074, ADR-076).
+
+    `None` is legal and is the right value for a parameter with no fluctuation counterpart — a
+    grade index, a design, a feedstock batch. It is **required in substance** for a parameter
+    declared as a *mean over a domain*, because such a parameter's value depends on where the
+    mean/fluctuation line was drawn, and E-45's finding is that operator reuse silently depends
+    on that line matching."""
 
     also_state_in_regions: tuple[str, ...] = ()
     """The regions, if any, where this same physical quantity **is** a slot occupant.
