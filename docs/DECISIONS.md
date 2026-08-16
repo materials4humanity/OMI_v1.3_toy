@@ -6688,6 +6688,32 @@ applied to placement.
 
 ### E-32's two halves have completely different costs, and only one is worth paying
 
+> **AMENDED at the composition design gate — Half A as written below is wrong in two ways, and the
+> corrections point in opposite directions.** Found by auditing the repository for unregistered
+> implementations before designing the composition milestone.
+>
+> **(i) It is already implemented.** `src/omi/proposed/item6.py` has existed since ADR-043 (amended by
+> ADR-046) and carries `InvariantSubItem` (`6a`/`6b`/`6c` plus `CONSTITUTIVE_FORM` as the new item),
+> `InvariantRole`, `roles_for`, `certificate_eligible`, `assert_certificate_eligible` and
+> `CertificateRoleRefused`. It is exported from `omi.proposed` and exercised by
+> `tests/oracles/test_known_envelope.py`. It was invisible to ADR-073 because **it is registered in no
+> `docs/COVERAGE.md` row** — an unregistered implementation, now registered.
+>
+> **(ii) The change it proposed — "`InvariantKind` gains a third member" — would have been an error.**
+> That would add `EQUILIBRIUM_LIMITED_FRACTION` to `omi.interface.InvariantKind`, i.e. modify **v1.3's**
+> classifier. `item6.py`'s own docstring states why not: "v1.3's classifier is untouched.
+> `omi.interface.classify_invariant` continues to refuse anything that is neither a conservation law nor
+> a monotone functional, which is correct under v1.3 and **is the evidence E-32 rests on**." Making
+> `classify_invariant` accept the third kind would destroy the measurement that item 6 refuses it —
+> the same self-defeating trade ADR-073 correctly identified for Half B, which it then walked into for
+> Half A.
+>
+> **Net effect on this ADR's conclusions: none.** The count still does not move (6a–6c are sub-parts),
+> the placement principle stands unchanged, and Half B's refusal is unaffected. What changes is that
+> Half A requires **no work at all** — it is done, correctly, on the wrapper, and `omi.interface` must
+> stay as it is. The paragraph below is left standing as the record of what was decided and why it was
+> wrong.
+
 **Half A — item 6 role-scoped into 6a/6b/6c, and `InvariantKind` gains a third member.** Decided:
 **do it.** Measured cost: **zero.** All fifteen invariants declared anywhere in this repository
 classify as `CONSERVATION` or `MONOTONICITY`, so no invariant reclassifies, `invariants_structural`
@@ -6832,6 +6858,95 @@ The first cross-implementation operator reuse in this repository, or a second in
 domain under a different characterisation suite. Either supplies the evidence E-31 says is missing
 for choosing between prohibition and disclosure, and at that point enforcement becomes decidable
 rather than a coin toss.
+
+---
+
+## ADR-075 — Two decisions the composition milestone cannot start without: `c̄` does **not** reuse the declared-domain construction, and composition is built in a new variant package rather than retrofitted
+
+**Status.** Accepted — **design only, no implementation.** **Gap.** none — reconciles three prior
+decisions and fixes where the work lands. **Track.** composition milestone, design gate.
+**Supersedes in part.** **ADR-049**, on its "one object for `ν` and for `c̄`" claim only. ADR-049's
+declared-domain construction itself stands and is unchanged.
+**Pins.** Nothing yet — design only. `docs/COMPOSITION-BRIEF.md` carries the staged plan.
+
+### Decision 1 — the declared-domain construction serves `ν` and **not** `c̄`, and ADR-049 is superseded on that point
+
+**The contradiction, stated exactly.** ADR-049 is titled "one object for `ν` and for `c̄`" and its
+Track note reads: *"Consumed by Part 3 (composition) without modification; a parallel mechanism for
+`c̄` would be an architectural error."* But ADR-071 moved `mean_composition` off
+`CoupledQuantityDeclaration` and onto `ParameterRole` under item 1b, leaving `ν` on the original
+construction. **There are now two mechanisms — exactly what ADR-049 called an architectural error —
+and nothing in ADR-049 records that it was overruled.**
+
+**ADR-071 is right and ADR-049's premise was refuted between them.** `docs/V1.4-EDITS.md` E-46 was
+filed after ADR-049 and its finding is precisely that ADR-049's widening was *"legitimate for `ν` and
+illegitimate for `c̄`"*, on a four-property test: `ν` evolves under an operator, is assimilated from
+observations, and carries a per-particle value in `𝒫(𝒮)`; `c̄` does none of the three. ADR-049's
+premise is that the two are the same kind of declarable thing. E-46 refutes it with a measurement.
+
+**So the "parallel mechanism" warning does not apply.** What ADR-049 warned against is a *duplicate*
+mechanism for one kind of thing — two homes, the ambiguity ADR-071 and ADR-073 both exist to remove.
+What the repository now has is *different* mechanisms for *different* kinds of thing, which is the
+opposite arrangement and is what ADR-073's placement principle requires.
+
+**What `c̄` loses by not carrying the construction, checked rather than waved past.**
+`ParameterRole` carries `constant_over`, `descriptor_basis`, `underlying_space`,
+`also_state_in_regions`; it does not carry `DeclaredDomainKind`, `CouplingDirection` or
+`TrackedDimensions`. Item by item:
+
+| construction field | is it lost for `c̄`? |
+|---|---|
+| `CouplingDirection` | **No — it was vacuous.** `SpeciesRole.PARAMETER`'s own docstring says the parameter role was "realised as `CouplingDirection.INVARIANT` on item 1 (ADR-049)", i.e. `INVARIANT` *was* the parameter role wearing a coupling's clothes. With a real parameter role, the coupling has nothing left to say |
+| `TrackedDimensions` | **No — implied.** A quantity asserted constant over a region has no spatial variation within it by construction, so `NONE` is the only consistent value and declaring it adds nothing falsifiable |
+| `DeclaredDomainKind` | **Partly.** `constant_over=()` reads as whole-chain and `constant_over=("bulk",)` as per-region, so the *information* survives — but untyped. This is a real if small loss of explicitness, and it is accepted rather than denied |
+
+**Consequence for the milestone, and it is a prohibition.** Nobody may "restore" the declared-domain
+construction to `c̄` in the course of implementing ADR-050. Doing so re-creates the second declaration
+site ADR-071 removed and would fail ADR-073's placement test. **`δc` is different**: it is a slot
+occupant, so it is item-1a schema content and the construction applies to it in full where its
+declared domain is non-trivial.
+
+### Decision 2 — composition is built in a **new variant package**, not by retrofitting `flagship` or `sdl`
+
+**The reason is the audit baseline, and it is decisive.** `δc` is a slot occupant, so declaring it
+changes a `StateSchema`. Changing an existing schema changes its `size`, and therefore every
+metric-normalised quantity computed on it — Lipschitz spectra, erasure measurements, Gramians, danger
+scores, triage labels, Class-B reductions. Measured surface: `redesign-items8` holds **547**
+observations, and both implemented domains are heavily represented in them. Retrofitting would move a
+large fraction of the record and force a **third generation**, for a change whose content is
+orthogonal to almost every quantity it would disturb.
+
+**The precedent is `flagship_constitutive`,** built for exactly this reason: a variant package
+declaring the same Core §4 items plus an extension, so the comparison against `flagship` is meaningful
+*and* `flagship` is untouched. `CONSTITUTIVE_V13_CORE` is even constructed field-by-field from
+`FLAGSHIP_DECLARATION` so the two cores cannot drift.
+
+**Decided: a new `omi_domains/flagship_composition/` package** (name settled at C1), declaring `c̄` in
+item 1b and `δc` in `z`, reusing flagship's operators where they carry over. **Gate posture: zero
+existing observations move; the generation stays `redesign-items8`.**
+
+**Alternatives rejected.**
+
+*Retrofit `flagship`.* Rejected on the baseline cost above. It is also the domain whose three
+de-facto-static components are E-29's unrepaired defect; adding composition to it while that stands
+would entangle two findings.
+
+*Retrofit `sdl`.* Rejected twice over. Its `state.py` **deliberately excludes composition on E-46's
+own reasoning** ("Putting it in a slot would type a fixed index as a state, which is precisely the
+mis-typing E-46 separates"), so retrofitting would contradict a documented design rationale; and
+ADR-064 has since built its three operators, so its observations would move.
+
+*A domain-neutral `δc` mechanism in `omi/` with no domain.* Rejected: it would be a declarable
+category with no occupant, the vacuity this repository has now recorded twice (E-30's group, E-32's
+6c). Build the mechanism against a domain that needs it.
+
+### What would change either decision
+
+Decision 1 reverses only if E-46's four-property test is itself refuted — if some quantity is shown to
+be both transported by an operator and a fixed operator-family index at the same declaration scope.
+**`docs/V1.4-EDITS.md` E-61 is the nearest live threat** and is about the 1b/2 boundary rather than
+1a/1b, so it does not reach this. Decision 2 reverses if a domain arrives whose composition cannot be
+declared without touching an existing schema, which is a physics claim no current domain makes.
 
 ---
 

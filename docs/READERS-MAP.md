@@ -154,6 +154,15 @@ point).
 
 ## What is scoped but not built
 
+`docs/COMPOSITION-BRIEF.md` — the composition milestone (v1.5's ADR-049 – ADR-054), staged C1–C3 with
+a gate between each. **A brief, not an execution.** It records that four of the seven composition
+decisions turned out to be further along than their ADRs said, that `omi.proposed.item6` was an
+**unregistered implementation** found by audit, and that ADR-053's attainability blocker is
+discharged. ADR-075 settles the two decisions the milestone could not start without: `c̄` does not
+reuse ADR-049's declared-domain construction (ADR-049 superseded on that claim by E-46/ADR-071), and
+composition is built in a new variant package so no existing schema — and no existing observation —
+moves.
+
 `docs/ARITY-REDESIGN-BRIEF.md` — Core §4's seven items under pressure from ten ledger entries,
 organised into **five decisions** (two restructure, three additive), with the re-baselining plan,
 the diff retirements, the sketch re-derivation and the three-stage sequencing. It also records the

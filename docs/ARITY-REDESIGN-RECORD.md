@@ -38,9 +38,10 @@ most — **what remains open, by name**.
 > asymmetry is measured, not stylistic, so treating the four cases alike would have been consistency
 > bought by ignoring the measurement that separates them.
 >
-> **Two riders.** (i) E-32's item-6 role-scoping half (6a–6c plus a third `InvariantKind`) is decided
-> and scheduled — zero observations move, and it repairs a measured refusal — but lands with **no
-> occupant**, since no built domain declares an equilibrium-limited fraction. (ii) The count is stable
+> **Two riders.** (i) E-32's item-6 role-scoping half (6a–6c) was recorded here as decided-and-scheduled
+> and is in fact **already implemented** in `omi.proposed.item6`, found by ADR-075's audit; the further
+> proposal to add a third `omi.interface.InvariantKind` member is **withdrawn** as an error (it would
+> modify v1.3's classifier and destroy E-32's own evidence). No work remains on it. (ii) The count is stable
 > *against these three* and **not against E-61**, which finds items 1b and 2 both legitimately hosting
 > one quantity at different declaration scopes — a competing home by ADR-073's own criterion, and
 > therefore the live candidate to move the count again. **E-31 was never a count pressure**: its wording
@@ -55,7 +56,7 @@ table records the state of each entry's content**, which is what remains partly 
 | pressure | its proposed wording asks for | where it lives here | status |
 |---|---|---|---|
 | **E-30** — symmetry group | "Add a **new declaration item** — deliberately not a sub-item of item 6" | `DecisionExtendedDeclaration.symmetry_group_actions` (ADR-070) | **half-closed, measured.** A domain can declare a group; `omi.state.Metric` still does not quotient by one. The `1.414`-distance demonstration for a 90°-rotated orientation descriptor stands unrepaired, and no built domain declares a group, so the second half is untested on real content |
-| **E-32 / ADR-046** — declared constitutive form | ADR-046 chose "(b) a **new interface item**", noting it "makes the interface eight items" | `ExtendedDeclaration.constitutive_forms` (ADR-042/043) | **closed as content; placement settled on the wrapper (ADR-073).** Five real forms are declared and exercised; item 6 still *refuses* a constitutive form by name, and the role-scoping (6a–6c plus a third `InvariantKind`) is **decided and scheduled, not yet implemented** — zero observations move, but it lands with no occupant. ADR-046's own count assumed item 1 was whole — with the split, its option (b) lands at **nine**, not eight |
+| **E-32 / ADR-046** — declared constitutive form | ADR-046 chose "(b) a **new interface item**", noting it "makes the interface eight items" | `ExtendedDeclaration.constitutive_forms` (ADR-042/043) | **closed as content; placement settled on the wrapper (ADR-073).** Five real forms are declared and exercised; item 6 still *refuses* a constitutive form by name, and the role-scoping (6a–6c) turned out to be **already implemented** in `omi.proposed.item6` since ADR-043/046, exercised by `tests/oracles/test_known_envelope.py`, and registered in no COVERAGE row until ADR-075's audit found it. ADR-073's further proposal to add a third `omi.interface.InvariantKind` member is **withdrawn** — it would modify v1.3's classifier and destroy the measurement E-32 rests on (ADR-073's amendment). ADR-046's own count assumed item 1 was whole — with the split, its option (b) lands at **nine**, not eight |
 | **E-52** — scope-exit criterion | "Add an **eighth item** to Core §4: 8. Scope-exit criterion" | `ScopeDeclaration.scope_exit_criterion` (ADR-070) | **half-closed, and the domain the evidence came from does not carry it.** SDL declares a criterion; `contrast` — whose terminal voltage goes negative within forty intervals, which is E-52's evidence — has no `DecisionExtendedDeclaration` at all, so the finding stands exactly as measured |
 
 Had all three been promoted to items, the interface would have been **eleven**. ADR-073 decided none
