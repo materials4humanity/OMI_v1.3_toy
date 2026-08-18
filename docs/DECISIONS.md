@@ -7187,6 +7187,140 @@ one this ADR does not resolve). That would force either a fourth descriptor or v
 
 ---
 
+## ADR-078 — Composition stage C2: composition-dependent validity, and the refusal ADR-054 asks for
+
+**Status.** Accepted — design final, authorised for implementation. **Gap.** none — implements
+ADR-054 in full. **Track.** composition milestone, stage C2.
+**Reads.** ADR-076 (stage C1, executed — the object this stage extends), ADR-054 (the design this
+stage builds), ADR-043 (`ValidityBound`/`ValidityRange`, the machinery being extended), ADR-047 and
+ADR-070 (the sibling-form-not-edit precedent this stage repeats), ADR-056 (the decision loop the
+verdict shape below must compose with), ADR-053 and ADR-077 (the composition-inverse machinery this
+check exists to serve).
+**Pins.** `src/omi/proposed/constitutive.py`; `src/omi_domains/flagship_constitutive/forms.py`.
+
+### Four decisions
+
+**1. `ValidityBound`'s edges gain a declared composition-dependent form.**
+
+`BoundEdge` widens from `float | Unbounded` to `float | Unbounded | CompositionDependentEdge`, where
+`CompositionDependentEdge` is a frozen dataclass carrying `evaluate: Callable[[Mapping[str, float]],
+float]` (descriptor name → edge value) and a required non-empty `provenance: str`, checked in
+`__post_init__` on the exact wording pattern `ConstitutiveForm` and every other provenance field in
+this module already use.
+
+This is ADR-054's own stated extension, made concrete: "`Ms` is not universal. Koistinen–Marburger's
+`α` is not universal... `ValidityBound`'s edges become **callables over the declared descriptor
+basis**." A bound with a `CompositionDependentEdge` on either side requires `evaluated_at:
+Mapping[str, float]` (descriptor values) supplied to `ValidityRange.report()`. Missing it **raises**
+— this is a malformed call, nothing to evaluate, not a diagnosis, and it is deliberately a different
+failure mode from decision 3's regime verdict below: one is "you called this wrong," the other is
+"you called this right and the answer is no." Fixed-float bounds are entirely unaffected; every
+existing `ValidityBound` construction in `flagship_constitutive.forms` and `sdl.forms` uses only
+`float | Unbounded` and its behaviour does not change.
+
+**2. `Ms` becomes composition-dependent via a new sibling form, not an edit to the existing one.**
+
+`KOISTINEN_MARBURGER_COMPOSITION_DEPENDENT` is declared with `refines=KOISTINEN_MARBURGER.name` and a
+non-empty `refinement_note`, on the precedent ADR-047 set and ADR-070 Decision D made structural:
+`KOCKS_MECKING_STRAIN_WINDOWED` was published alongside `KOCKS_MECKING` rather than as an edit,
+because `ValidityRange.report()` requires a value for every declared bound and a form's range cannot
+be widened without breaking every existing caller keyed on the original's bound names (E-40).
+`KOISTINEN_MARBURGER` itself is untouched — every existing caller, including
+`tests/test_flagship_constitutive.py`'s use of `MS_TEMPERATURE`, keeps its byte-stable answer.
+
+`Ms` is computed by Andrews' (1965) linear regression in wt% over whichever of
+`flagship_composition`'s declared descriptors actually cover the regression's terms (C, Mn, Ni, Cr,
+Mo); any term the descriptor set does not cover is declared zero-contribution with a stated reason
+rather than silently dropped. This is a real, citable literature source, on the same discipline
+`flagship_constitutive.forms` already states for its other forms: the *fitted parameters* are toy
+placeholders, the *provenance* is not.
+
+**3. The regime-boundary check returns a verdict; it does not raise.**
+
+`RegimeVerdict` (`WITHIN_INTERVAL` / `OUTSIDE_INTERVAL`), a frozen `RegimeReport`
+(`verdict`, `binding_descriptor: str | None`, `factor: float | None`, `interval`), and
+`check_composition_regime(descriptors, interval) -> RegimeReport`.
+
+**The substantive decision, stated because it could plausibly have gone the other way.** This
+repository's existing split is: **raise** when the framework has nothing to say —
+`omi.gaps.NotSpecified` for a `[Pass B]`/`[Pass C]` gap, `amplification_decomposition`'s refusal when the
+decomposition is ill-posed — and **return a verdict** when it has something specific to say that a
+caller acts on, possibly repeatedly, inside a loop: `ExtrapolationReport`, `ValidityAction`,
+`AttainabilityVerdict`. A regime-boundary finding is the second case: "this form no longer applies,
+here is which descriptor bound and by how much" is content, not absence. It must also compose with
+ADR-056's decision loop, which reads verdicts every interval with no exception handling around the
+read — an ordered rule over diagnostics cannot be built on top of a diagnostic that sometimes throws.
+
+This is not in tension with ADR-054's own language calling the check "a refusal, not a warning."
+ADR-054's "refusal" is a **policy conclusion** about what a caller should do with `OUTSIDE_INTERVAL`
+— treat the proposal as inadmissible, the way `AttainabilityVerdict.OUTSIDE_DESCRIPTOR_BOUNDS` is
+also, in effect, a refusal of that composition — not a claim that the check must be a raised
+exception to *be* a refusal. `AttainableRegion.report()` already establishes the pattern: a hard "no"
+delivered as a returned verdict, per ADR-043's "report, never enforce" stance restated for the
+first-order extrapolation check. `check_composition_regime` is called **before**
+`ValidityRange.report()` on a composition-dependent form; a caller finding `OUTSIDE_INTERVAL` must
+treat the form's subsequent validity report as not meaningful. This is a **calling-convention**
+requirement, not a structurally enforced one — `ValidityRange.report()` still runs if called directly
+against an out-of-regime composition — and that is necessary rather than sloppy: the
+composition-inverse machinery (ADR-053, ADR-077) needs to be able to probe exactly this boundary, and
+a check that refused to run near it would be unusable for the one purpose it exists to serve.
+
+**4. Location: additive to existing shared objects, no new variant package.**
+
+Unlike C1's `flagship_composition/`, this stage extends `src/omi/proposed/constitutive.py` and
+`src/omi_domains/flagship_constitutive/forms.py` directly. C1 needed a separate package because
+declaring `δc` would have changed `flagship`'s schema `size` and moved every metric-normalised
+observation depending on it (ADR-075 Decision 2). This stage's whole content is additive fields and a
+new sibling form on objects nothing depends on the *shape* of —
+`KOISTINEN_MARBURGER`'s `report()` is called by `tests/test_flagship_constitutive.py` and M11's
+extrapolation experiments, and none of those calls change. That distinction — extending a shared,
+already-exercised object safely versus needing an isolated variant — is exactly why ADR-054 scoped
+this as its own stage with an explicit movement-measurement gate, rather than folding it into C1.
+
+### Gate
+
+1. Full suite, `mypy --strict`, lints.
+2. Movement measured before landing: confirm zero movement on every existing observation touching
+   `KOISTINEN_MARBURGER`, `worst_extrapolation`, or `flagship_constitutive`'s `diff` — the sibling
+   form is additive and nothing pre-existing should move.
+3. Zero movement → normal additive generation under `redesign-items8`, marked **EXECUTED**. Movement
+   found → report the moved list explicitly, per ADR-054's own instruction; do not silently
+   re-baseline.
+4. New oracle: a constructed composition where Andrews-`Ms` crosses a held-constant query temperature
+   from inside- to outside-window purely by composition change — recovering the constructed crossing
+   point.
+5. New oracle: `check_composition_regime` fires `OUTSIDE_INTERVAL` on a constructed descriptor tuple
+   outside `COMPOSITION_VALIDITY_INTERVAL`, `WITHIN_INTERVAL` just inside — the boundary case at the
+   declared edge, not only deep-interior/deep-exterior.
+
+### Scope note
+
+SDL's `COMPOSITION_VALIDITY_INTERVAL` refusal wiring is explicitly **not** part of this stage. SDL
+has no evolution operator calling `report()` in anger yet — ADR-064 built the discovery domain's three
+operators, not this check — so there is nothing there for the regime-boundary check to guard.
+Noted as a follow-on stage, not folded in here.
+
+### Alternatives rejected
+
+*Extend `ValidityBound` in place rather than via a new sibling form.* Rejected on
+`ValidityRange.report()`'s deliberate strictness (ADR-043: every declared bound must receive a value)
+and this repository's established sibling-not-edit precedent (E-40, `refines`): widening
+`KOISTINEN_MARBURGER`'s own bound would break every caller keyed on its original signature.
+
+*Make the regime check part of `report()`'s existing return value instead of a separate function.*
+Rejected for now: it conflates two things ADR-054 treats as different in kind — first-order
+extrapolation within a form's own window, and regime validity of the window itself — and
+`ExtrapolationReport`'s existing shape does not obviously extend to "the form itself does not apply
+here," which is a different claim from "you are extrapolating within a form that does."
+
+### What would change this decision
+
+If Andrews' formula, applied to `flagship_composition`'s actual descriptor ranges, never produces a
+crossing inside the domain's declared control window, the worked oracle in gate item 4 has nothing to
+demonstrate and a different composition-dependent form would need to carry it instead.
+
+---
+
 ## Open questions
 
 Not decisions — hypotheses the code should settle. Full statements in
