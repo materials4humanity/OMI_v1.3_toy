@@ -49,7 +49,7 @@ supplies the category, and a domain supplies the forms that fill it.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import Enum
 from typing import Callable, Mapping, Protocol, runtime_checkable
 
@@ -135,9 +135,52 @@ class Unbounded(Enum):
 UNBOUNDED = Unbounded.UNBOUNDED
 """Module-level alias, so a declaration reads ``high=UNBOUNDED`` (Spec §2.2)."""
 
-BoundEdge = float | Unbounded
-"""One edge of a declared validity window: a number, or explicitly
-:data:`UNBOUNDED` (Spec §2.2; ADR-043)."""
+
+@dataclass(frozen=True)
+class CompositionDependentEdge:
+    """A validity-window edge that is a function over composition rather than a fixed
+    number (ADR-054; ADR-078 Decision 1).
+
+    **Why a bound needs a third edge kind, not just two floats.** ADR-054's finding is
+    that a form's fitted edge can be a property of *which member of the operator
+    family* is being evaluated — Core §4 item 1b's parameter (ADR-071, ADR-052's
+    descriptor basis) — rather than a constant of the form itself, so a bound expressed
+    as ``float | Unbounded`` cannot represent a window that moves as that parameter
+    moves. ADR-054's own extension, made concrete here: "`ValidityBound`'s edges
+    become **callables over the declared descriptor basis**." Resolving one needs a
+    composition, which :meth:`ValidityRange.report` receives as ``evaluated_at`` and
+    this class itself does not carry — the same separation :attr:`ConstitutiveForm
+    .evaluate` keeps from the state/control values it is evaluated against.
+
+    No domain vocabulary appears here, per this module's own discipline (CLAUDE.md §5
+    invariant 3): the worked physics is ADR-054's and ADR-078 Decision 2's, not this
+    type's.
+    """
+
+    evaluate: Callable[[Mapping[str, float]], float]
+    """Descriptor name → edge value (ADR-054), evaluated at a declared composition.
+    One float out, unlike :attr:`ConstitutiveForm.evaluate`'s array-valued signature,
+    which covers a whole response rather than a single edge."""
+    provenance: str
+    """The source establishing how this edge depends on composition — a citation, not
+    a claim, on the same discipline :attr:`ConstitutiveForm.provenance` already states
+    for the form the edge belongs to (ADR-054; ADR-078)."""
+
+    def __post_init__(self) -> None:
+        if not self.provenance:
+            raise ValueError(
+                "a composition-dependent edge declares no provenance: ADR-054's "
+                "extension requires the source establishing how the edge depends on "
+                "composition, since an unsourced dependence is an assertion rather "
+                "than a declaration"
+            )
+
+
+BoundEdge = float | Unbounded | CompositionDependentEdge
+"""One edge of a declared validity window: a number, explicitly :data:`UNBOUNDED`, or
+a :class:`CompositionDependentEdge` whose value is a function of composition rather
+than a constant (Spec §2.2; ADR-043; ADR-054 and ADR-078 Decision 1 for the third
+case)."""
 
 
 class EdgeKind(Enum):
@@ -269,9 +312,19 @@ class ValidityBound:
                 "its range in whatever quantity the source does limit (Spec §2.2)"
             )
         if not self.is_one_sided:
-            low, high = float(self.low), float(self.high)  # type: ignore[arg-type]
-            if not high > low:
-                raise ValueError(f"bound {self.name!r} needs high > low, got [{low}, {high}]")
+            if self.is_composition_dependent:
+                # At least one edge is a CompositionDependentEdge and the window is
+                # two-sided (neither edge is UNBOUNDED), so `high > low` cannot be
+                # checked until both edges are resolved against a composition.
+                # ValidityRange.report() resolves this bound via dataclasses.replace()
+                # before use (ADR-078 Decision 1), which reconstructs a ValidityBound
+                # with both edges as plain floats and re-runs this __post_init__ on
+                # THAT instance — so the check is deferred, not skipped.
+                pass
+            else:
+                low, high = float(self.low), float(self.high)  # type: ignore[arg-type]
+                if not high > low:
+                    raise ValueError(f"bound {self.name!r} needs high > low, got [{low}, {high}]")
             if self.fitted_scale is not None:
                 raise ValueError(
                     f"bound {self.name!r} is two-sided and also declares a fitted_scale: the "
@@ -293,6 +346,19 @@ class ValidityBound:
         """Whether exactly one edge of this window is declared :data:`UNBOUNDED`
         (Spec §2.2's "stated validity range"; ADR-043)."""
         return (self.low is UNBOUNDED) != (self.high is UNBOUNDED)
+
+    @property
+    def is_composition_dependent(self) -> bool:
+        """Whether either edge is a :class:`CompositionDependentEdge` (Spec §2.2's
+        "stated validity range"; ADR-054; ADR-078 Decision 1).
+
+        ``True`` means this bound cannot be evaluated without a composition supplied
+        as ``evaluated_at`` to :meth:`ValidityRange.report` — checked there, not here,
+        since this bound does not receive ``evaluated_at`` directly (ADR-078
+        Decision 1)."""
+        return isinstance(self.low, CompositionDependentEdge) or isinstance(
+            self.high, CompositionDependentEdge
+        )
 
     @property
     def centre(self) -> float:
@@ -332,9 +398,9 @@ class ValidityBound:
         :class:`EdgeKind` — so a consumer cannot tell whether a reported violation
         is against a sharp limit or a fuzzy boundary without this.
         """
-        if not isinstance(self.low, Unbounded) and value < float(self.low):
+        if not isinstance(self.low, Unbounded) and value < float(self.low):  # type: ignore[arg-type]
             return "low"
-        if not isinstance(self.high, Unbounded) and value > float(self.high):
+        if not isinstance(self.high, Unbounded) and value > float(self.high):  # type: ignore[arg-type]
             return "high"
         return None
 
@@ -379,7 +445,7 @@ class ValidityBound:
             excess = float(self.low) - value  # type: ignore[arg-type]
         else:
             # Window is (-∞, high]: the violation is rising *above* high.
-            excess = value - float(self.high)
+            excess = value - float(self.high)  # type: ignore[arg-type]
         return 1.0 + max(0.0, excess) / self.fitted_scale
 
 
@@ -464,6 +530,39 @@ class ExtrapolationReport:
         return self.action is ValidityAction.CONTROL_INVERSE
 
 
+def _resolve_edge(
+    edge: BoundEdge, bound_name: str, evaluated_at: Mapping[str, float] | None
+) -> BoundEdge:
+    """Resolve one edge of a bound against a supplied composition (ADR-054; ADR-078
+    Decision 1).
+
+    A fixed edge (a number or :data:`UNBOUNDED`) passes through untouched. A
+    :class:`CompositionDependentEdge` needs *evaluated_at* to resolve against — the
+    one thing this function checks before calling the edge's ``evaluate``, since
+    :class:`ValidityBound` does not carry ``evaluated_at`` itself (ADR-078 Decision 1:
+    the bound "should not need to know about `evaluated_at` directly"). Only
+    :meth:`ValidityRange.report` calls this.
+    """
+    if not isinstance(edge, CompositionDependentEdge):
+        return edge
+    if evaluated_at is None:
+        raise ValueError(
+            f"bound {bound_name!r} declares a composition-dependent edge but no "
+            "evaluated_at was supplied to report(): resolving the edge needs a "
+            "composition, and this is a malformed call rather than a diagnosis "
+            "(ADR-078 Decision 1) — distinct from a missing state/control value, "
+            "which is checked separately above"
+        )
+    try:
+        return float(edge.evaluate(evaluated_at))
+    except KeyError as exc:
+        raise ValueError(
+            f"bound {bound_name!r}'s composition-dependent edge needs descriptor "
+            f"{exc.args[0]!r}, which evaluated_at does not supply: resolving the edge "
+            "needs the composition value its evaluate() reads (ADR-078 Decision 1)"
+        ) from exc
+
+
 @dataclass(frozen=True)
 class ValidityRange:
     """A declared form's validated range: bounds in Core §3.1's state space,
@@ -483,7 +582,13 @@ class ValidityRange:
         legal too — a form genuinely bounded in one space should say so)."""
         return frozenset(b.space for b in self.bounds)
 
-    def report(self, form_name: str, values: Mapping[str, float]) -> ExtrapolationReport:
+    def report(
+        self,
+        form_name: str,
+        values: Mapping[str, float],
+        *,
+        evaluated_at: Mapping[str, float] | None = None,
+    ) -> ExtrapolationReport:
         """Evaluate every declared bound against *values* (Spec §2.2's reporting
         obligation), keyed by bound name.
 
@@ -493,6 +598,17 @@ class ValidityRange:
         own dominant input" shape `docs/V1.4-EDITS.md` §6 documents eight times
         over. Extra values are ignored — a caller may pass a whole state or
         control vector.
+
+        *evaluated_at* resolves any :class:`CompositionDependentEdge` among the
+        declared bounds against a composition, before either edge is used (ADR-054;
+        ADR-078 Decision 1). Required exactly when at least one bound is
+        :attr:`~ValidityBound.is_composition_dependent`; omitting it, or omitting a
+        descriptor name a composition-dependent edge needs, raises — a malformed
+        call, distinct from the missing-*values* check above, and distinct from
+        ADR-078 Decision 3's regime verdict (that is a diagnosis with an answer; this
+        is nothing to evaluate at all). A bound declared with only ``float |
+        Unbounded`` edges is unaffected by this parameter and needs no
+        *evaluated_at*.
         """
         missing = [b.name for b in self.bounds if b.name not in values]
         if missing:
@@ -501,8 +617,24 @@ class ValidityRange:
                 "without a value cannot be checked, and skipping it would hide the "
                 "violation the report exists to surface"
             )
-        factors = {b.name: b.extrapolation_factor(values[b.name]) for b in self.bounds}
-        binding = max(self.bounds, key=lambda b: factors[b.name]) if self.bounds else None
+        # Resolve composition-dependent edges before any bound is used below, so
+        # extrapolation_factor()/edge_kind() only ever see plain floats or UNBOUNDED
+        # (ADR-078 Decision 1) — ValidityBound's own methods stay unmodified and
+        # unaware of evaluated_at, per the ADR's own placement constraint. A bound
+        # with no composition-dependent edge is reused as-is (same object, not a
+        # copy), which is what keeps every pre-existing report() call byte-identical.
+        resolved = [
+            replace(
+                b,
+                low=_resolve_edge(b.low, b.name, evaluated_at),
+                high=_resolve_edge(b.high, b.name, evaluated_at),
+            )
+            if b.is_composition_dependent
+            else b
+            for b in self.bounds
+        ]
+        factors = {b.name: b.extrapolation_factor(values[b.name]) for b in resolved}
+        binding = max(resolved, key=lambda b: factors[b.name]) if resolved else None
         edge_kind = binding.edge_kind(values[binding.name]) if binding is not None else None
         return ExtrapolationReport(form_name, factors, binding, edge_kind)
 
