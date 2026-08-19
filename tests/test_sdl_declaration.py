@@ -14,7 +14,11 @@ from __future__ import annotations
 import pytest
 
 from omi.interface import ParameterRole, SpecificationVersion, diff
-from omi.proposed.constitutive import ConstitutivelyConstrained
+from omi.proposed.constitutive import (
+    ConstitutivelyConstrained,
+    RegimeVerdict,
+    check_composition_regime,
+)
 from omi.proposed.decision import (
     AttainabilityVerdict,
     CoupledQuantityDeclaration,
@@ -370,3 +374,96 @@ def test_the_erasure_inventory_is_non_empty_which_predicts_the_e48_extreme(
         "predicted to sit at changes"
     )
     assert not CONTRAST_DECLARATION.erasure_inventory
+
+
+# --- ADR-078 Decision 3: the regime-boundary check, boundary case included ---------
+
+
+def test_check_composition_regime_reads_the_boundary_as_inside_not_outside(
+    observe: ObservationRecorder,
+) -> None:
+    """**The ADR-078 Gate item 5 oracle**: three constructed descriptor tuples against
+    this domain's own `COMPOSITION_VALIDITY_INTERVAL` -- comfortably inside, comfortably
+    outside on exactly one descriptor, and exactly at a declared edge.
+
+    Not wired into SDL's forms or any operator, per ADR-078's scope note: SDL has no
+    evolution operator calling `report()` yet (ADR-064 built the discovery domain's
+    three operators, not this check), so there is nothing here for the regime check to
+    guard. This test exercises `check_composition_regime` as domain-neutral machinery,
+    reading `COMPOSITION_VALIDITY_INTERVAL` as data rather than adding a new declared
+    capability to the domain.
+
+    **The boundary case is the one worth getting right rather than assumed.**
+    `ExtrapolationReport.outside_envelope` is `worst_factor > 1.0` — strictly greater,
+    so a value exactly at an edge reads as inside. `check_composition_regime` uses the
+    same two-sided arithmetic `ValidityBound.extrapolation_factor` does
+    (`|value - centre| / half_width`), so the same convention should hold here, and
+    this test confirms it does rather than assuming the two implementations agree.
+    """
+    centre = {
+        name: 0.5 * (low + high) for name, (low, high) in COMPOSITION_VALIDITY_INTERVAL.items()
+    }
+
+    # Case 1: every descriptor at its interval's own centre -- comfortably inside.
+    within = dict(centre)
+    report_within = check_composition_regime(within, COMPOSITION_VALIDITY_INTERVAL)
+
+    # Case 2: mixing_enthalpy pushed far past its high edge (-4.0); the other two stay
+    # at their centres, so exactly one descriptor is responsible.
+    outside = dict(centre)
+    outside["mixing_enthalpy"] = 10.0
+    report_outside = check_composition_regime(outside, COMPOSITION_VALIDITY_INTERVAL)
+
+    # Case 3: support_acidity placed EXACTLY at its declared high edge (0.85); the
+    # other two stay at their centres.
+    low, high = COMPOSITION_VALIDITY_INTERVAL["support_acidity"]
+    on_edge = dict(centre)
+    on_edge["support_acidity"] = high
+    report_on_edge = check_composition_regime(on_edge, COMPOSITION_VALIDITY_INTERVAL)
+
+    observe(
+        "regime_within_verdict",
+        report_within.verdict.value,
+        f"== {RegimeVerdict.WITHIN_INTERVAL.value!r}",
+    )
+    observe(
+        "regime_outside_verdict_and_binding",
+        (report_outside.verdict.value, report_outside.binding_descriptor),
+        "== ('outside_interval', 'mixing_enthalpy')",
+    )
+    observe(
+        "regime_on_edge_verdict_and_factor",
+        (report_on_edge.verdict.value, report_on_edge.factor),
+        "verdict WITHIN_INTERVAL, factor None -- an edge value reads as inside, not outside",
+    )
+
+    # Case 1: comfortably inside.
+    assert report_within.verdict is RegimeVerdict.WITHIN_INTERVAL
+    assert report_within.binding_descriptor is None
+    assert report_within.factor is None
+
+    # Case 2: comfortably outside, on exactly the descriptor that was pushed.
+    assert report_outside.verdict is RegimeVerdict.OUTSIDE_INTERVAL
+    assert report_outside.binding_descriptor == "mixing_enthalpy"
+    assert report_outside.factor is not None
+    assert report_outside.factor > 1.0
+
+    # Case 3: exactly at the edge -- inside, per this file's own boundary convention,
+    # confirmed against the arithmetic directly: |high - centre| / half_width == 1.0.
+    assert high - centre["support_acidity"] == pytest.approx(0.5 * (high - low))
+    assert report_on_edge.verdict is RegimeVerdict.WITHIN_INTERVAL
+    assert report_on_edge.binding_descriptor is None
+    assert report_on_edge.factor is None
+
+
+def test_check_composition_regime_raises_on_a_missing_descriptor() -> None:
+    """A descriptor named in the declared interval but absent from the supplied
+    composition is a malformed call, not a regime finding -- distinct from
+    `RegimeVerdict.OUTSIDE_INTERVAL`, which is a diagnosis with an answer."""
+    incomplete = {
+        name: 0.5 * (low + high)
+        for name, (low, high) in COMPOSITION_VALIDITY_INTERVAL.items()
+        if name != "mixing_enthalpy"
+    }
+    with pytest.raises(ValueError, match="mixing_enthalpy"):
+        check_composition_regime(incomplete, COMPOSITION_VALIDITY_INTERVAL)

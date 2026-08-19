@@ -7189,8 +7189,9 @@ one this ADR does not resolve). That would force either a fourth descriptor or v
 
 ## ADR-078 — Composition stage C2: composition-dependent validity, and the refusal ADR-054 asks for
 
-**Status.** Accepted — design final, authorised for implementation. **Gap.** none — implements
-ADR-054 in full. **Track.** composition milestone, stage C2.
+**Status.** Accepted — **EXECUTED**, all three decisions landed and gated clean (see the Gate
+section below for the reported result against each item). **Gap.** none — implements
+ADR-054 in full. **Track.** composition milestone, stage C2, complete.
 **Reads.** ADR-076 (stage C1, executed — the object this stage extends), ADR-054 (the design this
 stage builds), ADR-043 (`ValidityBound`/`ValidityRange`, the machinery being extended), ADR-047 and
 ADR-070 (the sibling-form-not-edit precedent this stage repeats), ADR-056 (the decision loop the
@@ -7279,19 +7280,34 @@ this as its own stage with an explicit movement-measurement gate, rather than fo
 
 ### Gate
 
-1. Full suite, `mypy --strict`, lints.
+1. Full suite, `mypy --strict`, lints. **Reported: `mypy --strict` clean on every file touched across
+   all three decisions; all 25 lints pass (citation, vocabulary, coverage-evidence,
+   `observe`-bound); full suite 442 passed, 2 skipped on the run that closed decision 3.**
 2. Movement measured before landing: confirm zero movement on every existing observation touching
    `KOISTINEN_MARBURGER`, `worst_extrapolation`, or `flagship_constitutive`'s `diff` — the sibling
-   form is additive and nothing pre-existing should move.
+   form is additive and nothing pre-existing should move. **Reported: zero movement, confirmed on
+   every one of the three decisions' own gate runs, not only the final one.**
 3. Zero movement → normal additive generation under `redesign-items8`, marked **EXECUTED**. Movement
    found → report the moved list explicitly, per ADR-054's own instruction; do not silently
-   re-baseline.
+   re-baseline. **Reported: zero movement throughout, so this stays the `redesign-items8` generation
+   — no new baseline file was needed. Final `scripts/check_audit_gate.sh
+   audit/baselines/redesign-items8.json` run: 547 of 547 baseline observations byte-identical, 0
+   changed, 0 missing, 39 newly added (decisions 1–3's own new tests) — PASS.**
 4. New oracle: a constructed composition where Andrews-`Ms` crosses a held-constant query temperature
    from inside- to outside-window purely by composition change — recovering the constructed crossing
-   point.
+   point. **Reported: `tests/test_flagship_constitutive.py
+   ::test_andrews_ms_crosses_a_held_constant_query_temperature_by_composition_alone`. Carbon fixed at
+   0.1 wt%, manganese moved from 0.1 to 0.4 wt% (`Ms` 493.66 → 484.54 °C), a held query of 487 °C
+   inside one window and outside the other, factor and resolved `Ms` recovered exactly against an
+   independent recomputation of Andrews' formula.**
 5. New oracle: `check_composition_regime` fires `OUTSIDE_INTERVAL` on a constructed descriptor tuple
    outside `COMPOSITION_VALIDITY_INTERVAL`, `WITHIN_INTERVAL` just inside — the boundary case at the
-   declared edge, not only deep-interior/deep-exterior.
+   declared edge, not only deep-interior/deep-exterior. **Reported:
+   `tests/test_sdl_declaration.py::test_check_composition_regime_reads_the_boundary_as_inside_not
+   _outside`, against SDL's own declared `COMPOSITION_VALIDITY_INTERVAL` (not wired into SDL's forms
+   or any operator, per the scope note below). Confirmed the boundary convention this file already
+   uses for `ExtrapolationReport` — a value exactly at a declared edge reads `WITHIN_INTERVAL` with
+   `factor is None`, not a violation — by construction rather than by assumption.**
 
 ### Scope note
 

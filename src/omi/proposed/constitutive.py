@@ -752,6 +752,115 @@ class ConstitutiveForm:
         return self.validity.report(self.name, values, evaluated_at=evaluated_at)
 
 
+class RegimeVerdict(Enum):
+    """Whether a proposed composition still sits inside the descriptor interval a
+    declared mechanism set's validity ranges were established for (Spec §2.2's
+    proposed sixth category; ADR-054; ADR-078 Decision 3).
+
+    Two members, not :class:`ValidityAction`'s four-way space/action split. This check
+    answers a categorical question about the *chemistry itself*, prior to and
+    independent of any one form's own control/state validity ranges — there is no
+    analogue here of a control-space violation being actionable while a state-space one
+    is not, because nothing about *where the descriptor interval was established* names
+    an admissible-control remedy the way a control-space bound does.
+    """
+
+    WITHIN_INTERVAL = "within_interval"
+    """Every declared descriptor sits inside its interval. The mechanism set the
+    interval was established for is presumed to still apply, and a composition-
+    dependent form's own :meth:`ValidityRange.report` is meaningful for this
+    composition."""
+
+    OUTSIDE_INTERVAL = "outside_interval"
+    """At least one declared descriptor has left its interval. ADR-054's diagnosis: the
+    proposed chemistry may support a different mechanism than the one the form's
+    validity ranges were fitted for, so those ranges are no longer a claim about this
+    composition at all — not a graded warning, per ADR-054's own "a refusal, not a
+    warning"."""
+
+
+@dataclass(frozen=True)
+class RegimeReport:
+    """Where a proposed composition sits relative to a declared composition-validity
+    interval (Spec §2.2's proposed reporting obligation; ADR-054; ADR-078 Decision 3).
+
+    A result dataclass rather than a bare verdict (CLAUDE.md §8), on the same reasoning
+    :class:`ExtrapolationReport` states for itself: a caller receiving only
+    ``OUTSIDE_INTERVAL`` cannot tell which descriptor is responsible or by how much, and
+    a regime finding without that is a flag with nothing to act on.
+    """
+
+    verdict: RegimeVerdict
+    binding_descriptor: str | None
+    """Which declared descriptor sits furthest outside its interval, or ``None`` when
+    every descriptor is within (:attr:`RegimeVerdict.WITHIN_INTERVAL`)."""
+    factor: float | None
+    """The binding descriptor's two-sided extrapolation factor — the same
+    ``|value - centre| / half_width`` convention :meth:`ValidityBound
+    .extrapolation_factor` uses for a two-sided window, since a
+    ``COMPOSITION_VALIDITY_INTERVAL``-shaped entry is a plain ``(low, high)`` pair
+    rather than a :class:`ValidityBound`. ``None`` when :attr:`verdict` is
+    ``WITHIN_INTERVAL``."""
+    interval: Mapping[str, tuple[float, float]]
+    """The declared interval this report was checked against, carried alongside the
+    verdict so a consumer does not need the caller's own copy to interpret it."""
+
+
+def check_composition_regime(
+    descriptors: Mapping[str, float], interval: Mapping[str, tuple[float, float]]
+) -> RegimeReport:
+    """Whether *descriptors* still sits inside the composition-validity interval a
+    declared mechanism set's validity ranges were established for (Spec §2.2's
+    proposed sixth category; ADR-054; ADR-078 Decision 3).
+
+    **Returns a verdict; does not raise.** This repository's existing split is:
+    **raise** when the framework has nothing to say (`omi.gaps.NotSpecified` for a
+    `[Pass B]`/`[Pass C]` gap, `amplification_decomposition`'s refusal when the
+    decomposition is ill-posed) and **return a verdict** when it has something
+    specific to say that a caller acts on, possibly repeatedly, inside a loop
+    (:class:`ExtrapolationReport`, :class:`ValidityAction`, `AttainabilityVerdict`). A
+    regime-boundary finding is the second case: "this mechanism set no longer applies,
+    here is which descriptor and by how much" is content, not absence. The
+    missing-descriptor case below is the *first* case — nothing to check is a
+    malformed call, not a diagnosis, and is deliberately a different failure mode from
+    the verdict this function otherwise returns.
+
+    This is not in tension with ADR-054's own language calling the check "a refusal,
+    not a warning": that is a **policy conclusion** about what a caller should do with
+    `OUTSIDE_INTERVAL` — treat the composition as inadmissible — not a claim that the
+    check must be a raised exception to *be* a refusal.
+
+    **A calling-convention requirement, not a structurally enforced one**
+    (:meth:`ConstitutiveForm.report`'s own "reported, never enforced" stance, restated
+    here for the check that precedes it): `check_composition_regime` is called
+    **before** :meth:`ValidityRange.report` on a composition-dependent form, and a
+    caller finding `OUTSIDE_INTERVAL` MUST treat the form's subsequent report as not
+    meaningful. Nothing here stops a caller calling `report()` anyway — the
+    composition-inverse machinery (ADR-053, ADR-077) needs to be able to probe exactly
+    this boundary, and a check that refused to compose with a direct `report()` call
+    would be unusable for the one purpose it exists to serve.
+
+    Every descriptor named in *interval* MUST have a value in *descriptors*; a missing
+    one raises, on the same style :meth:`ValidityRange.report`'s own missing-value
+    check uses — nothing to check is not a finding.
+    """
+    missing = [name for name in interval if name not in descriptors]
+    if missing:
+        raise ValueError(
+            f"no value supplied for declared composition-validity descriptor(s) {missing}: "
+            "a descriptor without a value cannot be checked, and skipping it would hide "
+            "the regime violation this check exists to surface"
+        )
+    factors = {
+        name: abs(descriptors[name] - 0.5 * (low + high)) / (0.5 * (high - low))
+        for name, (low, high) in interval.items()
+    }
+    if not factors or max(factors.values()) <= 1.0:
+        return RegimeReport(RegimeVerdict.WITHIN_INTERVAL, None, None, interval)
+    binding = max(factors, key=lambda name: factors[name])
+    return RegimeReport(RegimeVerdict.OUTSIDE_INTERVAL, binding, factors[binding], interval)
+
+
 @runtime_checkable
 class ConstitutivelyConstrained(Protocol):
     """An operator constrained to declared forms, which therefore reports where it
