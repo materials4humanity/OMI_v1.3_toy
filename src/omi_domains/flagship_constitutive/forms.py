@@ -50,6 +50,7 @@ import numpy as np
 
 from omi.proposed.constitutive import (
     UNBOUNDED,
+    CompositionDependentEdge,
     ConstitutiveForm,
     EdgeKind,
     FormKind,
@@ -344,6 +345,130 @@ KOISTINEN_MARBURGER = ConstitutiveForm(
     ),
     governs=((Slot.Z, "accumulated_hardening"),),
 )
+
+
+# --- Koistinen–Marburger, composition-dependent (ADR-078 Decision 2) ----------
+#
+# A sibling, not an edit -- KOISTINEN_MARBURGER above is completely untouched, on the
+# ADR-047/ADR-070 precedent this file already uses for KOCKS_MECKING_STRAIN_WINDOWED:
+# `ValidityRange.report` requires a value for every declared bound, so a form's range
+# cannot be widened without breaking every caller keyed on the original's signature
+# (E-40). Every existing caller of KOISTINEN_MARBURGER.report, including this test
+# module's own use of MS_TEMPERATURE, keeps its byte-stable answer.
+
+
+def _andrews_ms(descriptors: Mapping[str, float]) -> float:
+    """Andrews' (1965) linear Ms regression, restricted to the two terms
+    `flagship_composition`'s descriptor basis can honestly carry (ADR-078 amendment,
+    docs/DECISIONS.md).
+
+    `Ms = 539 - 423*C - 30.4*Mn - 17.7*Ni - 12.1*Cr - 7.5*Mo` (degrees C, weight-percent).
+    Nickel, chromium and molybdenum are declared **zero-contribution** here rather than
+    silently dropped: this toy domain's descriptor basis does not track them
+    (`flagship_composition.composition.ANDREWS_DESCRIPTORS` carries only carbon and
+    manganese), and Andrews' formula treats an absent term as zero alloying content, not
+    an unmeasured quantity — so omitting those three terms from the sum below *is* the
+    honest zero-contribution declaration, not an approximation of one. This is a
+    smaller-than-full-coverage repair, stated as one (ADR-078 amendment, third paragraph).
+
+    *descriptors* carries `"carbon"` and `"manganese"` as **weight-percent**, not simplex
+    fractions — the conversion from `flagship_composition.composition
+    .ANDREWS_DESCRIPTOR_MAP`'s native simplex-fraction output is the caller's declared
+    responsibility (`ANDREWS_WT_PERCENT_PER_SIMPLEX_FRACTION`), so this function reads the
+    same convention Andrews' own coefficients are calibrated against.
+    """
+    carbon_wt_pct = descriptors["carbon"]
+    manganese_wt_pct = descriptors["manganese"]
+    return 539.0 - 423.0 * carbon_wt_pct - 30.4 * manganese_wt_pct
+
+
+ANDREWS_MS_EDGE = CompositionDependentEdge(
+    evaluate=_andrews_ms,
+    provenance=(
+        "Andrews, K.W. (1965), 'Empirical formulae for the calculation of some "
+        "transformation temperatures', Journal of the Iron and Steel Institute, 203, "
+        "721-727: Ms = 539 - 423*C - 30.4*Mn - 17.7*Ni - 12.1*Cr - 7.5*Mo (deg C, wt%). "
+        "A real, cited literature formula -- unlike this file's fitted parameter values "
+        "elsewhere, which are order-of-magnitude toy placeholders, this coefficient set is "
+        "not invented for this repository. Confidence stated plainly: these coefficients "
+        "are widely reproduced under this citation in secondary metallurgical literature "
+        "(e.g. Krauss, 'Steels: Processing, Structure, and Performance'); this repository "
+        "does not have primary-source page access to verify them against the original "
+        "1965 volume, and says so rather than presenting the citation as independently "
+        "confirmed. Coverage is PARTIAL and declared as such (ADR-078 amendment): only the "
+        "carbon and manganese terms are implemented, because flagship_composition's "
+        "descriptor basis does not track nickel, chromium or molybdenum content -- see "
+        "`_andrews_ms`'s own docstring for why omitting them is the honest zero-"
+        "contribution declaration Decision 2 asks for, not a silent gap."
+    ),
+)
+"""`Ms` as a function of composition rather than a fixed edge (ADR-054; ADR-078 Decision 1's
+`CompositionDependentEdge`, Decision 2's worked case)."""
+
+
+def koistinen_marburger_composition_dependent(values: Mapping[str, float]) -> FloatArray:
+    """`f_m = 1 − exp(−α(Ms(C, Mn) − T))` — the same athermal-transformation physics as
+    `koistinen_marburger` above, with `Ms` computed from composition rather than read as
+    the fixed `MS_TEMPERATURE` constant (ADR-078 Decision 2).
+
+    Deliberately reuses `_andrews_ms` rather than declaring a second copy of Andrews'
+    formula: the form's own predicted fraction and its validity window's high edge must
+    agree on what `Ms` is, or the form could report itself `WITHIN_ENVELOPE` at a
+    temperature its own physics already treats as beyond `Ms` (or vice versa) -- an
+    internal inconsistency `ANDREWS_MS_EDGE` alone would not prevent, since
+    `ConstitutiveForm.evaluate` and `ConstitutiveForm.report` are independent call paths
+    (the former is not invoked by the latter).
+    """
+    ms = _andrews_ms(values)
+    undercooling = ms - values["temperature"]
+    if undercooling <= 0.0:
+        return np.array([0.0])
+    return np.array([1.0 - np.exp(-KM_ALPHA * undercooling)])
+
+
+KOISTINEN_MARBURGER_COMPOSITION_DEPENDENT = ConstitutiveForm(
+    name="koistinen_marburger_athermal_fraction_composition_dependent",
+    kind=FormKind.EXPLICIT_SOLUTION,
+    evaluate=koistinen_marburger_composition_dependent,
+    parameters={"alpha": KM_ALPHA},
+    validity=ValidityRange(
+        (
+            ValidityBound(
+                name="temperature",
+                space=ValiditySpace.CONTROL,
+                low=KM_COMPETING_PRODUCT_ONSET,
+                high=ANDREWS_MS_EDGE,
+                regime=(
+                    "above Ms(C, Mn): no athermal transformation and the form does not apply; "
+                    "below the lower edge: a competing isothermal product intervenes during "
+                    "the quench, so the boundary is route-dependent -- both unchanged from "
+                    "KOISTINEN_MARBURGER, only the high edge becomes composition-dependent"
+                ),
+                low_kind=EdgeKind.APPROXIMATE,
+                high_kind=EdgeKind.SHARP,
+            ),
+        )
+    ),
+    provenance=(
+        "Koistinen & Marburger (1959) as KOISTINEN_MARBURGER above, with Ms computed from "
+        "composition via Andrews (1965) rather than read as a fixed constant -- see "
+        "ANDREWS_MS_EDGE's own provenance for the citation, its confidence level, and its "
+        "declared partial coverage (carbon and manganese only)."
+    ),
+    governs=((Slot.Z, "accumulated_hardening"),),
+    refines=KOISTINEN_MARBURGER.name,
+    refinement_note=(
+        "Identical athermal-transformation physics and identical alpha. The only change is "
+        "that Ms, both in the form's own predicted fraction and in its validity window's "
+        "high edge, is now a function of composition (carbon and manganese weight-percent, "
+        "via Andrews' 1965 regression) rather than the fixed MS_TEMPERATURE constant "
+        "(ADR-078 Decision 2). Nickel, chromium and molybdenum are declared zero-"
+        "contribution -- a smaller-than-full-coverage repair, stated as one."
+    ),
+)
+"""`KOISTINEN_MARBURGER` with `Ms` made composition-dependent, published **alongside** the
+original rather than amending it, on the same E-40/ADR-047/ADR-070 precedent
+`KOCKS_MECKING_STRAIN_WINDOWED` already sets in this file (ADR-078 Decision 2)."""
 
 
 # --- Hall–Petch + forest hardening -------------------------------------------
