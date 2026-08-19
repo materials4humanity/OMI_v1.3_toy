@@ -7628,6 +7628,96 @@ implementation stage rather than a standing blocker.
 
 ---
 
+## ADR-080 — `AttainabilityVerdict.OUTSIDE_ROUTE` is removed: declared on the wrong object, and the domain's own text already said so
+
+**Status.** Accepted — implemented.
+**Track.** Composition milestone, a finding from ADR-079's own grounding pass.
+**Reads.** ADR-053 (`AttainableRegion`'s original design), ADR-062 (the audit gate's declared-
+exceptions/retirement discipline, and why this removal is neither), ADR-079 (whose §4 recorded the
+finding this ADR resolves).
+**Pins.** `src/omi/proposed/decision.py`.
+
+### What was found
+
+Investigated before any code: `AttainableRegion` is constructed exactly once in the whole repository
+(`src/omi_domains/sdl/interface.py:208`), and `AttainabilityVerdict.OUTSIDE_ROUTE` is referenced
+exactly once — its own declaration line (`decision.py:254`). `AttainableRegion.report()`'s complete
+`if`/`elif`/`else` branching (`decision.py:388`–`396`) only ever produces `ATTAINABLE`,
+`OUTSIDE_DESCRIPTOR_BOUNDS`, `EXCLUDED_PAIR` or `UNDERLYING_INFEASIBLE`: the `factors` dict it
+branches on is built from `descriptor_bounds`, `underlying_bounds`, `sums_to_one` and
+`excluded_pairs` only — `route_note` is never read inside `report()`, not even as a factor key. No
+test constructs a query that could reach `OUTSIDE_ROUTE`, and none asserts it.
+
+Whether that unreachability is a bug (route feasibility ought to be checkable, and `report()` is
+missing a branch) or a correct absence (route feasibility was never meant to be checkable *here*) was
+investigated against SDL's own declared `route_note`, quoted here for the record:
+
+> "The declared route is incipient-wetness impregnation followed by calcination. It reaches the
+> interior of the region above but NOT the high-loading corner: total metal above ~0.45 exceeds the
+> support's pore volume in one impregnation and would require a multi-step route this declaration
+> does not include. Stated in prose because it is the one constraint here that is not machine-
+> checkable from the declared coordinates alone — **a route bound is a statement about the apparatus,
+> and item 2's admissible set is where it belongs**; recorded here so a reader does not mistake the
+> checkable constraints for the whole certificate."
+
+Two findings followed. First, the number is real and the content is structured enough to check
+mechanically — "total metal" is unambiguously `metal_a + metal_b` (`SPECIES` in
+`src/omi_domains/sdl/state.py`), and ~0.45 is already committed to in writing, so a sum-of-fractions
+ceiling could be built without inventing physics content. Second, and decisive: **the domain's own
+text already argues this content does not belong on `AttainableRegion` at all** — it names item 2's
+`control_space` as the correct home, because a route bound is a statement about the apparatus, not
+about composition-space feasibility. Building a new field on `AttainableRegion` to make
+`OUTSIDE_ROUTE` reachable would mean overriding the domain author's own stated placement reasoning
+solely to give an existing enum member something to do — backwards from how this repository decides
+where content lives (ADR-073's placement principle: an item or field exists where there is a
+*competing* claim to host it, not wherever the nearest object happens to be).
+
+### The decision
+
+**`OUTSIDE_ROUTE` is removed from `AttainabilityVerdict`.** Route feasibility stays prose-only on
+`AttainableRegion.route_note`, exactly as SDL's own declaration already argues it should. No new field
+is added to `AttainableRegion`, and `route_note` itself is unchanged — it was correct as written; the
+enum was declared against it prematurely, not the other way round.
+
+`AttainabilityVerdict`'s docstring is updated to state explicitly that route feasibility is
+deliberately prose-only, on item 2's own reasoning, and is not one of this object's four checkable
+verdicts — citing this ADR, so a future reader finds the reasoning rather than rediscovering the same
+question.
+
+### Why this is not a retirement under ADR-062's discipline
+
+ADR-062's declared-exceptions and retirement mechanism protects **observed, reported values** from
+moving or disappearing silently — a numeric observation recorded by `observe()` and compared by the
+audit gate across runs. `OUTSIDE_ROUTE` was never produced by any code path (confirmed above:
+`report()`'s branching cannot reach it) and asserted by no test, so `build/observations.json` has
+never contained it under any name, in any run, ever. There is no observation history to preserve,
+move, or retire — removing an enum member nothing ever emitted is a plain code removal, not a
+retirement in ADR-062's sense, and does not need a declared exception.
+
+### What would change this decision
+
+If item 2's `control_space` ever gains a structured, non-prose apparatus-admissibility mechanism —
+something a domain could declare bounds against the way `AttainableRegion` declares
+`descriptor_bounds` today — route feasibility would become checkable *there*. That would not mean
+resurrecting `OUTSIDE_ROUTE` on `AttainableRegion`: it would mean asking, as a fresh question, whether
+a control-space verdict should exist at all, on whatever shape item 2's mechanism turns out to have.
+This ADR's removal is not a bet that route feasibility is permanently unworthy of a verdict — only
+that it does not belong on this object, which is the same claim SDL's own declaration already made.
+
+### Alternatives rejected
+
+*Add a sum-of-fractions field to `AttainableRegion` and wire `OUTSIDE_ROUTE` to it.* Rejected: the
+content is checkable, but not here — see "What was found" above. Available again if a future domain's
+route infeasibility turns out to be a genuine composition-space fact rather than an apparatus one; SDL's
+is not.
+
+*Leave `OUTSIDE_ROUTE` declared, unreachable, documented as aspirational.* Rejected: an enum member
+with no code path and a domain-level argument against ever building one is not aspirational, it is
+decorative, and CLAUDE.md's gap discipline prefers a clean refusal (here, removal) to a declaration
+nothing can act on.
+
+---
+
 ## Open questions
 
 Not decisions — hypotheses the code should settle. Full statements in
