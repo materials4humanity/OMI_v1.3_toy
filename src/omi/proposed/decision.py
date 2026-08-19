@@ -241,6 +241,14 @@ class AttainabilityVerdict(Enum):
     gives: the composition inverse's whole claim to being a *third* inverse problem is that
     its infeasibility certificate has no analogue in the other two, and a certificate that
     cannot say which constraint bound is not a certificate.
+
+    **Route feasibility is deliberately not one of these four.** Whether a descriptor point
+    is reachable by the declared preparation route is apparatus/control content, not
+    composition-space feasibility content — item 2's `control_space` is where it belongs, on
+    the domain's own declared reasoning (`AttainableRegion.route_note`), not this object's.
+    An `OUTSIDE_ROUTE` member was declared here and removed once found unreachable from
+    `AttainableRegion.report()`'s branching (ADR-080): the fix was removal, not a missing
+    branch, because the placement itself was wrong, not merely unimplemented.
     """
 
     ATTAINABLE = "attainable"
@@ -251,8 +259,6 @@ class AttainabilityVerdict(Enum):
     normalisation — the descriptors are individually plausible and jointly impossible."""
     EXCLUDED_PAIR = "excluded_pair"
     """A declared pairwise exclusion is violated."""
-    OUTSIDE_ROUTE = "outside_route"
-    """Attainable in principle and not by the declared preparation route."""
 
 
 @dataclass(frozen=True)
