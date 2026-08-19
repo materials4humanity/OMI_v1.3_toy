@@ -726,7 +726,12 @@ class ConstitutiveForm:
         if self.refines == self.name:
             raise ValueError(f"form {self.name!r} cannot refine itself")
 
-    def report(self, values: Mapping[str, float]) -> ExtrapolationReport:
+    def report(
+        self,
+        values: Mapping[str, float],
+        *,
+        evaluated_at: Mapping[str, float] | None = None,
+    ) -> ExtrapolationReport:
         """Where the current evaluation sits relative to this form's validated
         range (Spec §2.2's reporting obligation; ADR-043).
 
@@ -735,8 +740,16 @@ class ConstitutiveForm:
         design must probe, and `docs/V1.4-EDITS.md` E-28 is the standing evidence
         that a constraint blocking the optimiser rather than informing it
         composes into a new failure.
+
+        *evaluated_at* is a straight pass-through to :meth:`ValidityRange.report`
+        (ADR-078 Decision 1), so a composition-dependent form is reached through the
+        same front door as every other form rather than by a caller reaching past
+        this method into :attr:`validity` directly. `None` — the default, and every
+        existing call site's value — behaves exactly as before this parameter
+        existed: a form with no :class:`CompositionDependentEdge` among its declared
+        bounds never looks at it.
         """
-        return self.validity.report(self.name, values)
+        return self.validity.report(self.name, values, evaluated_at=evaluated_at)
 
 
 @runtime_checkable

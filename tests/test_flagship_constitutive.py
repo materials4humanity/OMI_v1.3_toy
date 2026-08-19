@@ -6,6 +6,8 @@ live on a real chain (ADR-044, docs/DECISIONS.md; `docs/V1.4-EDITS.md` E-32, E-2
 
 from __future__ import annotations
 
+from typing import Mapping
+
 import numpy as np
 import pytest
 
@@ -14,7 +16,7 @@ from omi.interface import InstantiationDeclaration, classify_invariant, diff
 from omi.proposed import CertificateRoleRefused, FormKind, InvariantSubItem, ValidityAction
 from omi.proposed import assert_certificate_eligible
 from omi.proposed.constitutive import ConstitutivelyConstrained, ValiditySpace
-from omi.state import Slot, State
+from omi.state import FloatArray, Slot, State
 
 from omi_domains.flagship.build import build_chain, build_incoming_ensemble
 from omi_domains.flagship.interface import FLAGSHIP_DECLARATION
@@ -389,3 +391,143 @@ def test_the_report_catches_koistinen_marburger_applied_at_the_soak_temperature(
     )
     assert not transfer_report.outside_envelope
     assert transfer_report.action is ValidityAction.WITHIN_ENVELOPE
+
+
+# --- composition-dependent Ms: the crossing oracle (ADR-078 Decision 2, Gate item 4) --
+
+
+def _andrews_wt_percent(unconstrained: FloatArray) -> Mapping[str, float]:
+    """Simplex fractions -> Andrews' weight-percent convention, via the declared
+    conversion (`flagship_composition.composition
+    .ANDREWS_WT_PERCENT_PER_SIMPLEX_FRACTION`). `unconstrained` is the pre-simplex
+    coordinate vector for `ANDREWS_DESCRIPTOR_MAP` -- not the fraction itself -- so a
+    caller wanting an exact target fraction `p` passes `np.log(p)`: softmax is
+    shift-invariant and `softmax(log(p)) == p` for any `p` summing to one.
+    """
+    from omi_domains.flagship_composition.composition import (
+        ANDREWS_DESCRIPTOR_MAP,
+        ANDREWS_WT_PERCENT_PER_SIMPLEX_FRACTION,
+    )
+
+    fractions = ANDREWS_DESCRIPTOR_MAP.named_descriptors_of(unconstrained)
+    return {
+        name: value * ANDREWS_WT_PERCENT_PER_SIMPLEX_FRACTION for name, value in fractions.items()
+    }
+
+
+def test_andrews_ms_crosses_a_held_constant_query_temperature_by_composition_alone(
+    observe: ObservationRecorder,
+) -> None:
+    """**The crossing oracle** (ADR-078 Gate item 4): a constructed crossing point where
+    composition alone moves `Ms` across a held-constant query temperature.
+
+    Two compositions, both inside the declared toy attainable range
+    (`flagship_composition.composition.ANDREWS_CARBON_RANGE`/`ANDREWS_MANGANESE_RANGE`,
+    0.1-2.0 wt% each), differing only in manganese -- carbon is held fixed, so the
+    crossing is attributable to composition alone, not to a second thing moving with it:
+
+    - **A**: 0.1 wt% carbon, 0.1 wt% manganese -- `Ms = 539 - 423*0.1 - 30.4*0.1 = 493.66`
+    - **B**: 0.1 wt% carbon, 0.4 wt% manganese -- `Ms = 539 - 423*0.1 - 30.4*0.4 = 484.54`
+
+    Known by construction from Andrews' own formula, recomputed independently below
+    rather than trusted from `_andrews_ms`'s own implementation, so this is a genuine
+    recovery check and not a test of the function against itself. A held-constant query
+    of `487` sits inside A's window (`[480, 493.66]`) and outside B's (`[480, 484.54]`).
+    """
+    from omi_domains.flagship_constitutive.forms import (
+        KM_COMPETING_PRODUCT_ONSET,
+        KOISTINEN_MARBURGER_COMPOSITION_DEPENDENT,
+    )
+
+    query_temperature = 487.0
+    composition_a = _andrews_wt_percent(np.log(np.array([0.001, 0.001, 0.998])))
+    composition_b = _andrews_wt_percent(np.log(np.array([0.001, 0.004, 0.995])))
+    expected_ms_a = 539.0 - 423.0 * composition_a["carbon"] - 30.4 * composition_a["manganese"]
+    expected_ms_b = 539.0 - 423.0 * composition_b["carbon"] - 30.4 * composition_b["manganese"]
+    assert expected_ms_a == pytest.approx(493.66, abs=1e-6)
+    assert expected_ms_b == pytest.approx(484.54, abs=1e-6)
+    assert expected_ms_a > query_temperature > expected_ms_b, (
+        "the constructed crossing itself: query_temperature must sit strictly between "
+        "the two Ms values for this to be a crossing rather than two same-side points"
+    )
+
+    report_a = KOISTINEN_MARBURGER_COMPOSITION_DEPENDENT.report(
+        {"temperature": query_temperature}, evaluated_at=composition_a
+    )
+    report_b = KOISTINEN_MARBURGER_COMPOSITION_DEPENDENT.report(
+        {"temperature": query_temperature}, evaluated_at=composition_b
+    )
+
+    observe(
+        "andrews_ms_crossing",
+        {
+            "composition_a_wt_pct": composition_a,
+            "composition_b_wt_pct": composition_b,
+            "query_temperature": query_temperature,
+            "resolved_ms_a": report_a.binding_bound.high if report_a.binding_bound else None,
+            "resolved_ms_b": report_b.binding_bound.high if report_b.binding_bound else None,
+            "factor_a": report_a.worst_factor,
+            "factor_b": report_b.worst_factor,
+            "action_a": report_a.action.value,
+            "action_b": report_b.action.value,
+        },
+        "factor crosses 1.0 between A and B, purely from manganese content",
+    )
+
+    # The resolved bound's high edge IS the composition-dependent Ms, recovered exactly
+    # -- confirming ValidityRange.report()'s resolution (ADR-078 Decision 1) against the
+    # same independently-recomputed values, not against the implementation under test.
+    assert report_a.binding_bound is not None
+    assert report_b.binding_bound is not None
+    assert report_a.binding_bound.high == pytest.approx(expected_ms_a, abs=1e-6)
+    assert report_b.binding_bound.high == pytest.approx(expected_ms_b, abs=1e-6)
+    # The low edge is unchanged from KOISTINEN_MARBURGER -- only the high edge moved.
+    assert report_a.binding_bound.low == KM_COMPETING_PRODUCT_ONSET
+    assert report_b.binding_bound.low == KM_COMPETING_PRODUCT_ONSET
+
+    # A: comfortably inside the window.
+    assert not report_a.outside_envelope
+    assert report_a.action is ValidityAction.WITHIN_ENVELOPE
+    # B: clearly outside, driven by the composition-dependent edge -- a control-space
+    # violation, since "temperature" is declared ValiditySpace.CONTROL here exactly as
+    # in KOISTINEN_MARBURGER, so CONTROL_INVERSE is the action the existing logic gives.
+    assert report_b.outside_envelope
+    assert report_b.action is ValidityAction.CONTROL_INVERSE
+    assert report_b.binding_space is ValiditySpace.CONTROL
+    # The crossing itself, in the vocabulary the report exists to produce.
+    assert report_a.worst_factor <= 1.0 < report_b.worst_factor
+
+
+def test_composition_dependent_ms_evaluate_and_report_agree(
+    observe: ObservationRecorder,
+) -> None:
+    """`ConstitutiveForm.evaluate` and `.report` are independent call paths
+    (`ConstitutiveForm.report` does not invoke `.evaluate`), so nothing structural
+    stops them disagreeing about what `Ms` is for a composition-dependent form. This
+    is what keeps `koistinen_marburger_composition_dependent` honest: both read `Ms`
+    from the same `_andrews_ms` helper rather than one holding a stale fixed value.
+    """
+    from omi_domains.flagship_constitutive.forms import (
+        KOISTINEN_MARBURGER_COMPOSITION_DEPENDENT,
+    )
+
+    composition = _andrews_wt_percent(np.log(np.array([0.001, 0.004, 0.995])))  # composition B
+    expected_ms = 539.0 - 423.0 * composition["carbon"] - 30.4 * composition["manganese"]
+
+    # Just above the composition's own Ms: evaluate() must clamp to zero (no athermal
+    # transformation), the same clamping rule KOISTINEN_MARBURGER's own evaluate() uses.
+    values = {**composition, "temperature": expected_ms + 1.0}
+    fraction_above_ms = float(
+        KOISTINEN_MARBURGER_COMPOSITION_DEPENDENT.evaluate(values)[0]
+    )
+    report_above_ms = KOISTINEN_MARBURGER_COMPOSITION_DEPENDENT.report(
+        {"temperature": values["temperature"]}, evaluated_at=composition
+    )
+
+    observe(
+        "evaluate_report_agreement_above_ms",
+        {"fraction": fraction_above_ms, "outside_envelope": report_above_ms.outside_envelope},
+        "fraction == 0.0 and outside_envelope is True -- both read the same Ms",
+    )
+    assert fraction_above_ms == pytest.approx(0.0)
+    assert report_above_ms.outside_envelope
