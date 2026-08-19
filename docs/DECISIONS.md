@@ -7319,6 +7319,89 @@ If Andrews' formula, applied to `flagship_composition`'s actual descriptor range
 crossing inside the domain's declared control window, the worked oracle in gate item 4 has nothing to
 demonstrate and a different composition-dependent form would need to carry it instead.
 
+### Amendment (after the Decision 2 implementation attempt) — the worked case's own descriptor basis cannot carry it, and the repair is authorised here
+
+**This amendment exists because Decision 2's own worked case was found unbuildable as stated, on the
+first implementation attempt, and CLAUDE.md's gap discipline requires recording that before deciding
+how the code copes with it.** The finding was reported before any code was written for the sibling
+form Decision 2 describes, per this repository's standing practice of stopping and reporting rather
+than silently resolving an ambiguity the ADR did not anticipate.
+
+**The finding, stated plainly.** Decision 2 assumed `flagship_composition`'s declared descriptor basis
+could carry Andrews' formula, either directly — a declared descriptor corresponding to a named Andrews
+term — or through Decision 2's own zero-contribution clause for whichever terms it does not cover. It
+cannot, honestly, and the gap is categorical rather than partial. `flagship_composition`'s two
+descriptors — `hardenability_index`, `solute_drag_index` — are declared over four **anonymous**
+underlying fractions (`base`, `solute_a`, `solute_b`, `residual`), and the module's own docstring
+states why: naming specific elements "would imply a calibration this toy does not have" (ADR-052).
+Neither descriptor, nor any underlying species, corresponds to carbon, manganese, nickel, chromium, or
+molybdenum — not approximately, not by convention, not at all. Routing all five Andrews terms through
+Decision 2's zero-contribution clause, as its literal wording permits, does not produce a
+composition-dependent edge with reduced fidelity: it produces `Ms(composition) ≡ 539.0`, a constant
+function wearing a `CompositionDependentEdge`'s type. That satisfies Decision 1's mechanism but not
+Decision 2's substance, and it makes Gate item 4's crossing oracle unsatisfiable by construction — the
+exact failure mode this ADR's own "What would change this decision" section, above, names in advance.
+
+**The resolution.**
+
+> `flagship_composition`'s descriptor basis is extended with a small, **separate**, honestly-elemental
+> addition — real underlying coordinates named `carbon` and `manganese`, the two largest-coefficient,
+> most load-bearing terms in Andrews' regression — rather than a repurposing of the existing four
+> anonymous species or a new descriptor computed over them.
+
+A descriptor computed from `base`/`solute_a`/`solute_b`/`residual`, however weighted, cannot honestly
+claim correspondence to a named element, because the underlying coordinates carry no elemental
+identity to correspond *from*; inventing that correspondence after the fact would be exactly the
+"ambiguity in which descriptors map to which Andrews term" the implementing prompt named as its own
+stop condition. Nickel, chromium and molybdenum remain declared zero-contribution — now legitimately:
+the zero-contribution clause was written for the case where *some* terms are covered and others are
+not, and this repair is what makes that the actual shape of the gap rather than the whole of it.
+**This is a smaller-than-full-coverage repair and is recorded as one.**
+`KOISTINEN_MARBURGER_COMPOSITION_DEPENDENT`'s `Ms` will vary with carbon and manganese content and not
+at all with nickel, chromium or molybdenum — a real, partial composition-dependence, not the complete
+regression, and not disguised as one.
+
+**A constraint on how the addition is built, found while designing this repair and recorded so it is
+not silently mishandled downstream.** `DescriptorMap`'s simplex (ADR-076 decision 1) is architecture
+for exactly one claim: that a set of underlying coordinates sums to one because together they are the
+*whole* composition. Two coordinates alone — carbon and manganese, with nothing else — do not have
+that property; real steels are not entirely carbon and manganese, and a simplex over just the two
+would assert `C + Mn = 1`, which is false for every real composition Andrews' formula was fitted to.
+The new underlying space must therefore carry a third, explicit **balance** coordinate (`carbon`,
+`manganese`, `balance`), so the simplex's closure claim is honest — the same closure discipline
+ADR-050/ADR-076 already applies to `c̄` itself, extended to this smaller sibling object rather than
+invented fresh. The unit correspondence between a simplex fraction and Andrews' wt% convention is not
+settled by this amendment and is left to the implementing commit to declare explicitly, with its own
+stated provenance, on the same discipline every toy parameter in `flagship_constitutive.forms` already
+carries.
+
+**Why this repair is authorised here, in this amendment, rather than deferred to its own stage —
+distinguished explicitly from ADR-053/C3's precedent.** C3's disposition declined to fold a
+domain-design decision into an implementation stage because it would have meant *inventing a new
+attainable-region boundary with real physics content from nothing* — a decision with no prior
+commitment behind it, whose cost (a passing capability read as evidence for a claim not yet earned)
+was the reason to stop. This is narrower on every axis that mattered there: it extends an **existing**
+toy descriptor basis this repository already declared and already exercises, with **one** additional
+real-elemental descriptor pair, in service of a worked case (Decision 2) this repository **already
+committed to** at this ADR's original acceptance. There is no new claim being smuggled in under cover
+of an implementation detail — the claim ("`Ms` depends on composition") was made and accepted before
+this amendment existed; the amendment only repairs what the composition side of that claim needs to be
+honest. Authorising it here keeps Decision 2 a single decided thing rather than splitting it across
+two authorisations for no reason connected to the object's actual risk.
+
+**Not a framework finding.** This is a correction of this repository's own prior ADR content against
+something the implementation attempt discovered, in the sense ADR-070 and ADR-075 already record such
+corrections — not a Core or Spec defect, so no `docs/V1.4-EDITS.md` entry is filed for it.
+`flagship_composition`'s deliberate anonymity is itself sound domain design (ADR-052); it is Decision
+2's worked-case choice that outran what that design could carry, and this amendment repairs the choice
+rather than the design it ran into.
+
+**What this changes for Gate item 4.** The crossing oracle must vary carbon and/or manganese content
+specifically to move `Ms`; varying the existing `hardenability_index`/`solute_drag_index` alone, or
+the anonymous species underneath them, will not move it at all, since neither is wired to the new
+elemental pair. This is now the binding constraint on how that oracle is constructed, and it should be
+read as amending Gate item 4's own instruction rather than as a fresh requirement.
+
 ---
 
 ## Open questions
