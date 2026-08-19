@@ -7420,6 +7420,214 @@ read as amending Gate item 4's own instruction rather than as a fresh requiremen
 
 ---
 
+## ADR-079 — `AttainabilityCertificate`'s shape: verdict, binding constraint, nearest-attainable-composition, and what it would take to exercise it
+
+**Status.** Accepted — **design only. No search, no acquisition loop, no code.**
+**Track.** Composition milestone, stage C3 — the shape half only. The search half remains
+unauthorised, per the standing disposition this ADR restates rather than reopens.
+**Reads.** ADR-053 (the composition inverse's original design, and the two infeasibility grounds this
+certificate composes), ADR-054 and ADR-078 (the second ground — composition-dependent validity — and
+its verdict shape), ADR-076 (C1 — `CompositionMetric`, measured here against what a projection
+actually needs), ADR-077 (the vehicle decision, whose own "Consequences" section already names the
+non-convex-projection gap this ADR inherits rather than closes), `docs/COMPOSITION-BRIEF.md` §4 (the
+C3 disposition this ADR does not reopen), `omi.inverse.nearest_reachable_state` (the structure-inverse
+analogue this ADR's shape is modelled against and measured apart from).
+**Pins.** None — no code changes in this ADR.
+
+### Grounding, before the design — two corrections to the authorising message's own citations
+
+The authorising message attributes the C3 disposition ("Disposition settled in advance, at the C1
+authorisation...") and the phrase "the nearest-attainable-composition that C1's metric now makes
+computable" to **ADR-045**. Neither is there. ADR-045 (`docs/DECISIONS.md`) is "The extrapolation
+experiment: does declared physics buy reach?" — the M11.4 hold-out design, an unrelated milestone with
+no composition content at all; `git grep` for both phrases across `docs/` returns exactly one source
+each, and it is the same source both times: `docs/COMPOSITION-BRIEF.md` §4's Stage C3 section, whose
+disposition block and "what C3 may still do" paragraph are quoted below unchanged. The same claim is
+independently restated in **ADR-077**'s own "Consequences" section, correctly attributed there. Both
+statements in the authorising message are accurate in substance; only the ADR number is wrong, and
+this is recorded rather than silently corrected, per this session's standing practice of grounding
+from the repository rather than from an account of it — the fifth or sixth instance of the same
+pattern this composition milestone has produced, and worth naming as a pattern rather than treating
+each instance as isolated.
+
+### 1. `AttainabilityCertificate`'s fields, grounded against what exists
+
+**What already exists covers the verdict half in full.** `AttainableRegion.report()`
+(`src/omi/proposed/decision.py:354`) already returns an `AttainabilityReport`
+(`verdict: AttainabilityVerdict`, `binding_constraint: str`, `factors: Mapping[str, float]`) over five
+verdict members (`ATTAINABLE` plus four failure modes). Nothing here needs designing again; a
+certificate wrapping it composes this object rather than re-deriving it (ADR-042's
+composition-over-modification principle, applied at this level).
+
+**What is missing is Core §5's other output, and its shape is not a free choice — it is set by what
+the structure inverse's own analogue actually does.** `omi.inverse.nearest_reachable_state`
+(`src/omi/inverse.py:71`) is an **exact, closed-form Euclidean projection onto a single linear
+halfspace** — `{s : w·s ≤ bound}` — and it is exact *because* `ReachabilityCertificate` restricts `Φ`
+to a linear functional (ADR-031): `projected = target.values - (excess / (w·w)) * w`. That closed form
+does not generalise to `AttainableRegion`'s constraint shape, which is not one halfspace: it is a box
+(`descriptor_bounds`, `underlying_bounds`) intersected with a simplex (`sums_to_one`) intersected with
+the **complement** of an excluded-pair region (`excluded_pairs`, a product-budget inequality) — the
+last of which is generically non-convex. `nearest_reachable_state`'s exactness is a property of the
+structure inverse's specific restriction to a linear certificate, not a property of "nearest" in
+general; the composition analogue cannot borrow the formula, only the shape of the question.
+
+**`AttainabilityCertificate`'s fields, therefore:**
+
+```
+AttainabilityCertificate:
+    region_report: AttainabilityReport        # composed, not re-derived (§1 above)
+    nearest_attainable: Mapping[str, float]    # descriptor-space point; equals the query
+                                                # unchanged when already attainable, mirroring
+                                                # nearest_reachable_state's own convention
+    distance: float                            # CompositionMetric.distance(query, nearest_attainable);
+                                                # zero when already attainable
+    regime_report: RegimeReport | None         # the second infeasibility ground; see §3
+```
+
+`nearest_attainable` is declared in **descriptor space**, not underlying (fraction) space, on ADR-052's
+own position that "descriptors are the metric over `c̄`" — `CompositionMetric` (§2 below) is declared
+there, and a certificate reporting a point in a space with no declared metric would be as uninterpretable
+as an unscaled distance (E-33's finding, restated one level up).
+
+### 2. Whether the nearest-attainable-composition is computable now — verified against the code, and the brief's own phrase measured against it
+
+**A distance exists. A projection does not, and the difference is the finding.**
+`CompositionMetric.distance()` (`src/omi/proposed/composition.py:222`) supplies a genuine, declared,
+scale-normalised distance over descriptor space — the minimum ingredient for "nearest" to mean
+anything at all, and it is real: two descriptor tuples now have a defensible distance between them,
+with a stated basis (E-33's requirement). This is what C1 actually delivered.
+
+**What C1 did not deliver, and what `docs/COMPOSITION-BRIEF.md`'s own phrase — "makes computable" —
+overclaims by exactly this gap:** a distance function is not a projection algorithm. Given a query
+point outside `AttainableRegion`, finding the *nearest* point inside it requires either a closed form
+(unavailable — §1 above) or a numerical optimiser (search over the feasible set to minimise
+`CompositionMetric.distance`), and no such optimiser exists anywhere in this repository. The
+optimisation problem itself is not straightforward even in principle: it must respect a box, a
+simplex, and the complement of a non-convex exclusion, while the objective (the descriptor-space
+metric) is declared in a **different space** from the constraints (underlying/fraction space for the
+box, simplex and exclusion; descriptor space for the metric), connected only through `DescriptorMap
+.evaluate()` — a caller-supplied, possibly-nonlinear functional with no declared inverse. Two
+consequences follow directly, both already partly named in ADR-077's own "Consequences" section
+rather than newly discovered here:
+
+- **Non-uniqueness.** A non-convex feasible set can have more than one nearest point at equal
+  distance; ADR-077 already flagged that "nearest" has no unique-projection guarantee without a
+  declared tie-break, and none exists.
+- **Non-invertibility.** Whether `DescriptorMap.evaluate()` is injective on the attainable set is
+  unresolved (ADR-077's own "What would change this decision"); if it is not, a "nearest attainable
+  descriptor point" may correspond to several different attainable compositions, or none reachable by
+  a simple search from a single underlying-space seed.
+
+**Verdict: the distance is computable; the certificate's `nearest_attainable` field is not, without
+further design this ADR does not undertake.** `docs/COMPOSITION-BRIEF.md`'s phrasing should be read as
+"the ingredient the projection needs is now computable," not "the projection is."
+
+### 3. What C2's regime-check machinery contributes — referenced, not built on
+
+**ADR-053's own table already names both grounds as belonging to one certificate**, not two: "the
+descriptors are not jointly attainable by any real alloy, **or** the resulting chemistry leaves the
+declared mechanism set's validity region (ADR-054)." So `AttainabilityCertificate`'s shape must be
+able to carry both — the `regime_report: RegimeReport | None` field in §1's shape above is that
+carrying, and its presence is not a design choice this ADR is free to omit.
+
+**But the two checks are genuinely independent machinery, and the certificate should compose them
+rather than merge them.** They live in different modules (`omi.proposed.decision` vs
+`omi.proposed.constitutive`), take different inputs (a region plus underlying coordinates, versus
+descriptors plus a declared interval), and answer different questions — whether a chemistry exists and
+is reachable by the declared route, versus whether a chemistry that does exist still supports the
+mechanism set a form's validity range was fitted for. Folding `check_composition_regime`'s arithmetic
+into `AttainableRegion.report()` (or the reverse) would duplicate Decision 3's own reasoning for
+keeping the regime check a separate, composable verdict (ADR-078) — `AttainabilityCertificate` is the
+right level for that composition, on ADR-073's placement principle applied one level up: a wrapper
+that composes two independently-declared checks, not a merger of their logic.
+
+**Practically, today, only the first ground is exercisable.** SDL declares no evolution operator that
+calls `report()` (ADR-078's own scope note), so `regime_report` on any certificate built against SDL
+today would have nothing live to populate it from — formally optional in the shape, actually absent
+in practice, until the follow-on stage ADR-078 already named wires C2's check to a real operator.
+
+### 4. What it would take to exercise the shape — the report ADR-045's disposition, restated here, asks for
+
+**SDL's declared region classifies; it does not make a search non-vacuous, and the reason is not
+cost.** Restated from `docs/COMPOSITION-BRIEF.md` rather than re-argued: a bounded box over three toy
+descriptors, a simplex and one excluded pair is enough for `AttainableRegion.report()` to answer
+"is this point in or out" — which is what a certificate's verdict half needs — but a *search* built
+against it would in substance be a lookup over the region's own declared boundary, and it would pass.
+A passing search reads as evidence for the third-inverse-problem claim ADR-053 makes, which is the
+discovery claim the SDL framing rests on; a pass earned this cheaply would be worth less than nothing,
+because it would be mistaken for support the toy region cannot actually supply.
+
+**What a real domain extension would need before a search authorisation is non-vacuous, each item its
+own physics content and its own justification, on the same discipline ADR-077 already used for its
+own cost accounting:**
+
+1. **Calibrated, literature-grounded descriptors**, not toy weights — the same descriptor-honesty
+   finding this composition milestone already produced once, for Andrews' formula (the ADR-078
+   amendment), generalised to the attainable-region descriptors themselves.
+2. **A genuinely rich attainability boundary** — more than one excluded region, or a boundary
+   expressed as a curve rather than a single product-budget inequality, each tied to a declared
+   physical mechanism (ADR-077's own recommendation for Part B, restated as a precondition here
+   rather than a suggestion).
+3. **A declared, justified tie-break for the non-convex-projection non-uniqueness** named in §2 — a
+   real decision about which nearest point a certificate reports when more than one is equidistant,
+   not an implementation detail to be improvised at build time.
+4. **Resolution of whether `DescriptorMap.evaluate()` is injective on the attainable set** (§2;
+   ADR-077's "What would change this decision") — otherwise "nearest attainable descriptor point"
+   does not name a well-posed target for a search to converge on.
+5. **C2's regime machinery actually wired to a real, composition-dependent operator**, not only
+   declared data, so the certificate's second ground (§3) is exercised against live physics rather
+   than left formally optional.
+
+**One further gap, found while grounding §1 against the actual code rather than assumed.**
+`AttainabilityVerdict.OUTSIDE_ROUTE` is a declared verdict member
+(`src/omi/proposed/decision.py:254`) that `AttainableRegion.report()`'s own logic
+(`decision.py:354`–`396`) **never returns** — its `if`/`elif`/`else` chain produces only
+`ATTAINABLE`, `OUTSIDE_DESCRIPTOR_BOUNDS`, `EXCLUDED_PAIR` or `UNDERLYING_INFEASIBLE`. Route
+feasibility is declared prose-only (`route_note`'s own docstring: "the one part of this declaration
+that is not machine-checkable"), so any certificate built on today's `AttainableRegion` inherits a
+verdict category with no mechanical path to it. A domain extension wanting route feasibility to be
+genuinely checkable — rather than merely named as a legal outcome — would need to close this gap too,
+and it is a sixth item on the list above, found rather than anticipated.
+
+### 5. Reaffirming the standing disposition, explicitly rather than by omission
+
+**This ADR designs `AttainabilityCertificate`'s shape and reports what exercising it would require. It
+does not design, and this repository does not build, a search, an acquisition loop, or anything that
+finds a composition.** That remains `docs/COMPOSITION-BRIEF.md`'s disposition, "settled in advance, at
+the C1 authorisation," and ADR-053's own restraint one level up — declining to design the certificate
+for want of a declared region, now declining to build the search for want of a region rich enough to
+search over honestly. Building the search is authorised only once a domain extension answering §4's
+list exists, on its own ADR, per ADR-077's own precedent for scoping new physics content out of an
+implementation stage. Nothing in this ADR should be read as narrowing that gap; it names precisely how
+wide it still is.
+
+### Alternatives rejected
+
+*Building the search now, against SDL's existing region.* Rejected — this is exactly the standing
+disposition this ADR restates rather than reopens (§5); the authorising message itself excludes it,
+and the reasoning is repeated here in full so a reader of this ADR alone has it, not only a reader who
+also has the authorising message.
+
+*Folding `check_composition_regime` into `AttainableRegion.report()`, or the reverse, so
+`AttainabilityCertificate` needs only one input report.* Rejected (§3): would duplicate ADR-078
+Decision 3's own reasoning for keeping the regime check separate and composable, and would collapse
+two genuinely different questions — chemistry existence/reachability versus mechanism-set validity —
+into one function's arithmetic.
+
+*Declaring `nearest_attainable` in underlying (fraction) space instead of descriptor space.* Rejected:
+`CompositionMetric` — the only declared distance this repository has for composition — is defined over
+descriptors (ADR-052), so a certificate reporting an underlying-space point would need a second,
+undeclared metric to say how far it is from anything, which is exactly the unscaled-distance failure
+E-33 already found once.
+
+### What would change this decision
+
+A domain extension satisfying §4's list, authorised on its own ADR per ADR-077's precedent. At that
+point this ADR's shape becomes buildable as stated, and §4's report becomes the task list for the
+implementation stage rather than a standing blocker.
+
+---
+
 ## Open questions
 
 Not decisions — hypotheses the code should settle. Full statements in
