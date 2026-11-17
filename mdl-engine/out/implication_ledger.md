@@ -49,6 +49,32 @@
 - **Missing inputs:** fitted n, Rs, Rsh (J-V file or intensity-dependent Voc) - low-light result is a prior envelope.
 - **Human ratification:** _pending_
 
+### tables_v62_small - Tables v62 notable exception: CZTSSe 14.9% (IoP/CAS, 0.2694 cm2 da, NPVM 4/23)
+*Provenance tier: T1*
+*Note: Matches the Mg-doping Cu-Zn ordering result (arXiv 2404.05974, Nature Energy Nov 2025). Eg assumed 1.10 eV.*
+- **Normalized:** 14.9% at Eg 1.1 eV = 50.2% of SQ (blackbody-5772K (approx; %SQ reads high)); Voc/SQ 0.648, Jsc/SQ 0.926, FF/SQ 0.835; Voc deficit 301.3 mV vs SQ.
+- **Gain vs ibm_2014:** +17.9% relative; shares Voc +0.48 / Jsc +0.29 / FF +0.23 -> diode-quality-led (Voc/FF).
+- **Low light (class-prior envelope (n, Rs borrowed; Rsh solved from FF)), median (min-max):** retention 0.91 (0.84-0.96) @400, 0.81 (0.65-0.90) @200, 0.65 (0.38-0.84) @100 W/m2; indoor eta 0.44 (0.19-8.16)% @1000 lux.
+- **Compliance:** buffer Cd 77.81 wt% (7780.9x limit). Gates -> VIPV: FAIL, BIPV: moot, interior: FAIL.
+- **Transferability to P0:** HIGH (0.8): mechanism 'doping/ordering': transfers high; dose/anneal re-optimization expected (base 0.8).
+- **Application signs (deterministic part):** VIPV: BLOCKED by substance gate (value = 0 until addressed); BIPV: open (gate moot); multipliers above; interior: BLOCKED by substance gate (value = 0 until addressed)
+- **Application-adjacent data flags:** not yet assessed.
+- **Missing inputs:** fitted n, Rs, Rsh (J-V file or intensity-dependent Voc) - low-light result is a prior envelope.
+- **Human ratification:** _pending_
+
+### tables_v64_small - Tables v64 notable exception: CZTSSe 15.1% (IoP/CAS, 0.2697 cm2 da, NPVM 4/24)
+*Provenance tier: T1*
+*Note: Mechanism class is a guess; may correspond to the Na-activated selenization paper (Joule 2026) - not confirmed. Eg assumed 1.10 eV; Voc fell 25 mV vs the 14.9% cell, so the gap may be narrower.*
+- **Normalized:** 15.1% at Eg 1.1 eV = 50.9% of SQ (blackbody-5772K (approx; %SQ reads high)); Voc/SQ 0.619, Jsc/SQ 0.964, FF/SQ 0.852; Voc deficit 326.8 mV vs SQ.
+- **Gain vs tables_v62_small:** +1.4% relative; shares Voc -3.47 / Jsc +2.96 / FF +1.51 -> current-led (Jsc/optics).
+- **Low light (class-prior envelope (n, Rs borrowed; Rsh solved from FF)), median (min-max):** retention 0.91 (0.88-0.95) @400, 0.82 (0.74-0.88) @200, 0.70 (0.55-0.79) @100 W/m2; indoor eta 0.67 (0.28-1.02)% @1000 lux.
+- **Compliance:** buffer Cd 77.81 wt% (7780.9x limit). Gates -> VIPV: FAIL, BIPV: moot, interior: FAIL.
+- **Transferability to P0:** HIGH (0.8): mechanism 'bulk growth-kinetics': transfers high; thermal profile needs re-optimization on steel (base 0.8).
+- **Application signs (deterministic part):** VIPV: BLOCKED by substance gate (value = 0 until addressed); BIPV: open (gate moot); multipliers above; interior: BLOCKED by substance gate (value = 0 until addressed)
+- **Application-adjacent data flags:** not yet assessed.
+- **Missing inputs:** fitted n, Rs, Rsh (J-V file or intensity-dependent Voc) - low-light result is a prior envelope.
+- **Human ratification:** _pending_
+
 ### cui_2026 - Cui et al. Li2SnS3 interphase, 15.45% lab / 15.04% certified, Voc 602 mV at 1.10 eV
 *Provenance tier: T4 for J-V values (press); T2/T3 for the efficiency*
 *Note: Lab-champion J-V values from secondary press coverage; replace with the paper's certified values. S/Se ratio assumed.*
@@ -64,7 +90,7 @@
 
 ### fitted_15p4_ref30 - 15.4% CZTSSe device with published one-diode fit (n 1.42, Rs 0.38, Gsh 1.03 mS/cm2)
 *Provenance tier: T3*
-*Note: Row from the fit table in PMC12417543 (its ref. 30); device identity and Eg not yet traced. Rsh fitted at 1 sun can understate the dark/low-light Rsh.*
+*Note: Row from the fit table in PMC12417543 (its ref. 30). Efficiency and lineage are consistent with the Mg-doping lab champion (15.4%, certified 14.9%) but the identity is not confirmed. Rsh fitted at 1 sun can understate the dark/low-light Rsh.*
 - **Normalized:** 15.4% at Eg 1.1 eV = 51.9% of SQ (blackbody-5772K (approx; %SQ reads high)); Voc/SQ 0.651, Jsc/SQ 0.938, FF/SQ 0.848; Voc deficit 298.7 mV vs SQ.
 - **Gain vs ibm_2014:** +21.8% relative; shares Voc +0.42 / Jsc +0.31 / FF +0.27 -> diode-quality-led (Voc/FF).
 - **Low light (fitted (n, Rs, Rsh supplied)):** retention 0.93 @400, 0.85 @200, 0.76 @100 W/m2; indoor 1.08% @1000 lux, 0.22% @200 lux.

@@ -86,20 +86,16 @@
   "certification_dated_mixed_area": {
     "increments": [
       [
-        2022.9,
+        2022.6,
         0.4
       ],
       [
-        2023.15,
+        2023.3,
         1.9
       ],
       [
-        2026.15,
-        0.14
-      ],
-      [
-        2026.4,
-        0.06
+        2024.3,
+        0.2
       ],
       [
         2026.45,
@@ -108,50 +104,50 @@
     ],
     "drift_2023_on": {
       "n_records": 3,
-      "ols_slope_pts_per_yr": 0.66,
-      "endpoint_rate_pts_per_yr": 0.87
+      "ols_slope_pts_per_yr": 0.12,
+      "endpoint_rate_pts_per_yr": 0.13
     },
     "drift_since_plateau_end": {
-      "n_records": 6,
-      "ols_slope_pts_per_yr": 0.21,
+      "n_records": 5,
+      "ols_slope_pts_per_yr": 0.22,
       "endpoint_rate_pts_per_yr": 0.22
     },
-    "n_records_2023_on": 5,
+    "n_records_2023_on": 4,
     "changepoint_2014_2026": {
       "posterior": {
-        "2015": 0.0337,
-        "2016": 0.0296,
-        "2017": 0.0306,
-        "2018": 0.0358,
-        "2019": 0.0466,
-        "2020": 0.0671,
-        "2021": 0.1075,
-        "2022": 0.1941,
-        "2023": 0.0883,
-        "2024": 0.0529,
-        "2025": 0.0937,
-        "2026": 0.2202
+        "2015": 0.0687,
+        "2016": 0.056,
+        "2017": 0.0535,
+        "2018": 0.0574,
+        "2019": 0.0679,
+        "2020": 0.088,
+        "2021": 0.1253,
+        "2022": 0.1979,
+        "2023": 0.0964,
+        "2024": 0.0642,
+        "2025": 0.056,
+        "2026": 0.0687
       },
-      "map_year": 2026,
-      "map_prob": 0.22,
-      "log10_bayes_factor_vs_no_change": 0.32,
-      "rate_before": 0.286,
-      "rate_after": 1.333
+      "map_year": 2022,
+      "map_prob": 0.198,
+      "log10_bayes_factor_vs_no_change": 0.06,
+      "rate_before": 0.2,
+      "rate_after": 0.714
     },
     "gate_fired_W2": [
       [
         2016.0,
-        2022.9
+        2022.6
       ],
       [
-        2025.15,
-        2026.15
+        2026.3,
+        2026.45
       ]
     ],
     "gate_fired_W3": [
       [
         2017.0,
-        2022.9
+        2022.6
       ]
     ]
   },

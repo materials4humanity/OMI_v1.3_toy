@@ -79,8 +79,8 @@ def charts(R, events, outdir):
         t = [x[0] for x in f] + [2026.9]; e = [x[1] for x in f] + [f[-1][1]]
         ax.step(t, e, where="post", color=col, lw=2, label=lab)
         ax.plot(t[:-1], e[:-1], "o", color=col, ms=5, mec=SURF, mew=1.5)
-    ax.axvspan(2015.9, 2023.28, color=MUTED, alpha=0.08, lw=0)
-    ax.text(2019.6, 15.05, "draft 2-year gate fired\n2015.9 to 2023.3", ha="center", va="top",
+    ax.axvspan(2015.9, 2022.6, color=MUTED, alpha=0.08, lw=0)
+    ax.text(2019.6, 15.05, "draft 2-year gate fired\nabout 2016 to 2022-23", ha="center", va="top",
             fontsize=9, color=MUTED)
     ax.set_xlim(2009.5, 2027); ax.set_ylim(9, 16)
     ax.set_ylabel("Best certified efficiency (%)", color=MUTED, fontsize=9)

@@ -110,36 +110,35 @@
   {
    "t": 2014.0,
    "eta": 12.6,
-   "label": "IBM"
+   "label": "IBM (tables)"
   },
   {
-   "t": 2022.9,
+   "t": 2022.6,
    "eta": 13.0,
-   "label": "tables v61 (per v62 summary)",
+   "label": "tables v61 small-area (certificate date not checked)",
    "verify": true
   },
   {
-   "t": 2023.15,
+   "t": 2023.3,
    "eta": 14.9,
-   "label": "tables v62: IoP-CAS small-area (area definition differs from papers' total-area)",
-   "verify": true
+   "label": "tables v62 Table 2: IoP/CAS 0.2694 cm2 (da), NPVM 4/23"
   },
   {
-   "t": 2026.15,
-   "eta": 15.04,
-   "label": "Cui et al."
-  },
-  {
-   "t": 2026.4,
+   "t": 2024.3,
    "eta": 15.1,
-   "label": "Jiao et al.",
-   "verify": true
+   "label": "tables v64 Table 2: IoP/CAS 0.2697 cm2 (da), NPVM 4/24"
   },
   {
    "t": 2026.45,
    "eta": 15.3,
-   "label": "claim circulating",
+   "label": "claim circulating (Henan), not in tables",
    "verify": true
   }
+ ],
+ "_notes": [
+  "Certification series uses the tables' designated-area small cells; the papers quote total-area certifications (13.8, 14.2, 15.04), so the two series are not the same population (failure mode F2).",
+  "Cui et al. 15.04% (2026) does not exceed the 15.1% already certified 4/24, so it is not a record on the certification clock.",
+  "The Mg-ordering 14.9% (Nature Energy, 12 Nov 2025; arXiv Apr 2024) matches the NPVM 4/23 tables entry: certified about 2.5 years before journal publication.",
+  "Tables v66 (May 2025) lists a new CAS kesterite entry; press reports of its value are inconsistent (14.1% in one, a garbled figure in others). Not entered."
  ]
 }

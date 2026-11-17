@@ -838,6 +838,440 @@
     }
   },
   {
+    "id": "tables_v62_small",
+    "headline": "Tables v62 notable exception: CZTSSe 14.9% (IoP/CAS, 0.2694 cm2 da, NPVM 4/23)",
+    "provenance_tier": "T1",
+    "notes": "Matches the Mg-doping Cu-Zn ordering result (arXiv 2404.05974, Nature Energy Nov 2025). Eg assumed 1.10 eV.",
+    "missing": [
+      "fitted n, Rs, Rsh (J-V file or intensity-dependent Voc) - low-light result is a prior envelope"
+    ],
+    "normalized": {
+      "eg_ev": 1.1,
+      "eta_pct": 14.9,
+      "sq_eta_pct": 29.66,
+      "pct_sq": 50.2,
+      "logit_sq": 0.01,
+      "voc_over_sq": 0.648,
+      "jsc_over_sq": 0.926,
+      "ff_over_sq": 0.835,
+      "voc_deficit_sq_mv": 301.3,
+      "voc_deficit_eg_mv": 544.6,
+      "spectrum": "blackbody-5772K (approx; %SQ reads high)"
+    },
+    "gain": {
+      "eta_prev_pct": 12.61,
+      "eta_new_pct": 14.87,
+      "rel_gain_pct": 17.9,
+      "share_voc": 0.48,
+      "share_jsc": 0.29,
+      "share_ff": 0.23,
+      "label": "diode-quality-led (Voc/FF)",
+      "versus": "ibm_2014"
+    },
+    "low_light": {
+      "provenance": "class-prior envelope (n, Rs borrowed; Rsh solved from FF)",
+      "n_feasible": 18,
+      "n_range": [
+        1.2,
+        1.7
+      ],
+      "rsh_range_ohm_cm2": [
+        168,
+        89011
+      ],
+      "outdoor_retention": {
+        "1000W/m2": {
+          "min": 1.0,
+          "median": 1.0,
+          "max": 1.0
+        },
+        "400W/m2": {
+          "min": 0.839,
+          "median": 0.907,
+          "max": 0.959
+        },
+        "200W/m2": {
+          "min": 0.645,
+          "median": 0.808,
+          "max": 0.896
+        },
+        "100W/m2": {
+          "min": 0.384,
+          "median": 0.651,
+          "max": 0.839
+        },
+        "50W/m2": {
+          "min": 0.193,
+          "median": 0.428,
+          "max": 0.781
+        }
+      },
+      "indoor_eta_pct": {
+        "1000lux": {
+          "min": 0.19,
+          "median": 0.44,
+          "max": 8.16
+        },
+        "500lux": {
+          "min": 0.09,
+          "median": 0.22,
+          "max": 7.14
+        },
+        "200lux": {
+          "min": 0.04,
+          "median": 0.09,
+          "max": 5.69
+        }
+      }
+    },
+    "compliance": {
+      "layers": [
+        {
+          "layer": "absorber",
+          "formula": "Cu2ZnSn(S0.2Se0.8)4",
+          "restricted": [],
+          "pass": true
+        },
+        {
+          "layer": "buffer",
+          "formula": "CdS",
+          "restricted": [
+            {
+              "element": "Cd",
+              "wt_pct": 77.81,
+              "limit_wt_pct": 0.01,
+              "times_over": 7780.9,
+              "pass": false
+            }
+          ],
+          "pass": false
+        }
+      ],
+      "material_pass": false,
+      "worst_times_over": 7780.9,
+      "gates": {
+        "VIPV": {
+          "gate": "FAIL",
+          "regime": "EU ELV (vehicles)"
+        },
+        "BIPV": {
+          "gate": "moot",
+          "regime": "RoHS, professional fixed-installation PV exclusion"
+        },
+        "interior": {
+          "gate": "FAIL",
+          "regime": "RoHS (consumer product, no shelter)"
+        }
+      }
+    },
+    "transferability": {
+      "score": 0.8,
+      "band": "HIGH",
+      "reasons": [
+        "mechanism 'doping/ordering': transfers high; dose/anneal re-optimization expected (base 0.8)"
+      ],
+      "platform": "P0"
+    },
+    "applications": {
+      "VIPV": {
+        "gate": {
+          "gate": "FAIL",
+          "regime": "EU ELV (vehicles)"
+        },
+        "low_light": {
+          "point": "400W/m2",
+          "min": 0.839,
+          "median": 0.907,
+          "max": 0.959,
+          "unit": "retention"
+        },
+        "thermal": {
+          "t_cell_c": 70.0,
+          "multiplier": {
+            "low": 0.82,
+            "mid": 0.843,
+            "high": 0.865
+          },
+          "provenance": "CIGS-derived class prior; NO measured TC exists for 14-15% kesterite (standing red flag, design 5.3)",
+          "cold_side": "unmodelled: -40..0 C freeze-out behaviour unknown"
+        },
+        "deterministic_sign": "BLOCKED by substance gate (value = 0 until addressed)"
+      },
+      "BIPV": {
+        "gate": {
+          "gate": "moot",
+          "regime": "RoHS, professional fixed-installation PV exclusion"
+        },
+        "low_light": {
+          "point": "200W/m2",
+          "min": 0.645,
+          "median": 0.808,
+          "max": 0.896,
+          "unit": "retention"
+        },
+        "thermal": {
+          "t_cell_c": 60.0,
+          "multiplier": {
+            "low": 0.86,
+            "mid": 0.878,
+            "high": 0.895
+          },
+          "provenance": "CIGS-derived class prior; NO measured TC exists for 14-15% kesterite (standing red flag, design 5.3)",
+          "cold_side": null
+        },
+        "deterministic_sign": "open (gate moot); multipliers above"
+      },
+      "interior": {
+        "gate": {
+          "gate": "FAIL",
+          "regime": "RoHS (consumer product, no shelter)"
+        },
+        "low_light": {
+          "point": "500lux",
+          "min": 0.09,
+          "median": 0.22,
+          "max": 7.14,
+          "unit": "eta_pct"
+        },
+        "thermal": {
+          "t_cell_c": 25.0,
+          "multiplier": {
+            "low": 1.0,
+            "mid": 1.0,
+            "high": 1.0
+          },
+          "provenance": "CIGS-derived class prior; NO measured TC exists for 14-15% kesterite (standing red flag, design 5.3)",
+          "cold_side": null
+        },
+        "deterministic_sign": "BLOCKED by substance gate (value = 0 until addressed)"
+      }
+    },
+    "blind_spots": null,
+    "human_ratification": {
+      "net_sign": null,
+      "threat_opportunity_class": null,
+      "actions": [],
+      "signed_by": null
+    }
+  },
+  {
+    "id": "tables_v64_small",
+    "headline": "Tables v64 notable exception: CZTSSe 15.1% (IoP/CAS, 0.2697 cm2 da, NPVM 4/24)",
+    "provenance_tier": "T1",
+    "notes": "Mechanism class is a guess; may correspond to the Na-activated selenization paper (Joule 2026) - not confirmed. Eg assumed 1.10 eV; Voc fell 25 mV vs the 14.9% cell, so the gap may be narrower.",
+    "missing": [
+      "fitted n, Rs, Rsh (J-V file or intensity-dependent Voc) - low-light result is a prior envelope"
+    ],
+    "normalized": {
+      "eg_ev": 1.1,
+      "eta_pct": 15.1,
+      "sq_eta_pct": 29.66,
+      "pct_sq": 50.9,
+      "logit_sq": 0.037,
+      "voc_over_sq": 0.619,
+      "jsc_over_sq": 0.964,
+      "ff_over_sq": 0.852,
+      "voc_deficit_sq_mv": 326.8,
+      "voc_deficit_eg_mv": 570.1,
+      "spectrum": "blackbody-5772K (approx; %SQ reads high)"
+    },
+    "gain": {
+      "eta_prev_pct": 14.87,
+      "eta_new_pct": 15.07,
+      "rel_gain_pct": 1.4,
+      "share_voc": -3.47,
+      "share_jsc": 2.96,
+      "share_ff": 1.51,
+      "label": "current-led (Jsc/optics)",
+      "versus": "tables_v62_small"
+    },
+    "low_light": {
+      "provenance": "class-prior envelope (n, Rs borrowed; Rsh solved from FF)",
+      "n_feasible": 6,
+      "n_range": [
+        1.2,
+        1.4
+      ],
+      "rsh_range_ohm_cm2": [
+        255,
+        915
+      ],
+      "outdoor_retention": {
+        "1000W/m2": {
+          "min": 1.0,
+          "median": 1.0,
+          "max": 1.0
+        },
+        "400W/m2": {
+          "min": 0.881,
+          "median": 0.913,
+          "max": 0.946
+        },
+        "200W/m2": {
+          "min": 0.745,
+          "median": 0.821,
+          "max": 0.88
+        },
+        "100W/m2": {
+          "min": 0.549,
+          "median": 0.696,
+          "max": 0.789
+        },
+        "50W/m2": {
+          "min": 0.311,
+          "median": 0.525,
+          "max": 0.663
+        }
+      },
+      "indoor_eta_pct": {
+        "1000lux": {
+          "min": 0.28,
+          "median": 0.665,
+          "max": 1.02
+        },
+        "500lux": {
+          "min": 0.14,
+          "median": 0.335,
+          "max": 0.51
+        },
+        "200lux": {
+          "min": 0.06,
+          "median": 0.135,
+          "max": 0.2
+        }
+      }
+    },
+    "compliance": {
+      "layers": [
+        {
+          "layer": "absorber",
+          "formula": "Cu2ZnSn(S0.2Se0.8)4",
+          "restricted": [],
+          "pass": true
+        },
+        {
+          "layer": "buffer",
+          "formula": "CdS",
+          "restricted": [
+            {
+              "element": "Cd",
+              "wt_pct": 77.81,
+              "limit_wt_pct": 0.01,
+              "times_over": 7780.9,
+              "pass": false
+            }
+          ],
+          "pass": false
+        }
+      ],
+      "material_pass": false,
+      "worst_times_over": 7780.9,
+      "gates": {
+        "VIPV": {
+          "gate": "FAIL",
+          "regime": "EU ELV (vehicles)"
+        },
+        "BIPV": {
+          "gate": "moot",
+          "regime": "RoHS, professional fixed-installation PV exclusion"
+        },
+        "interior": {
+          "gate": "FAIL",
+          "regime": "RoHS (consumer product, no shelter)"
+        }
+      }
+    },
+    "transferability": {
+      "score": 0.8,
+      "band": "HIGH",
+      "reasons": [
+        "mechanism 'bulk growth-kinetics': transfers high; thermal profile needs re-optimization on steel (base 0.8)"
+      ],
+      "platform": "P0"
+    },
+    "applications": {
+      "VIPV": {
+        "gate": {
+          "gate": "FAIL",
+          "regime": "EU ELV (vehicles)"
+        },
+        "low_light": {
+          "point": "400W/m2",
+          "min": 0.881,
+          "median": 0.913,
+          "max": 0.946,
+          "unit": "retention"
+        },
+        "thermal": {
+          "t_cell_c": 70.0,
+          "multiplier": {
+            "low": 0.82,
+            "mid": 0.843,
+            "high": 0.865
+          },
+          "provenance": "CIGS-derived class prior; NO measured TC exists for 14-15% kesterite (standing red flag, design 5.3)",
+          "cold_side": "unmodelled: -40..0 C freeze-out behaviour unknown"
+        },
+        "deterministic_sign": "BLOCKED by substance gate (value = 0 until addressed)"
+      },
+      "BIPV": {
+        "gate": {
+          "gate": "moot",
+          "regime": "RoHS, professional fixed-installation PV exclusion"
+        },
+        "low_light": {
+          "point": "200W/m2",
+          "min": 0.745,
+          "median": 0.821,
+          "max": 0.88,
+          "unit": "retention"
+        },
+        "thermal": {
+          "t_cell_c": 60.0,
+          "multiplier": {
+            "low": 0.86,
+            "mid": 0.878,
+            "high": 0.895
+          },
+          "provenance": "CIGS-derived class prior; NO measured TC exists for 14-15% kesterite (standing red flag, design 5.3)",
+          "cold_side": null
+        },
+        "deterministic_sign": "open (gate moot); multipliers above"
+      },
+      "interior": {
+        "gate": {
+          "gate": "FAIL",
+          "regime": "RoHS (consumer product, no shelter)"
+        },
+        "low_light": {
+          "point": "500lux",
+          "min": 0.14,
+          "median": 0.335,
+          "max": 0.51,
+          "unit": "eta_pct"
+        },
+        "thermal": {
+          "t_cell_c": 25.0,
+          "multiplier": {
+            "low": 1.0,
+            "mid": 1.0,
+            "high": 1.0
+          },
+          "provenance": "CIGS-derived class prior; NO measured TC exists for 14-15% kesterite (standing red flag, design 5.3)",
+          "cold_side": null
+        },
+        "deterministic_sign": "BLOCKED by substance gate (value = 0 until addressed)"
+      }
+    },
+    "blind_spots": null,
+    "human_ratification": {
+      "net_sign": null,
+      "threat_opportunity_class": null,
+      "actions": [],
+      "signed_by": null
+    }
+  },
+  {
     "id": "cui_2026",
     "headline": "Cui et al. Li2SnS3 interphase, 15.45% lab / 15.04% certified, Voc 602 mV at 1.10 eV",
     "provenance_tier": "T4 for J-V values (press); T2/T3 for the efficiency",
@@ -1058,7 +1492,7 @@
     "id": "fitted_15p4_ref30",
     "headline": "15.4% CZTSSe device with published one-diode fit (n 1.42, Rs 0.38, Gsh 1.03 mS/cm2)",
     "provenance_tier": "T3",
-    "notes": "Row from the fit table in PMC12417543 (its ref. 30); device identity and Eg not yet traced. Rsh fitted at 1 sun can understate the dark/low-light Rsh.",
+    "notes": "Row from the fit table in PMC12417543 (its ref. 30). Efficiency and lineage are consistent with the Mg-doping lab champion (15.4%, certified 14.9%) but the identity is not confirmed. Rsh fitted at 1 sun can understate the dark/low-light Rsh.",
     "missing": [],
     "normalized": {
       "eg_ev": 1.1,

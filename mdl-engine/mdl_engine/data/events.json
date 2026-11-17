@@ -1,59 +1,289 @@
 [
- {"id": "ibm_2014", "headline": "IBM hydrazine CZTSSe 12.6% certified (plateau benchmark)",
-  "tier": "T1", "eg_ev": 1.13,
-  "device": {"voc_v": 0.5134, "jsc_ma": 35.2, "ff_pct": 69.8, "eta_pct": 12.6},
-  "layers": [{"name": "absorber", "formula": "Cu2ZnSn(S0.25Se0.75)4"}, {"name": "buffer", "formula": "CdS"}],
-  "mechanism": {"class": "bulk growth-kinetics", "route": "solution-molecular-ink", "configuration": "substrate"},
-  "notes": "J-V values entered from memory of Wang et al. 2014; verify against the paper."},
-
- {"id": "tables_v62_1cm2", "headline": "Tables v62 CZTSSe >=1 cm2 cell 12.1% (IoP/CAS, NPVM 4/23)",
-  "tier": "T1", "eg_ev": 1.10,
-  "device": {"voc_v": 0.5379, "jsc_ma": 35.29, "ff_pct": 63.6, "eta_pct": 12.1},
-  "layers": [{"name": "absorber", "formula": "Cu2ZnSn(S0.2Se0.8)4"}, {"name": "buffer", "formula": "CdS"}],
-  "mechanism": {"class": "bulk growth-kinetics", "route": "solution-molecular-ink", "configuration": "substrate"},
-  "notes": "Eg assumed 1.10 eV (not stated in the table row)."},
-
- {"id": "tables_v64_1cm2", "headline": "Tables v64 CZTSSe >=1 cm2 cell 13.45% (IoP/CAS, NPVM 4/24)",
-  "tier": "T1", "eg_ev": 1.10, "prev_id": "tables_v62_1cm2",
-  "device": {"voc_v": 0.5109, "jsc_ma": 37.90, "ff_pct": 69.5, "eta_pct": 13.45},
-  "layers": [{"name": "absorber", "formula": "Cu2ZnSn(S0.2Se0.8)4"}, {"name": "buffer", "formula": "CdS"}],
-  "mechanism": {"class": "bulk growth-kinetics", "route": "solution-molecular-ink", "configuration": "substrate"},
-  "notes": "Eg assumed 1.10 eV; the lower Voc with higher Jsc suggests a narrower gap than v62, which would change the shares."},
-
- {"id": "module_v64", "headline": "First certified solution-processed kesterite minimodule 10.1% (NJUPT, NREL 1/24, 10.48 cm2)",
-  "tier": "T1", "eg_ev": 1.10,
-  "device": {"voc_v": 0.5309, "jsc_ma": 32.77, "ff_pct": 57.9, "eta_pct": 10.1},
-  "layers": [{"name": "absorber", "formula": "Cu2ZnSn(S0.2Se0.8)4"}, {"name": "buffer", "formula": "CdS"}],
-  "mechanism": {"class": "bulk growth-kinetics", "route": "solution-molecular-ink", "configuration": "substrate"},
-  "notes": "Per-cell Voc and Jsc as listed in the table; Eg assumed."},
-
- {"id": "cui_2026", "headline": "Cui et al. Li2SnS3 interphase, 15.45% lab / 15.04% certified, Voc 602 mV at 1.10 eV",
-  "tier": "T4 for J-V values (press); T2/T3 for the efficiency", "eg_ev": 1.10, "prev_id": "ibm_2014",
-  "device": {"voc_v": 0.602, "jsc_ma": 37.2, "ff_pct": 68.9, "eta_pct": 15.45},
-  "layers": [{"name": "absorber", "formula": "Cu2ZnSn(S0.2Se0.8)4"}, {"name": "buffer", "formula": "CdS"}],
-  "mechanism": {"class": "bulk growth-kinetics", "route": "solution-molecular-ink", "configuration": "substrate"},
-  "notes": "Lab-champion J-V values from secondary press coverage; replace with the paper's certified values. S/Se ratio assumed."},
-
- {"id": "fitted_15p4_ref30", "headline": "15.4% CZTSSe device with published one-diode fit (n 1.42, Rs 0.38, Gsh 1.03 mS/cm2)",
-  "tier": "T3", "eg_ev": 1.10, "prev_id": "ibm_2014",
-  "device": {"voc_v": 0.558, "jsc_ma": 37.4, "ff_pct": 73.6, "eta_pct": 15.4, "n": 1.42, "rs": 0.38, "rsh": 970.9},
-  "layers": [{"name": "absorber", "formula": "Cu2ZnSn(S0.2Se0.8)4"}, {"name": "buffer", "formula": "CdS"}],
-  "mechanism": {"class": "bulk growth-kinetics", "route": "solution-molecular-ink", "configuration": "substrate"},
-  "notes": "Row from the fit table in PMC12417543 (its ref. 30); device identity and Eg not yet traced. Rsh fitted at 1 sun can understate the dark/low-light Rsh."},
-
- {"id": "yin_2025_cd_gradient", "headline": "Yin et al. Cd-gradient pure-sulfide CZTS, >13% certified",
+ {
+  "id": "ibm_2014",
+  "headline": "IBM hydrazine CZTSSe 12.6% certified (plateau benchmark)",
+  "tier": "T1",
+  "eg_ev": 1.13,
+  "device": {
+   "voc_v": 0.5134,
+   "jsc_ma": 35.2,
+   "ff_pct": 69.8,
+   "eta_pct": 12.6
+  },
+  "layers": [
+   {
+    "name": "absorber",
+    "formula": "Cu2ZnSn(S0.25Se0.75)4"
+   },
+   {
+    "name": "buffer",
+    "formula": "CdS"
+   }
+  ],
+  "mechanism": {
+   "class": "bulk growth-kinetics",
+   "route": "solution-molecular-ink",
+   "configuration": "substrate"
+  },
+  "notes": "J-V values entered from memory of Wang et al. 2014; verify against the paper."
+ },
+ {
+  "id": "tables_v62_1cm2",
+  "headline": "Tables v62 CZTSSe >=1 cm2 cell 12.1% (IoP/CAS, NPVM 4/23)",
+  "tier": "T1",
+  "eg_ev": 1.1,
+  "device": {
+   "voc_v": 0.5379,
+   "jsc_ma": 35.29,
+   "ff_pct": 63.6,
+   "eta_pct": 12.1
+  },
+  "layers": [
+   {
+    "name": "absorber",
+    "formula": "Cu2ZnSn(S0.2Se0.8)4"
+   },
+   {
+    "name": "buffer",
+    "formula": "CdS"
+   }
+  ],
+  "mechanism": {
+   "class": "bulk growth-kinetics",
+   "route": "solution-molecular-ink",
+   "configuration": "substrate"
+  },
+  "notes": "Eg assumed 1.10 eV (not stated in the table row)."
+ },
+ {
+  "id": "tables_v64_1cm2",
+  "headline": "Tables v64 CZTSSe >=1 cm2 cell 13.45% (IoP/CAS, NPVM 4/24)",
+  "tier": "T1",
+  "eg_ev": 1.1,
+  "prev_id": "tables_v62_1cm2",
+  "device": {
+   "voc_v": 0.5109,
+   "jsc_ma": 37.9,
+   "ff_pct": 69.5,
+   "eta_pct": 13.45
+  },
+  "layers": [
+   {
+    "name": "absorber",
+    "formula": "Cu2ZnSn(S0.2Se0.8)4"
+   },
+   {
+    "name": "buffer",
+    "formula": "CdS"
+   }
+  ],
+  "mechanism": {
+   "class": "bulk growth-kinetics",
+   "route": "solution-molecular-ink",
+   "configuration": "substrate"
+  },
+  "notes": "Eg assumed 1.10 eV; the lower Voc with higher Jsc suggests a narrower gap than v62, which would change the shares."
+ },
+ {
+  "id": "module_v64",
+  "headline": "First certified solution-processed kesterite minimodule 10.1% (NJUPT, NREL 1/24, 10.48 cm2)",
+  "tier": "T1",
+  "eg_ev": 1.1,
+  "device": {
+   "voc_v": 0.5309,
+   "jsc_ma": 32.77,
+   "ff_pct": 57.9,
+   "eta_pct": 10.1
+  },
+  "layers": [
+   {
+    "name": "absorber",
+    "formula": "Cu2ZnSn(S0.2Se0.8)4"
+   },
+   {
+    "name": "buffer",
+    "formula": "CdS"
+   }
+  ],
+  "mechanism": {
+   "class": "bulk growth-kinetics",
+   "route": "solution-molecular-ink",
+   "configuration": "substrate"
+  },
+  "notes": "Per-cell Voc and Jsc as listed in the table; Eg assumed."
+ },
+ {
+  "id": "tables_v62_small",
+  "headline": "Tables v62 notable exception: CZTSSe 14.9% (IoP/CAS, 0.2694 cm2 da, NPVM 4/23)",
+  "tier": "T1",
+  "eg_ev": 1.1,
+  "prev_id": "ibm_2014",
+  "device": {
+   "voc_v": 0.5554,
+   "jsc_ma": 36.93,
+   "ff_pct": 72.5,
+   "eta_pct": 14.9
+  },
+  "layers": [
+   {
+    "name": "absorber",
+    "formula": "Cu2ZnSn(S0.2Se0.8)4"
+   },
+   {
+    "name": "buffer",
+    "formula": "CdS"
+   }
+  ],
+  "mechanism": {
+   "class": "doping/ordering",
+   "route": "solution-molecular-ink",
+   "configuration": "substrate"
+  },
+  "notes": "Matches the Mg-doping Cu-Zn ordering result (arXiv 2404.05974, Nature Energy Nov 2025). Eg assumed 1.10 eV."
+ },
+ {
+  "id": "tables_v64_small",
+  "headline": "Tables v64 notable exception: CZTSSe 15.1% (IoP/CAS, 0.2697 cm2 da, NPVM 4/24)",
+  "tier": "T1",
+  "eg_ev": 1.1,
+  "prev_id": "tables_v62_small",
+  "device": {
+   "voc_v": 0.5299,
+   "jsc_ma": 38.44,
+   "ff_pct": 74.0,
+   "eta_pct": 15.1
+  },
+  "layers": [
+   {
+    "name": "absorber",
+    "formula": "Cu2ZnSn(S0.2Se0.8)4"
+   },
+   {
+    "name": "buffer",
+    "formula": "CdS"
+   }
+  ],
+  "mechanism": {
+   "class": "bulk growth-kinetics",
+   "route": "solution-molecular-ink",
+   "configuration": "substrate"
+  },
+  "notes": "Mechanism class is a guess; may correspond to the Na-activated selenization paper (Joule 2026) - not confirmed. Eg assumed 1.10 eV; Voc fell 25 mV vs the 14.9% cell, so the gap may be narrower."
+ },
+ {
+  "id": "cui_2026",
+  "headline": "Cui et al. Li2SnS3 interphase, 15.45% lab / 15.04% certified, Voc 602 mV at 1.10 eV",
+  "tier": "T4 for J-V values (press); T2/T3 for the efficiency",
+  "eg_ev": 1.1,
+  "prev_id": "ibm_2014",
+  "device": {
+   "voc_v": 0.602,
+   "jsc_ma": 37.2,
+   "ff_pct": 68.9,
+   "eta_pct": 15.45
+  },
+  "layers": [
+   {
+    "name": "absorber",
+    "formula": "Cu2ZnSn(S0.2Se0.8)4"
+   },
+   {
+    "name": "buffer",
+    "formula": "CdS"
+   }
+  ],
+  "mechanism": {
+   "class": "bulk growth-kinetics",
+   "route": "solution-molecular-ink",
+   "configuration": "substrate"
+  },
+  "notes": "Lab-champion J-V values from secondary press coverage; replace with the paper's certified values. S/Se ratio assumed."
+ },
+ {
+  "id": "fitted_15p4_ref30",
+  "headline": "15.4% CZTSSe device with published one-diode fit (n 1.42, Rs 0.38, Gsh 1.03 mS/cm2)",
   "tier": "T3",
-  "layers": [{"name": "absorber (assumed 30% Cd on Zn site)", "formula": "Cu2Zn0.7Cd0.3SnS4"}, {"name": "buffer", "formula": "CdS"}],
-  "mechanism": {"class": "doping/ordering", "route": "solution-molecular-ink", "configuration": "substrate"},
-  "notes": "Cd fraction is the design memo's illustrative 30%, not the paper's measured profile."},
-
- {"id": "rival_pb_perovskite", "headline": "Rival: Pb-halide perovskite 1 cm2 cell 24.35% (Tables v62, NUS/SERIS)",
-  "tier": "T1", "eg_ev": 1.55,
-  "device": {"voc_v": 1.159, "jsc_ma": 25.60, "ff_pct": 82.1, "eta_pct": 24.35},
-  "layers": [{"name": "absorber (as FAPbI3)", "formula": "CH5N2PbI3"}],
-  "notes": "Eg and absorber composition assumed. Rival-technology entry: no P0 transferability."},
-
- {"id": "p0_target_stack", "headline": "P0 target: CZTSSe with Cd-free Zn(O,S) buffer (compliance check only)",
+  "eg_ev": 1.1,
+  "prev_id": "ibm_2014",
+  "device": {
+   "voc_v": 0.558,
+   "jsc_ma": 37.4,
+   "ff_pct": 73.6,
+   "eta_pct": 15.4,
+   "n": 1.42,
+   "rs": 0.38,
+   "rsh": 970.9
+  },
+  "layers": [
+   {
+    "name": "absorber",
+    "formula": "Cu2ZnSn(S0.2Se0.8)4"
+   },
+   {
+    "name": "buffer",
+    "formula": "CdS"
+   }
+  ],
+  "mechanism": {
+   "class": "bulk growth-kinetics",
+   "route": "solution-molecular-ink",
+   "configuration": "substrate"
+  },
+  "notes": "Row from the fit table in PMC12417543 (its ref. 30). Efficiency and lineage are consistent with the Mg-doping lab champion (15.4%, certified 14.9%) but the identity is not confirmed. Rsh fitted at 1 sun can understate the dark/low-light Rsh."
+ },
+ {
+  "id": "yin_2025_cd_gradient",
+  "headline": "Yin et al. Cd-gradient pure-sulfide CZTS, >13% certified",
+  "tier": "T3",
+  "layers": [
+   {
+    "name": "absorber (assumed 30% Cd on Zn site)",
+    "formula": "Cu2Zn0.7Cd0.3SnS4"
+   },
+   {
+    "name": "buffer",
+    "formula": "CdS"
+   }
+  ],
+  "mechanism": {
+   "class": "doping/ordering",
+   "route": "solution-molecular-ink",
+   "configuration": "substrate"
+  },
+  "notes": "Cd fraction is the design memo's illustrative 30%, not the paper's measured profile."
+ },
+ {
+  "id": "rival_pb_perovskite",
+  "headline": "Rival: Pb-halide perovskite 1 cm2 cell 24.35% (Tables v62, NUS/SERIS)",
+  "tier": "T1",
+  "eg_ev": 1.55,
+  "device": {
+   "voc_v": 1.159,
+   "jsc_ma": 25.6,
+   "ff_pct": 82.1,
+   "eta_pct": 24.35
+  },
+  "layers": [
+   {
+    "name": "absorber (as FAPbI3)",
+    "formula": "CH5N2PbI3"
+   }
+  ],
+  "notes": "Eg and absorber composition assumed. Rival-technology entry: no P0 transferability."
+ },
+ {
+  "id": "p0_target_stack",
+  "headline": "P0 target: CZTSSe with Cd-free Zn(O,S) buffer (compliance check only)",
   "tier": "design",
-  "layers": [{"name": "absorber", "formula": "Cu2ZnSn(S0.2Se0.8)4"}, {"name": "buffer", "formula": "ZnO0.7S0.3"}]}
+  "layers": [
+   {
+    "name": "absorber",
+    "formula": "Cu2ZnSn(S0.2Se0.8)4"
+   },
+   {
+    "name": "buffer",
+    "formula": "ZnO0.7S0.3"
+   }
+  ]
+ }
 ]
