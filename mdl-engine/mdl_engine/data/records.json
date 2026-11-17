@@ -1,0 +1,145 @@
+{
+ "_comment": "Kesterite CZTSSe cell frontier, two time bases. Decimal years. Entries marked verify=true are not yet checked against a primary source.",
+ "publication_dated": [
+  {
+   "t": 2010.1,
+   "eta": 9.66,
+   "label": "IBM hydrazine",
+   "lineage": "IBM",
+   "verify": true
+  },
+  {
+   "t": 2011.5,
+   "eta": 10.1,
+   "label": "IBM",
+   "lineage": "IBM",
+   "verify": true
+  },
+  {
+   "t": 2012.6,
+   "eta": 11.1,
+   "label": "IBM",
+   "lineage": "IBM",
+   "verify": true
+  },
+  {
+   "t": 2013.9,
+   "eta": 12.6,
+   "label": "IBM (Wang et al.)",
+   "lineage": "IBM"
+  },
+  {
+   "t": 2023.28,
+   "eta": 13.8,
+   "label": "Zhou et al., Se partial pressure",
+   "lineage": "IOP-CAS/NJUPT"
+  },
+  {
+   "t": 2024.45,
+   "eta": 14.2,
+   "label": "Shi et al., multinary alloying",
+   "lineage": "IOP-CAS/NJUPT",
+   "verify": true
+  },
+  {
+   "t": 2025.5,
+   "eta": 14.9,
+   "label": "Wang et al., Mg ordering",
+   "lineage": "IOP-CAS/NJUPT",
+   "verify": true
+  },
+  {
+   "t": 2026.15,
+   "eta": 15.04,
+   "label": "Cui et al., Li2SnS3 interphase",
+   "lineage": "QIBEBT-CAS"
+  },
+  {
+   "t": 2026.4,
+   "eta": 15.1,
+   "label": "Jiao et al., Na-activated selenization",
+   "lineage": "unassigned",
+   "verify": true
+  },
+  {
+   "t": 2026.45,
+   "eta": 15.3,
+   "label": "claim circulating (Henan)",
+   "lineage": "Henan",
+   "verify": true
+  }
+ ],
+ "table_dated_small_area": [
+  {
+   "t": 2014.0,
+   "eta": 12.6,
+   "label": "IBM enters tables",
+   "verify": true
+  },
+  {
+   "t": 2022.9,
+   "eta": 13.0,
+   "label": "v61: 13.0% (per v62 press summary)",
+   "verify": true
+  },
+  {
+   "t": 2023.45,
+   "eta": 14.9,
+   "label": "v62: 14.9% IoP-CAS small-area (pv magazine, Jun 2023)"
+  }
+ ],
+ "table_dated_1cm2": [
+  {
+   "t": 2023.45,
+   "eta": 12.1,
+   "label": "v62: 12.1% (NPVM 4/23)"
+  },
+  {
+   "t": 2024.45,
+   "eta": 13.45,
+   "label": "v64: 13.45% (NPVM 4/24)"
+  },
+  {
+   "t": 2026.6,
+   "eta": 14.2,
+   "label": "Nature Materials 2026: 14.2% certified 1 cm2 (not yet confirmed in tables)",
+   "verify": true
+  }
+ ],
+ "certification_dated_mixed_area": [
+  {
+   "t": 2014.0,
+   "eta": 12.6,
+   "label": "IBM"
+  },
+  {
+   "t": 2022.9,
+   "eta": 13.0,
+   "label": "tables v61 (per v62 summary)",
+   "verify": true
+  },
+  {
+   "t": 2023.15,
+   "eta": 14.9,
+   "label": "tables v62: IoP-CAS small-area (area definition differs from papers' total-area)",
+   "verify": true
+  },
+  {
+   "t": 2026.15,
+   "eta": 15.04,
+   "label": "Cui et al."
+  },
+  {
+   "t": 2026.4,
+   "eta": 15.1,
+   "label": "Jiao et al.",
+   "verify": true
+  },
+  {
+   "t": 2026.45,
+   "eta": 15.3,
+   "label": "claim circulating",
+   "verify": true
+  }
+ ]
+}
