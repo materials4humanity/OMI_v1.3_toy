@@ -10,7 +10,7 @@ A tested Python package that turns the two design memos into running code:
 
 - **Physics layer:** %SQ normalization, Voc/Jsc/FF gain decomposition, one-diode low-light projection (50–1000 W/m², 200–1000 lux), thermal prior, homogeneous-material compliance arithmetic, transferability operator, and an Implication Ledger entry builder. Verdict fields are emitted empty for human ratification.
 - **Temporal layer:** a distribution-free record-count test of "World B", a static-tail null simulation, an exact Bayesian changepoint, the gate backtest, and a window-calibration simulator.
-- **Seed data:** nine events and four record series, each row carrying its provenance and a `verify` flag where it has not been checked against a primary source.
+- **Seed data:** eleven events and four record series, each row carrying its provenance and a `verify` flag where it has not been checked against a primary source.
 
 ---
 
@@ -25,7 +25,7 @@ Checked against Efficiency Tables v62 and v64 directly. The tables' small-area (
 | Apr 2023 (v62) | 14.9% | 0.2694 cm² (da) | 555.4 mV / 36.93 / 72.5% | IoP-CAS, NPVM |
 | Apr 2024 (v64) | 15.1% | 0.2697 cm² (da) | 529.9 mV / 38.44 / 74.0% | IoP-CAS, NPVM |
 
-The Mg-ordering paper (14.9% certified; arXiv April 2024; Nature Energy 12 November 2025) is the April 2023 certificate, published in a journal about 2.5 years later. So the project ledger's "2025: 14.9%" is a publication date, and a 15.1% cell was already certified in April 2024, before the 2026 results the pitch treats as the frontier.
+The Mg-ordering paper (14.9% certified; arXiv April 2024; Nature Energy 12 November 2025) matches the April 2023 certificate (same group, same value, same test centre), published in a journal about 2.5 years later. So the project ledger's "2025: 14.9%" is a publication date, and a 15.1% cell was already certified in April 2024, before the 2026 results the pitch treats as the frontier.
 
 | Basis | Records since 2022 | Increments (abs. pts) | Rate |
 |---|---|---|---|
