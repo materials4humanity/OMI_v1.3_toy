@@ -18,7 +18,8 @@ from dataclasses import dataclass
 import numpy as np
 from scipy import stats
 
-from .campaign import CHECKPOINTS, welch_one_sided
+from .campaign import (CHECKPOINTS, welch_one_sided, finalize_copy, _final_anchor_diag,
+                       SENSITIVITY_ROUNDS)
 from .emulator import VirtualKesterite, NoiseModel
 from .lab import Lab
 from .space import LITERATURE_RECIPE
@@ -43,6 +44,7 @@ class LookupJob:
     hetero: float
     seed: int
     budget: int = 40
+    final_anchor: bool = True     # loop-dev only: anchor the final recommendation (0.4)
 
 
 def run_lookup(job: LookupJob) -> dict:
@@ -56,12 +58,27 @@ def run_lookup(job: LookupJob) -> dict:
              else OVAT(LITERATURE_RECIPE, careful=True))
     lit_q, lit_d = model.qfls(LITERATURE_RECIPE), model.device_voc(LITERATURE_RECIPE)
     cps = {}
+    ref = lit_d if job.arm == "loop-dev" else lit_q        # what the arm's claim is about
+
+    def entry(rec, claimed):
+        return {"rec": rec, "true_gain_mev": 1000 * (model.qfls(rec) - lit_q),
+                "device_gain_mev": 1000 * (model.device_voc(rec) - lit_d),
+                "claimed_gain_mev": 1000 * (claimed - ref) if math.isfinite(claimed) else None}
+
     for r in range(1, job.budget + 1):
         strat.step(lab)
         if r in CHECKPOINTS:
-            rec, _ = strat.recommend(lab)
-            cps[str(r)] = {"rec": rec, "true_gain_mev": 1000 * (model.qfls(rec) - lit_q),
-                           "device_gain_mev": 1000 * (model.device_voc(rec) - lit_d)}
+            fin = (finalize_copy(strat, lab) if job.arm == "loop-dev" and job.final_anchor
+                   else None)
+            rec, claimed = strat.recommend(lab)
+            cps[str(r)] = entry(rec, claimed)
+            if fin is not None:
+                f, lab2 = fin
+                cps[str(r)] = {**entry(f["rec"], f["claimed"]), "n_devices": lab2.n_devices,
+                               "final_anchor": _final_anchor_diag(f), "v03": cps[str(r)]}
+                g, _ = finalize_copy(strat, lab, SENSITIVITY_ROUNDS)
+                cps[str(r)]["until_anchored"] = {**entry(g["rec"], g["claimed"]),
+                                                 "final_anchor": _final_anchor_diag(g)}
     return {"arm": job.arm, "measured_film": job.measured_film, "hetero": job.hetero,
             "seed": job.seed, "nominal_film": nm.film_mev, "run_mev": nm.run_mev,
             "checkpoints": cps}
