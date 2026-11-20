@@ -48,3 +48,21 @@ jobs:
           python-version: "3.11"
       - run: pip install -e ".[dev]"
       - run: ./scripts/check_determinism.sh
+
+  mdl-packages:
+    name: test (${{ matrix.package }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [mdl-engine, mdl-loop]
+    defaults:
+      run:
+        working-directory: ${{ matrix.package }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -e ".[dev]"
+      - run: python -m pytest -v

@@ -13,7 +13,9 @@ trap 'rm -f "$RUN1" "$RUN2"' EXIT
 strip_wall_clock() {
     # Wall-clock duration legitimately differs between runs and carries no
     # determinism signal — strip it before diffing, not before running.
-    sed -E 's/[0-9]+\.[0-9]+s\b//g; s/ in [0-9.]+ seconds?//g'
+    # pytest prints "307.12s" and, once a run exceeds a minute, appends the
+    # timedelta form "(0:05:07)" (or "(1 day, 0:05:07)"); strip both.
+    sed -E 's/ ?\(([0-9]+ days?, )?[0-9]+:[0-9]{2}:[0-9]{2}\)//g; s/[0-9]+\.[0-9]+s\b//g; s/ in [0-9.]+ seconds?//g'
 }
 
 pytest -q --color=no "$@" 2>&1 | strip_wall_clock > "$RUN1"
