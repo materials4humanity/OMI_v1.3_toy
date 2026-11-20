@@ -147,7 +147,7 @@ def summarize(results: list[dict], ns=(40, 20), repeats: int = 30) -> dict:
                 dev = [v["device_gain_mev"] for v in vs]
                 pw, per = primary_power([(r["seed"], v["rec"]) for r, v in zip(rs, vs)], cell,
                                         repeats=repeats)
-                per_view[which] = (np.array(over), np.array(dev))
+                per_view[which] = (np.array(over), np.array(dev), np.array(per))
                 d[which] = {"overclaim_median_mv": _q(over, 50), "overclaim_p90_mv": _q(over, 90),
                             "device_gain_median_mv": _q(dev, 50),
                             "qfls_gain_median_mev": _q([v["true_gain_mev"] for v in vs], 50),
@@ -162,6 +162,10 @@ def summarize(results: list[dict], ns=(40, 20), repeats: int = 30) -> dict:
                         "p_device_gain_higher": round(float(np.mean(dd > 1e-9)), 3),
                         "abs_overclaim_change_median_mv": _q(np.abs(per_view[which][0])
                                                              - np.abs(per_view["v03"][0]), 50)}
+                    dp = per_view[which][2] - per_view["v03"][2]
+                    d[which]["paired_minus_v03"]["primary_power"] = round(float(dp.mean()), 3)
+                    d[which]["paired_minus_v03"]["primary_power_se"] = round(
+                        float(dp.std(ddof=1) / np.sqrt(len(dp))), 3)
             row[str(n)] = d
         out[key] = row
     return out
