@@ -1,4 +1,4 @@
-# mdl-loop 0.4
+# mdl-loop 0.5
 
 The software half of campaign C1, built before any hardware exists (next-stage
 plan items A4, A7, A8, plus the M0 design support for B1). It answers one question the plan leaves open:
@@ -6,11 +6,12 @@ plan items A4, A7, A8, plus the M0 design support for B1). It answers one questi
 is a fair kill condition, and how does that number depend on the noise floor M0
 will measure?**
 
-    python -m pytest -q                      # 18 tests
+    python -m pytest -q                      # 20 tests
     python -m mdl_loop.m0 --out out          # M0 lookup and sizing, ~15 min
     python -m mdl_loop --out out --seeds 24  # full sweep, ~30 min on 2 cores
     python -m mdl_loop --out out --report-only
-    python -m mdl_loop.final_anchor --out out --seeds 24   # 0.4 vs 0.3, ~20 min on 4 cores
+    python -m mdl_loop.final_anchor --out out --seeds 24   # 0.4 vs 0.3, ~15 min on 4 cores
+    python -m mdl_loop.two_campaign --out out --seeds 24 --workers 4   # 0.5 head-to-head
 
 | Module | Does |
 |---|---|
@@ -23,6 +24,8 @@ will measure?**
 | `m0.py` | M0 support: C1 power indexed by noise *as M0 measures it* (literature recipe, both noise-shape assumptions); nested runs × films × spots variance components; go/no-go operating characteristics |
 | `campaign.py` | Campaign driver, confirmation test (one-sided Welch at alpha 0.05), power tables, winner's-curse statistics. Device-aware checkpoints record the 0.4 answer and, under `v03`, the 0.3 answer from the same campaign |
 | `final_anchor.py` | 0.4 vs 0.3 in the M0 lookup cells and the 10 meV main-sweep cell: over-claim, true device gain, C1 primary power (common random numbers) |
+| `two_campaign.py` | 0.5: two 20-run loop/OVAT campaign pairs (literature start + an alternative start, `m0.start_recipe`) against one 40-run pair at the same furnace runs; head-to-head power, wrong-way rate, device-level gap |
+| `_blas.py` | Pins BLAS/OpenMP to one thread in every driver and reports the thread count and library versions into each summary |
 
 ## Read before quoting numbers
 * The emulator is a benchmark surface. Its coefficients are choices, set so the
@@ -40,8 +43,17 @@ will measure?**
 
 ## Repository layout
 * `out/` holds the summaries and charts behind the memos. The raw per-campaign
-  results (`results.jsonl`, `m0_lookup.jsonl`, `final_anchor.jsonl`) are not committed;
-  every campaign is seeded, so the commands above regenerate them.
+  results (`results.jsonl`, `m0_lookup.jsonl`, `final_anchor.jsonl`, `two_campaign.jsonl`)
+  are not committed; every campaign is seeded, so the commands above regenerate them.
+* **Seeded results reproduce exactly only at a fixed BLAS thread count and fixed
+  library versions.** Threaded reductions change floating-point results in the
+  last digits, and over 40 sequential runs that can flip a recommendation (0.4 memo
+  §5). Every driver pins BLAS to one thread (`_blas.py`; an explicit
+  `OMP_NUM_THREADS` / `OPENBLAS_NUM_THREADS` / `MKL_NUM_THREADS` in the environment
+  still wins) and records the thread count and the numpy, scipy and scikit-learn
+  versions under `environment` in its summary. Summaries written before 0.5
+  (`summary.json`, `m0_lookup_summary.json`, `m0_summary.json`) came from
+  unpinned runs and regenerate only approximately.
 * `docs/` holds dated snapshots of the memos. The live copies are in the
   Materials Discovery Lab project (`claude/mdl_loop_v0.1_results.md`,
   `claude/mdl_loop_v0.2_results.md`, `claude/M0_noise_floor_design.md`).

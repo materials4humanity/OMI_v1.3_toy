@@ -27,14 +27,10 @@ All of it runs on the synthetic virtual-kesterite surface.
 """
 from __future__ import annotations
 
-import os
-
-# Single-threaded BLAS: about 3x faster with two worker processes on this code,
-# and it removes thread-count dependence of the floating-point results.
-for _v in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):
-    os.environ.setdefault(_v, "1")
+from . import _blas  # noqa: F401  (pins BLAS threads; must precede numpy)
 
 import json  # noqa: E402
+import os  # noqa: E402
 from dataclasses import dataclass  # noqa: E402
 
 import numpy as np  # noqa: E402
@@ -198,6 +194,7 @@ def main():
         results = [json.loads(line) for line in f if line.strip()]
     results = [r for r in results if r["seed"] < a.seeds]
     summ = summarize(results)
+    summ["environment"] = _blas.environment()
     with open(os.path.join(a.out, "final_anchor_summary.json"), "w") as f:
         json.dump(summ, f, indent=1)
     print(json.dumps({k: v.get("40") for k, v in summ.items() if isinstance(v, dict)}, indent=1))

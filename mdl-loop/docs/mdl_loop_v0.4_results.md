@@ -1,6 +1,7 @@
 # mdl-loop 0.4 — Anchoring the Final Recommendation
 ### Results memo. Follows the mdl-loop 0.2 memo (A8, §2.4 over-claim; §5 next action 3) and the M0 design note (§1.1 lookup). Same synthetic test surface as 0.1–0.3: every number below is a property of that surface, not of kesterite.
 **Prepared 20 Nov 2026. Code: mdl-loop 0.4.0 (18 passing tests). Numbers are in `out/final_anchor_summary.json`, reproducible with `python -m mdl_loop.final_anchor --out out --seeds 24` (13 min on 4 cores). 24 seeds per cell.**
+**Status 21 Nov 2026: the final anchor is now part of the C1 pre-registration. The two-campaign head-to-head that follows from it is in `mdl_loop_v0.5_results.md`. From 0.5 every driver pins BLAS to one thread (§5).**
 
 ---
 

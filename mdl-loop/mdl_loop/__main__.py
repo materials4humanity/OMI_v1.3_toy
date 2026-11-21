@@ -6,6 +6,8 @@ learning-curve chart.
 """
 from __future__ import annotations
 
+from . import _blas  # noqa: F401  (pins BLAS threads; must precede numpy)
+
 import argparse
 import json
 import os
@@ -192,6 +194,7 @@ def main():
                     print(f"{i}/{len(jobs)} jobs, {time.time() - t0:.0f} s", flush=True)
     results = load(path)
     summ = summarize(results)
+    summ["environment"] = _blas.environment()
     with open(os.path.join(a.out, "summary.json"), "w") as f:
         json.dump(summ, f, indent=1)
     chart(results, os.path.join(a.out, "learning_curves.png"))
