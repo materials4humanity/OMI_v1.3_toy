@@ -227,3 +227,24 @@ def test_checkpoint_finalize_leaves_the_campaign_unchanged():
     assert cp["until_anchored"]["final_anchor"]["devices_made"] <= 3
     assert cp["until_anchored"]["final_anchor"]["devices_made"] >= cp["final_anchor"]["devices_made"]
     assert a == run_job(Job("loop-dev", 10.0, 3, budget=10))          # seeded
+
+
+# ---------------------------------------------------------------- 0.5: two-campaign head-to-head
+def test_alternative_start_is_seeded_and_distinct():
+    from mdl_loop.m0 import start_recipe
+    assert start_recipe(3, 0) == LITERATURE_RECIPE
+    a, b = start_recipe(3, 1), start_recipe(3, 1)
+    assert a == b and a != LITERATURE_RECIPE and start_recipe(4, 1) != a
+    assert a["li_layer"] == LITERATURE_RECIPE["li_layer"]          # categorical settings kept
+    assert all(P0_SPACE[k].lo <= a[k] <= P0_SPACE[k].hi for k in P0_SPACE.names if k != "li_layer")
+
+
+def test_stratified_test_is_antisymmetric_and_detects_a_shift():
+    from mdl_loop.two_campaign import stratified_p
+    rng = np.random.default_rng(12)
+    hi = [(rng.normal(10, 1, 8), rng.normal(0, 1, 8)) for _ in range(2)]
+    p, prev = stratified_p(hi)
+    assert p < 1e-6 and prev > 1 - 1e-6
+    q, qrev = stratified_p([(b, a) for a, b in hi])
+    assert q == pytest.approx(prev) and qrev == pytest.approx(p)
+    assert stratified_p([(np.array([1.0]), np.array([0.0, 1.0]))] * 2) == (1.0, 1.0)

@@ -12,6 +12,8 @@ Two questions the B1 design note needs answered:
 """
 from __future__ import annotations
 
+from . import _blas  # noqa: F401  (pins BLAS threads; must precede numpy)
+
 import math
 from dataclasses import dataclass
 
@@ -28,6 +30,7 @@ from .strategies import OVAT, DeviceAwareGPBO
 MEASURED_FILM = (5.0, 8.0, 11.0, 15.0)     # film-to-film sd at the literature recipe, meV
 RUN_RATIO = 0.5                            # run-to-run sd as a fraction of measured film sd
 SPOT_MEV = 3.0                             # PL spot-to-spot plus calibration, meV
+HETEROS_M0 = (1.0, 0.0)                    # noise shape: poorer films noisier / constant
 
 
 def noise_for(measured_film: float, hetero: float) -> NoiseModel:
@@ -45,17 +48,37 @@ class LookupJob:
     seed: int
     budget: int = 40
     final_anchor: bool = True     # loop-dev only: anchor the final recommendation (0.4)
+    start: int = 0                # 0: literature recipe; k > 0: alternative start k (0.5)
+
+
+START_SCALE = 0.1   # unit-space sd of an alternative start around the literature recipe
+
+
+def start_recipe(seed: int, k: int) -> dict:
+    """Start point of campaign ``k`` for ``seed``: the literature recipe for k = 0,
+    otherwise a perturbation of its continuous parameters (sd ``START_SCALE`` in
+    unit coordinates, categorical settings kept), drawn from its own generator.
+    Both arms of a campaign pair share it. No emulator truth is used to pick it,
+    so a start can be better or worse than the literature recipe.
+    """
+    if k == 0:
+        return dict(LITERATURE_RECIPE)
+    from .space import P0_SPACE
+    return P0_SPACE.perturb(LITERATURE_RECIPE, np.random.default_rng([seed, k, 2027]),
+                            START_SCALE, p_flip=0.0)
 
 
 def run_lookup(job: LookupJob) -> dict:
     nm = noise_for(job.measured_film, job.hetero)
     model = VirtualKesterite(1.0, nm)
     model.optimum()
-    rng = np.random.default_rng([job.seed, int(job.measured_film * 10), int(job.hetero * 10),
-                                 {"loop-dev": 61, "ovat": 51}[job.arm], 2026])
+    key = [job.seed, int(job.measured_film * 10), int(job.hetero * 10),
+           {"loop-dev": 61, "ovat": 51}[job.arm], 2026]
+    rng = np.random.default_rng(key + [job.start] if job.start else key)
     lab = Lab(model, rng)
-    strat = (DeviceAwareGPBO(LITERATURE_RECIPE, rng) if job.arm == "loop-dev"
-             else OVAT(LITERATURE_RECIPE, careful=True))
+    start = start_recipe(job.seed, job.start)
+    strat = (DeviceAwareGPBO(start, rng) if job.arm == "loop-dev"
+             else OVAT(start, careful=True))
     lit_q, lit_d = model.qfls(LITERATURE_RECIPE), model.device_voc(LITERATURE_RECIPE)
     cps = {}
     ref = lit_d if job.arm == "loop-dev" else lit_q        # what the arm's claim is about
@@ -80,7 +103,9 @@ def run_lookup(job: LookupJob) -> dict:
                 cps[str(r)]["until_anchored"] = {**entry(g["rec"], g["claimed"]),
                                                  "final_anchor": _final_anchor_diag(g)}
     return {"arm": job.arm, "measured_film": job.measured_film, "hetero": job.hetero,
-            "seed": job.seed, "nominal_film": nm.film_mev, "run_mev": nm.run_mev,
+            "seed": job.seed, "start": job.start, "budget": job.budget,
+            "start_true_gain_mev": 1000 * (model.qfls(start) - lit_q),
+            "nominal_film": nm.film_mev, "run_mev": nm.run_mev,
             "checkpoints": cps}
 
 
@@ -211,7 +236,7 @@ def main():
             for line in f:
                 r = json.loads(line)
                 done.add((r["arm"], r["measured_film"], r["hetero"], r["seed"]))
-    jobs = [LookupJob(arm, m, h, s) for s in range(a.seeds) for h in (1.0, 0.0)
+    jobs = [LookupJob(arm, m, h, s) for s in range(a.seeds) for h in HETEROS_M0
             for m in MEASURED_FILM for arm in ("loop-dev", "ovat")]
     jobs = [j for j in jobs if (j.arm, j.measured_film, j.hetero, j.seed) not in done]
     with Pool(a.workers) as pool, open(path, "a") as f:
@@ -225,6 +250,7 @@ def main():
                "go_rule_ub80_le_13": {R: {tf: size_m0(float(tf), 0.5 * tf, R, n_sim=2000,
                                                        film_threshold=13.0, seed=tf * 7 + R)["p_pass"]
                                            for tf in (8, 10, 11, 12, 13, 15, 17)} for R in (8, 12)}}
+    summary["environment"] = _blas.environment()
     with open(os.path.join(a.out, "m0_summary.json"), "w") as f:
         json.dump(summary, f, indent=1)
     print(json.dumps(summary["go_rule_ub80_le_13"]))
