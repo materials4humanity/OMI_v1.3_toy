@@ -2,6 +2,7 @@
 ### Results memo. Follows the mdl-loop 0.1 memo (A7) and amends its §2. Companion to the next-stage plan (A8, B1, C1) and the v2 map (§7a: "periodic anchor devices keep the proxy honest").
 **Status 19 Nov 2026 (evening): the §3 precondition is restated in M0's units by `claude/M0_noise_floor_design.md` (go if the film-to-film 80% upper bound at the literature recipe is ≤ 13 meV; run-to-run becomes a flag).**
 **Status 20 Nov 2026: §5 next action 3 is done in mdl-loop 0.4 (`mdl_loop_v0.4_results.md`). Anchoring the final recommendation removes only part of the §2.4 over-claim. The §2.4 claims rule stands. See the addendum at the end.**
+**Status 21 Nov 2026: §5 next action 4 is done in mdl-loop 0.5 (`mdl_loop_v0.5_results.md`). At the same total furnace runs, two 20-run campaign pairs do not beat one 40-run pair. The §0 "Funders" second pair has to be a full-length pair (not simulated yet).**
 **Prepared 19 Nov 2026. Code: `mdl-loop-0.2.zip` (14 passing tests). Numbers are in `out/summary.json`, reproducible with `python -m mdl_loop --out out --seeds 24`. Same synthetic test surface as 0.1; read every number as conditional on it.**
 
 ---
