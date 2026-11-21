@@ -143,3 +143,53 @@ def test_seed_ledger_runs_and_flips_sign():
     for e in es.values():
         assert e["human_ratification"]["net_sign"] is None
         ledger.render_markdown(e)
+
+
+# ---------------------------------------------------------------- A6 ledger entries
+def _a6_entries():
+    import json
+    from importlib import resources
+    from mdl_engine import ledger
+    ev = json.loads(resources.files("mdl_engine.data").joinpath("events.json").read_text())
+    return {e["id"]: e for e in ledger.run(ev)}
+
+
+def test_zto_entry_is_the_first_cd_free_device_pass():
+    E = _a6_entries()
+    g = E["zto_ees_2026"]["applications"]
+    assert g["VIPV"]["gate"]["gate"] == "pass" and g["interior"]["gate"]["gate"] == "pass"
+    devices_passing = [i for i, e in E.items() if e.get("compliance")
+                       and e["compliance"]["gates"]["VIPV"]["gate"] == "pass"
+                       and i != "p0_target_stack"]                     # design target, not a device
+    assert devices_passing == ["zto_ees_2026"]
+
+
+def test_unknown_stack_leaves_gates_undetermined_not_passed():
+    E = _a6_entries()
+    for i in ("flex_mo_ne_2026", "flex_module_ne_2026", "tables_v68_1cm2", "module_v68"):
+        assert all(a["gate"]["gate"] == "unknown" for a in E[i]["applications"].values())
+
+
+def test_value_provenance_and_unverified_list_reach_the_entry():
+    E = _a6_entries()
+    z = E["zto_ees_2026"]
+    assert z["reported_values"]["eta_certified_pct"]["value"] == 13.90
+    assert not z["reported_values"]["eta_certified_pct"]["verify"]
+    assert "eta_lab_pct" in z["unverified"] and "eta_certified_pct" not in z["unverified"]
+
+
+def test_jv_check_flags_rows_that_do_not_reproduce_their_efficiency():
+    E = _a6_entries()
+    assert E["tables_v68_1cm2"]["jv_check"]["consistent"] is False
+    assert "jsc_ma" in E["tables_v68_1cm2"]["unverified"]
+    others = [e["jv_check"]["consistent"] for i, e in E.items() if "jv_check" in e and i != "tables_v68_1cm2"]
+    assert others and all(others)
+
+
+def test_same_certificate_has_the_same_date_in_every_series():
+    import json
+    from importlib import resources
+    R = json.loads(resources.files("mdl_engine.data").joinpath("records.json").read_text())
+    t = {k: r["t"] for k in ("table_dated_small_area", "certification_dated_mixed_area")
+         for r in R[k] if r["eta"] == 14.9}
+    assert len(set(t.values())) == 1 and 2023.25 <= t["certification_dated_mixed_area"] < 2023.34   # April
