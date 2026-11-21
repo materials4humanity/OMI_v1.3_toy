@@ -7,6 +7,12 @@
     "missing": [
       "fitted n, Rs, Rsh (J-V file or intensity-dependent Voc) - low-light result is a prior envelope"
     ],
+    "jv_check": {
+      "voc_jsc_ff_pct": 12.61,
+      "stated_eta_pct": 12.6,
+      "consistent": true,
+      "tolerance_pts": 0.15
+    },
     "normalized": {
       "eg_ev": 1.13,
       "eta_pct": 12.6,
@@ -214,6 +220,12 @@
     "missing": [
       "fitted n, Rs, Rsh (J-V file or intensity-dependent Voc) - low-light result is a prior envelope"
     ],
+    "jv_check": {
+      "voc_jsc_ff_pct": 12.07,
+      "stated_eta_pct": 12.1,
+      "consistent": true,
+      "tolerance_pts": 0.15
+    },
     "normalized": {
       "eg_ev": 1.1,
       "eta_pct": 12.1,
@@ -421,6 +433,12 @@
     "missing": [
       "fitted n, Rs, Rsh (J-V file or intensity-dependent Voc) - low-light result is a prior envelope"
     ],
+    "jv_check": {
+      "voc_jsc_ff_pct": 13.46,
+      "stated_eta_pct": 13.45,
+      "consistent": true,
+      "tolerance_pts": 0.15
+    },
     "normalized": {
       "eg_ev": 1.1,
       "eta_pct": 13.45,
@@ -638,6 +656,12 @@
     "missing": [
       "fitted n, Rs, Rsh (J-V file or intensity-dependent Voc) - low-light result is a prior envelope"
     ],
+    "jv_check": {
+      "voc_jsc_ff_pct": 10.07,
+      "stated_eta_pct": 10.1,
+      "consistent": true,
+      "tolerance_pts": 0.15
+    },
     "normalized": {
       "eg_ev": 1.1,
       "eta_pct": 10.1,
@@ -845,6 +869,12 @@
     "missing": [
       "fitted n, Rs, Rsh (J-V file or intensity-dependent Voc) - low-light result is a prior envelope"
     ],
+    "jv_check": {
+      "voc_jsc_ff_pct": 15.43,
+      "stated_eta_pct": 15.45,
+      "consistent": true,
+      "tolerance_pts": 0.15
+    },
     "normalized": {
       "eg_ev": 1.1,
       "eta_pct": 15.45,
@@ -1060,6 +1090,12 @@
     "provenance_tier": "T3",
     "notes": "Row from the fit table in PMC12417543 (its ref. 30); device identity and Eg not yet traced. Rsh fitted at 1 sun can understate the dark/low-light Rsh.",
     "missing": [],
+    "jv_check": {
+      "voc_jsc_ff_pct": 15.36,
+      "stated_eta_pct": 15.4,
+      "consistent": true,
+      "tolerance_pts": 0.15
+    },
     "normalized": {
       "eg_ev": 1.1,
       "eta_pct": 15.4,
@@ -1412,6 +1448,12 @@
     "missing": [
       "fitted n, Rs, Rsh (J-V file or intensity-dependent Voc) - low-light result is a prior envelope"
     ],
+    "jv_check": {
+      "voc_jsc_ff_pct": 24.36,
+      "stated_eta_pct": 24.35,
+      "consistent": true,
+      "tolerance_pts": 0.15
+    },
     "normalized": {
       "eg_ev": 1.55,
       "eta_pct": 24.35,
@@ -1688,6 +1730,818 @@
           "cold_side": null
         },
         "deterministic_sign": "open (gate pass); multipliers above"
+      }
+    },
+    "blind_spots": null,
+    "human_ratification": {
+      "net_sign": null,
+      "threat_opportunity_class": null,
+      "actions": [],
+      "signed_by": null
+    }
+  },
+  {
+    "id": "zto_ees_2026",
+    "headline": "Zhao et al. Cd-free CZTSSe/Zn-Sn-O (ZTO) buffer: 13.90% certified, 14.39% lab, 12.24% at 1.03 cm2 (Energy Environ. Sci. 2026)",
+    "provenance_tier": "T2 for the certified 13.90%; T3 (unverified) for lab and large-area values",
+    "notes": "Mechanism from the abstract: junction heat treatment drives Zn from the ZTO buffer into the absorber's space-charge region. Formulas are placeholders for the compliance arithmetic, which depends only on the absence of Cd/Pb/Hg; the stack is Cd-free per the title. Window and contact layers not listed (not checked for Cd). Deposition route not available, so transferability uses the off-primary default.",
+    "missing": [
+      "device J-V parameters (Voc/Jsc/FF) and/or Eg"
+    ],
+    "reported_values": {
+      "eta_certified_pct": {
+        "value": 13.9,
+        "tier": "T2",
+        "source": "Zhao et al., Energy Environ. Sci. 19, 2356-2366 (2026), doi:10.1039/D6EE00550K",
+        "access": "abstract, as indexed by web search (RSC site refuses automated access)",
+        "verify": false
+      },
+      "eta_lab_pct": {
+        "value": 14.39,
+        "tier": "T3",
+        "source": "Zhao et al., Energy Environ. Sci. 19, 2356-2366 (2026), doi:10.1039/D6EE00550K",
+        "access": "not reached: abstract snippets do not state it",
+        "verify": true
+      },
+      "eta_large_area_pct": {
+        "value": 12.24,
+        "tier": "T3",
+        "source": "Zhao et al., Energy Environ. Sci. 19, 2356-2366 (2026), doi:10.1039/D6EE00550K",
+        "access": "not reached",
+        "verify": true
+      },
+      "large_area_cm2": {
+        "value": 1.03,
+        "tier": "T3",
+        "source": "Zhao et al., Energy Environ. Sci. 19, 2356-2366 (2026), doi:10.1039/D6EE00550K",
+        "access": "not reached",
+        "verify": true,
+        "unit": "cm2"
+      },
+      "buffer": {
+        "value": "Zn-Sn-O (ZTO)",
+        "tier": "T3",
+        "source": "Zhao et al., Energy Environ. Sci. 19, 2356-2366 (2026), doi:10.1039/D6EE00550K",
+        "access": "abstract, as indexed by web search (RSC site refuses automated access)",
+        "verify": false,
+        "note": "Zn/(Zn+Sn) ratio not available"
+      },
+      "cd_free": {
+        "value": true,
+        "tier": "T3",
+        "source": "Zhao et al., Energy Environ. Sci. 19, 2356-2366 (2026), doi:10.1039/D6EE00550K",
+        "access": "title and abstract",
+        "verify": false
+      },
+      "certifying_lab": {
+        "value": null,
+        "tier": "T2",
+        "source": "Zhao et al., Energy Environ. Sci. 19, 2356-2366 (2026), doi:10.1039/D6EE00550K",
+        "access": "not reached",
+        "verify": true
+      },
+      "certificate_date": {
+        "value": null,
+        "tier": "T2",
+        "source": "Zhao et al., Energy Environ. Sci. 19, 2356-2366 (2026), doi:10.1039/D6EE00550K",
+        "access": "not reached",
+        "verify": true
+      },
+      "device_jv": {
+        "value": null,
+        "tier": "T2",
+        "source": "Zhao et al., Energy Environ. Sci. 19, 2356-2366 (2026), doi:10.1039/D6EE00550K",
+        "access": "not reached: Voc, Jsc, FF of the certified device are not in the abstract",
+        "verify": true
+      }
+    },
+    "unverified": [
+      "certificate_date",
+      "certifying_lab",
+      "device_jv",
+      "eta_lab_pct",
+      "eta_large_area_pct",
+      "large_area_cm2"
+    ],
+    "compliance": {
+      "layers": [
+        {
+          "layer": "absorber (S/Se assumed 0.2/0.8)",
+          "formula": "Cu2ZnSn(S0.2Se0.8)4",
+          "restricted": [],
+          "pass": true
+        },
+        {
+          "layer": "buffer (Zn-Sn-O; Zn0.8Sn0.2O1.2 assumed, ratio not available)",
+          "formula": "Zn0.8Sn0.2O1.2",
+          "restricted": [],
+          "pass": true
+        }
+      ],
+      "material_pass": true,
+      "worst_times_over": 0.0,
+      "gates": {
+        "VIPV": {
+          "gate": "pass",
+          "regime": "EU ELV (vehicles)"
+        },
+        "BIPV": {
+          "gate": "moot",
+          "regime": "RoHS, professional fixed-installation PV exclusion"
+        },
+        "interior": {
+          "gate": "pass",
+          "regime": "RoHS (consumer product, no shelter)"
+        }
+      }
+    },
+    "transferability": {
+      "score": 0.3,
+      "band": "LOW",
+      "reasons": [
+        "mechanism 'interface/buffer': stack-dependent; re-check against the Cd-free buffer (base 0.6)",
+        "route 'unknown' is off-primary (x0.5)"
+      ],
+      "platform": "P0"
+    },
+    "applications": {
+      "VIPV": {
+        "gate": {
+          "gate": "pass",
+          "regime": "EU ELV (vehicles)"
+        },
+        "thermal": {
+          "t_cell_c": 70.0,
+          "multiplier": {
+            "low": 0.82,
+            "mid": 0.843,
+            "high": 0.865
+          },
+          "provenance": "CIGS-derived class prior; NO measured TC exists for 14-15% kesterite (standing red flag, design 5.3)",
+          "cold_side": "unmodelled: -40..0 C freeze-out behaviour unknown"
+        },
+        "deterministic_sign": "open (gate pass); multipliers above"
+      },
+      "BIPV": {
+        "gate": {
+          "gate": "moot",
+          "regime": "RoHS, professional fixed-installation PV exclusion"
+        },
+        "thermal": {
+          "t_cell_c": 60.0,
+          "multiplier": {
+            "low": 0.86,
+            "mid": 0.878,
+            "high": 0.895
+          },
+          "provenance": "CIGS-derived class prior; NO measured TC exists for 14-15% kesterite (standing red flag, design 5.3)",
+          "cold_side": null
+        },
+        "deterministic_sign": "open (gate moot); multipliers above"
+      },
+      "interior": {
+        "gate": {
+          "gate": "pass",
+          "regime": "RoHS (consumer product, no shelter)"
+        },
+        "thermal": {
+          "t_cell_c": 25.0,
+          "multiplier": {
+            "low": 1.0,
+            "mid": 1.0,
+            "high": 1.0
+          },
+          "provenance": "CIGS-derived class prior; NO measured TC exists for 14-15% kesterite (standing red flag, design 5.3)",
+          "cold_side": null
+        },
+        "deterministic_sign": "open (gate pass); multipliers above"
+      }
+    },
+    "blind_spots": null,
+    "human_ratification": {
+      "net_sign": null,
+      "threat_opportunity_class": null,
+      "actions": [],
+      "signed_by": null
+    }
+  },
+  {
+    "id": "flex_mo_ne_2026",
+    "headline": "Flexible CZTSSe cell, Li-Na alkali co-alloying: 14.2% certified (14.45% lab), 0.23 cm2 (Nature Energy 2026, IoP-CAS)",
+    "provenance_tier": "T2 for the certified 14.2%; T3 for the lab value; area unverified",
+    "notes": "Layer stack not entered: the buffer is not stated in anything reachable, so compliance is left undetermined rather than assumed.",
+    "missing": [
+      "device J-V parameters (Voc/Jsc/FF) and/or Eg",
+      "layer stack for compliance arithmetic"
+    ],
+    "reported_values": {
+      "eta_certified_pct": {
+        "value": 14.2,
+        "tier": "T2",
+        "source": "Nature Energy 11, 854-865 (2026), doi:10.1038/s41560-026-02018-5 (IoP-CAS, Meng group)",
+        "access": "abstract (as indexed by web search) and IoP-CAS release of 30 Mar 2026 (read directly)",
+        "verify": false,
+        "note": "release says the certified result is collected in Tables v66 (T1 row not read)"
+      },
+      "eta_lab_pct": {
+        "value": 14.45,
+        "tier": "T3",
+        "source": "Nature Energy 11, 854-865 (2026), doi:10.1038/s41560-026-02018-5 (IoP-CAS, Meng group)",
+        "access": "abstract and release state 14.5%; 14.45% not reached",
+        "verify": true
+      },
+      "area_cm2": {
+        "value": 0.23,
+        "tier": "T3",
+        "source": "Nature Energy 11, 854-865 (2026), doi:10.1038/s41560-026-02018-5 (IoP-CAS, Meng group)",
+        "access": "not reached",
+        "verify": true,
+        "unit": "cm2"
+      },
+      "substrate": {
+        "value": "Mo foil",
+        "tier": "T3",
+        "source": "Nature Energy 11, 854-865 (2026), doi:10.1038/s41560-026-02018-5 (IoP-CAS, Meng group)",
+        "access": "not reached: sources say 'flexible' only",
+        "verify": true
+      },
+      "buffer": {
+        "value": null,
+        "tier": "T3",
+        "source": "Nature Energy 11, 854-865 (2026), doi:10.1038/s41560-026-02018-5 (IoP-CAS, Meng group)",
+        "access": "not reached",
+        "verify": true
+      },
+      "certifying_lab": {
+        "value": null,
+        "tier": "T2",
+        "source": "Nature Energy 11, 854-865 (2026), doi:10.1038/s41560-026-02018-5 (IoP-CAS, Meng group)",
+        "access": "not reached",
+        "verify": true
+      },
+      "device_jv": {
+        "value": null,
+        "tier": "T2",
+        "source": "Nature Energy 11, 854-865 (2026), doi:10.1038/s41560-026-02018-5 (IoP-CAS, Meng group)",
+        "access": "not reached",
+        "verify": true
+      }
+    },
+    "unverified": [
+      "area_cm2",
+      "buffer",
+      "certifying_lab",
+      "device_jv",
+      "eta_lab_pct",
+      "substrate"
+    ],
+    "transferability": {
+      "score": 0.42,
+      "band": "MEDIUM",
+      "reasons": [
+        "mechanism 'alkali': conditionally better: P0 doses alkali deliberately (no glass supply) (base 0.85)",
+        "route 'unknown' is off-primary (x0.5)"
+      ],
+      "platform": "P0"
+    },
+    "applications": {
+      "VIPV": {
+        "gate": {
+          "gate": "unknown"
+        },
+        "thermal": {
+          "t_cell_c": 70.0,
+          "multiplier": {
+            "low": 0.82,
+            "mid": 0.843,
+            "high": 0.865
+          },
+          "provenance": "CIGS-derived class prior; NO measured TC exists for 14-15% kesterite (standing red flag, design 5.3)",
+          "cold_side": "unmodelled: -40..0 C freeze-out behaviour unknown"
+        },
+        "deterministic_sign": "undetermined"
+      },
+      "BIPV": {
+        "gate": {
+          "gate": "unknown"
+        },
+        "thermal": {
+          "t_cell_c": 60.0,
+          "multiplier": {
+            "low": 0.86,
+            "mid": 0.878,
+            "high": 0.895
+          },
+          "provenance": "CIGS-derived class prior; NO measured TC exists for 14-15% kesterite (standing red flag, design 5.3)",
+          "cold_side": null
+        },
+        "deterministic_sign": "undetermined"
+      },
+      "interior": {
+        "gate": {
+          "gate": "unknown"
+        },
+        "thermal": {
+          "t_cell_c": 25.0,
+          "multiplier": {
+            "low": 1.0,
+            "mid": 1.0,
+            "high": 1.0
+          },
+          "provenance": "CIGS-derived class prior; NO measured TC exists for 14-15% kesterite (standing red flag, design 5.3)",
+          "cold_side": null
+        },
+        "deterministic_sign": "undetermined"
+      }
+    },
+    "blind_spots": null,
+    "human_ratification": {
+      "net_sign": null,
+      "threat_opportunity_class": null,
+      "actions": [],
+      "signed_by": null
+    }
+  },
+  {
+    "id": "flex_module_ne_2026",
+    "headline": "Shingled flexible CZTSSe module: 12.0% certified (12.7% lab), >10.5 cm2 (Nature Energy 2026, IoP-CAS)",
+    "provenance_tier": "T2 for the certified 12.0%; area unverified",
+    "notes": "Same paper as flex_mo_ne_2026. Layer stack not entered (buffer unknown).",
+    "missing": [
+      "device J-V parameters (Voc/Jsc/FF) and/or Eg",
+      "layer stack for compliance arithmetic"
+    ],
+    "reported_values": {
+      "eta_certified_pct": {
+        "value": 12.0,
+        "tier": "T2",
+        "source": "Nature Energy 11, 854-865 (2026), doi:10.1038/s41560-026-02018-5 (IoP-CAS, Meng group)",
+        "access": "abstract (as indexed by web search) and IoP-CAS release of 30 Mar 2026 (read directly)",
+        "verify": false,
+        "note": "release says collected in Tables v66 (T1 row not read)"
+      },
+      "eta_lab_pct": {
+        "value": 12.7,
+        "tier": "T3",
+        "source": "Nature Energy 11, 854-865 (2026), doi:10.1038/s41560-026-02018-5 (IoP-CAS, Meng group)",
+        "access": "abstract (as indexed by web search) and IoP-CAS release of 30 Mar 2026 (read directly)",
+        "verify": false
+      },
+      "area_cm2": {
+        "value": 10.5,
+        "tier": "T3",
+        "source": "Nature Energy 11, 854-865 (2026), doi:10.1038/s41560-026-02018-5 (IoP-CAS, Meng group)",
+        "access": "not reached: 'over 10.5 cm2' not confirmed",
+        "verify": true,
+        "unit": "cm2",
+        "note": "lower bound as given in the request"
+      },
+      "buffer": {
+        "value": null,
+        "tier": "T3",
+        "source": "Nature Energy 11, 854-865 (2026), doi:10.1038/s41560-026-02018-5 (IoP-CAS, Meng group)",
+        "access": "not reached",
+        "verify": true
+      },
+      "device_jv": {
+        "value": null,
+        "tier": "T2",
+        "source": "Nature Energy 11, 854-865 (2026), doi:10.1038/s41560-026-02018-5 (IoP-CAS, Meng group)",
+        "access": "not reached",
+        "verify": true
+      }
+    },
+    "unverified": [
+      "area_cm2",
+      "buffer",
+      "device_jv"
+    ],
+    "transferability": {
+      "score": 0.42,
+      "band": "MEDIUM",
+      "reasons": [
+        "mechanism 'alkali': conditionally better: P0 doses alkali deliberately (no glass supply) (base 0.85)",
+        "route 'unknown' is off-primary (x0.5)"
+      ],
+      "platform": "P0"
+    },
+    "applications": {
+      "VIPV": {
+        "gate": {
+          "gate": "unknown"
+        },
+        "thermal": {
+          "t_cell_c": 70.0,
+          "multiplier": {
+            "low": 0.82,
+            "mid": 0.843,
+            "high": 0.865
+          },
+          "provenance": "CIGS-derived class prior; NO measured TC exists for 14-15% kesterite (standing red flag, design 5.3)",
+          "cold_side": "unmodelled: -40..0 C freeze-out behaviour unknown"
+        },
+        "deterministic_sign": "undetermined"
+      },
+      "BIPV": {
+        "gate": {
+          "gate": "unknown"
+        },
+        "thermal": {
+          "t_cell_c": 60.0,
+          "multiplier": {
+            "low": 0.86,
+            "mid": 0.878,
+            "high": 0.895
+          },
+          "provenance": "CIGS-derived class prior; NO measured TC exists for 14-15% kesterite (standing red flag, design 5.3)",
+          "cold_side": null
+        },
+        "deterministic_sign": "undetermined"
+      },
+      "interior": {
+        "gate": {
+          "gate": "unknown"
+        },
+        "thermal": {
+          "t_cell_c": 25.0,
+          "multiplier": {
+            "low": 1.0,
+            "mid": 1.0,
+            "high": 1.0
+          },
+          "provenance": "CIGS-derived class prior; NO measured TC exists for 14-15% kesterite (standing red flag, design 5.3)",
+          "cold_side": null
+        },
+        "deterministic_sign": "undetermined"
+      }
+    },
+    "blind_spots": null,
+    "human_ratification": {
+      "net_sign": null,
+      "threat_opportunity_class": null,
+      "actions": [],
+      "signed_by": null
+    }
+  },
+  {
+    "id": "tables_v68_1cm2",
+    "headline": "Tables v68 CZTSSe >=1 cm2 cell 14.1% (1.075 cm2 da, IoP/CAS, NPVM 1/25)",
+    "provenance_tier": "T1",
+    "notes": "Eg assumed 1.10 eV (not in the table row). Layer stack not entered: the table row does not state the buffer. The indexed Voc, Jsc and FF do not reproduce 14.1% (see jsc_ma); treat the normalized shares and gain as unreliable until the row is checked.",
+    "missing": [
+      "consistent J-V: Voc x Jsc x FF = 15.18% but the stated efficiency is 14.1% - normalized shares and gain in this entry are computed from values that do not reproduce the efficiency",
+      "fitted n, Rs, Rsh (J-V file or intensity-dependent Voc) - low-light result is a prior envelope",
+      "layer stack for compliance arithmetic"
+    ],
+    "reported_values": {
+      "eta_certified_pct": {
+        "value": 14.1,
+        "tier": "T1",
+        "source": "Solar cell efficiency tables: Version 68, Joule (2026), Table 1",
+        "access": "Version 68 table row, as indexed by web search (Joule and OSTI refused automated access); identical row in Versions 66 and 67",
+        "verify": false,
+        "note": "\u00b1 0.3"
+      },
+      "area_cm2": {
+        "value": 1.075,
+        "tier": "T1",
+        "source": "Solar cell efficiency tables: Version 68, Joule (2026), Table 1",
+        "access": "Version 68 table row, as indexed by web search (Joule and OSTI refused automated access); identical row in Versions 66 and 67",
+        "verify": false,
+        "unit": "cm2",
+        "note": "designated illumination area (da)"
+      },
+      "voc_v": {
+        "value": 0.5356,
+        "tier": "T1",
+        "source": "Solar cell efficiency tables: Version 68, Joule (2026), Table 1",
+        "access": "Version 68 table row, as indexed by web search (Joule and OSTI refused automated access); identical row in Versions 66 and 67",
+        "verify": false,
+        "unit": "V"
+      },
+      "jsc_ma": {
+        "value": 40.67,
+        "tier": "T1",
+        "source": "Solar cell efficiency tables: Version 68, Joule (2026), Table 1",
+        "access": "Version 68 table row, as indexed by web search (Joule and OSTI refused automated access); identical row in Versions 66 and 67",
+        "verify": true,
+        "unit": "mA/cm2",
+        "note": "footnote j on Jsc not read. Voc x Jsc x FF = 15.18%, not the stated 14.1%; 14.1% implies Jsc of about 37.77 mA/cm2. Check the row and footnote j in the table itself."
+      },
+      "ff_pct": {
+        "value": 69.7,
+        "tier": "T1",
+        "source": "Solar cell efficiency tables: Version 68, Joule (2026), Table 1",
+        "access": "Version 68 table row, as indexed by web search (Joule and OSTI refused automated access); identical row in Versions 66 and 67",
+        "verify": false,
+        "unit": "%"
+      },
+      "certifying_lab": {
+        "value": "NPVM",
+        "tier": "T1",
+        "source": "Solar cell efficiency tables: Version 68, Joule (2026), Table 1",
+        "access": "Version 68 table row, as indexed by web search (Joule and OSTI refused automated access); identical row in Versions 66 and 67",
+        "verify": false
+      },
+      "certificate_date": {
+        "value": "2025-01",
+        "tier": "T1",
+        "source": "Solar cell efficiency tables: Version 68, Joule (2026), Table 1",
+        "access": "Version 68 table row, as indexed by web search (Joule and OSTI refused automated access); identical row in Versions 66 and 67",
+        "verify": false
+      },
+      "eg_ev": {
+        "value": 1.1,
+        "tier": "assumed",
+        "source": "not in the table row",
+        "access": "n/a",
+        "verify": true,
+        "unit": "eV"
+      }
+    },
+    "unverified": [
+      "eg_ev",
+      "jsc_ma"
+    ],
+    "jv_check": {
+      "voc_jsc_ff_pct": 15.18,
+      "stated_eta_pct": 14.1,
+      "consistent": false,
+      "tolerance_pts": 0.15
+    },
+    "normalized": {
+      "eg_ev": 1.1,
+      "eta_pct": 14.1,
+      "sq_eta_pct": 29.66,
+      "pct_sq": 47.5,
+      "logit_sq": -0.098,
+      "voc_over_sq": 0.625,
+      "jsc_over_sq": 1.02,
+      "ff_over_sq": 0.803,
+      "voc_deficit_sq_mv": 321.1,
+      "voc_deficit_eg_mv": 564.4,
+      "spectrum": "blackbody-5772K (approx; %SQ reads high)"
+    },
+    "gain": {
+      "eta_prev_pct": 13.46,
+      "eta_new_pct": 15.18,
+      "rel_gain_pct": 12.8,
+      "share_voc": 0.39,
+      "share_jsc": 0.58,
+      "share_ff": 0.02,
+      "label": "mixed",
+      "versus": "tables_v64_1cm2"
+    },
+    "low_light": {
+      "provenance": "class-prior envelope (n, Rs borrowed; Rsh solved from FF)",
+      "n_feasible": 26,
+      "n_range": [
+        1.2,
+        1.9
+      ],
+      "rsh_range_ohm_cm2": [
+        105,
+        3409
+      ],
+      "outdoor_retention": {
+        "1000W/m2": {
+          "min": 1.0,
+          "median": 1.0,
+          "max": 1.0
+        },
+        "400W/m2": {
+          "min": 0.792,
+          "median": 0.887,
+          "max": 0.967
+        },
+        "200W/m2": {
+          "min": 0.546,
+          "median": 0.753,
+          "max": 0.913
+        },
+        "100W/m2": {
+          "min": 0.288,
+          "median": 0.575,
+          "max": 0.843
+        },
+        "50W/m2": {
+          "min": 0.144,
+          "median": 0.339,
+          "max": 0.756
+        }
+      },
+      "indoor_eta_pct": {
+        "1000lux": {
+          "min": 0.12,
+          "median": 0.275,
+          "max": 2.94
+        },
+        "500lux": {
+          "min": 0.06,
+          "median": 0.14,
+          "max": 1.68
+        },
+        "200lux": {
+          "min": 0.02,
+          "median": 0.055,
+          "max": 0.71
+        }
+      }
+    },
+    "transferability": {
+      "score": 0.8,
+      "band": "HIGH",
+      "reasons": [
+        "mechanism 'bulk growth-kinetics': transfers high; thermal profile needs re-optimization on steel (base 0.8)"
+      ],
+      "platform": "P0"
+    },
+    "applications": {
+      "VIPV": {
+        "gate": {
+          "gate": "unknown"
+        },
+        "low_light": {
+          "point": "400W/m2",
+          "min": 0.792,
+          "median": 0.887,
+          "max": 0.967,
+          "unit": "retention"
+        },
+        "thermal": {
+          "t_cell_c": 70.0,
+          "multiplier": {
+            "low": 0.82,
+            "mid": 0.843,
+            "high": 0.865
+          },
+          "provenance": "CIGS-derived class prior; NO measured TC exists for 14-15% kesterite (standing red flag, design 5.3)",
+          "cold_side": "unmodelled: -40..0 C freeze-out behaviour unknown"
+        },
+        "deterministic_sign": "undetermined"
+      },
+      "BIPV": {
+        "gate": {
+          "gate": "unknown"
+        },
+        "low_light": {
+          "point": "200W/m2",
+          "min": 0.546,
+          "median": 0.753,
+          "max": 0.913,
+          "unit": "retention"
+        },
+        "thermal": {
+          "t_cell_c": 60.0,
+          "multiplier": {
+            "low": 0.86,
+            "mid": 0.878,
+            "high": 0.895
+          },
+          "provenance": "CIGS-derived class prior; NO measured TC exists for 14-15% kesterite (standing red flag, design 5.3)",
+          "cold_side": null
+        },
+        "deterministic_sign": "undetermined"
+      },
+      "interior": {
+        "gate": {
+          "gate": "unknown"
+        },
+        "low_light": {
+          "point": "500lux",
+          "min": 0.06,
+          "median": 0.14,
+          "max": 1.68,
+          "unit": "eta_pct"
+        },
+        "thermal": {
+          "t_cell_c": 25.0,
+          "multiplier": {
+            "low": 1.0,
+            "mid": 1.0,
+            "high": 1.0
+          },
+          "provenance": "CIGS-derived class prior; NO measured TC exists for 14-15% kesterite (standing red flag, design 5.3)",
+          "cold_side": null
+        },
+        "deterministic_sign": "undetermined"
+      }
+    },
+    "blind_spots": null,
+    "human_ratification": {
+      "net_sign": null,
+      "threat_opportunity_class": null,
+      "actions": [],
+      "signed_by": null
+    }
+  },
+  {
+    "id": "module_v68",
+    "headline": "Tables v68 CZTSSe minimodule 12.9% (10.51 cm2 da, 6 cells, IoP/CAS, NPVM 7/25)",
+    "provenance_tier": "T1",
+    "notes": "Supersedes the Version 66 minimodule (11.95%, 10.47 cm2, per indexed text). Layer stack not entered (table row does not state the buffer).",
+    "missing": [
+      "device J-V parameters (Voc/Jsc/FF) and/or Eg",
+      "layer stack for compliance arithmetic"
+    ],
+    "reported_values": {
+      "eta_certified_pct": {
+        "value": 12.9,
+        "tier": "T1",
+        "source": "Solar cell efficiency tables: Version 68, Joule (2026), Table 1",
+        "access": "Version 68 table row, as indexed by web search (Joule and OSTI refused automated access)",
+        "verify": false,
+        "note": "\u00b1 0.3"
+      },
+      "area_cm2": {
+        "value": 10.51,
+        "tier": "T1",
+        "source": "Solar cell efficiency tables: Version 68, Joule (2026), Table 1",
+        "access": "table row, as indexed by web search",
+        "verify": false,
+        "unit": "cm2",
+        "note": "designated illumination area (da)"
+      },
+      "n_cells": {
+        "value": 6,
+        "tier": "T1",
+        "source": "Solar cell efficiency tables: Version 68, Joule (2026), Table 1",
+        "access": "table row, as indexed by web search",
+        "verify": false
+      },
+      "certifying_lab": {
+        "value": "NPVM",
+        "tier": "T1",
+        "source": "Solar cell efficiency tables: Version 68, Joule (2026), Table 1",
+        "access": "table row, as indexed by web search",
+        "verify": false
+      },
+      "certificate_date": {
+        "value": "2025-07",
+        "tier": "T1",
+        "source": "Solar cell efficiency tables: Version 68, Joule (2026), Table 1",
+        "access": "table row, as indexed by web search",
+        "verify": false
+      },
+      "device_jv": {
+        "value": null,
+        "tier": "T1",
+        "source": "Solar cell efficiency tables: Version 68, Joule (2026), Table 1",
+        "access": "not reached: Voc, Isc, FF of the row not in the indexed text",
+        "verify": true
+      }
+    },
+    "unverified": [
+      "device_jv"
+    ],
+    "applications": {
+      "VIPV": {
+        "gate": {
+          "gate": "unknown"
+        },
+        "thermal": {
+          "t_cell_c": 70.0,
+          "multiplier": {
+            "low": 0.82,
+            "mid": 0.843,
+            "high": 0.865
+          },
+          "provenance": "CIGS-derived class prior; NO measured TC exists for 14-15% kesterite (standing red flag, design 5.3)",
+          "cold_side": "unmodelled: -40..0 C freeze-out behaviour unknown"
+        },
+        "deterministic_sign": "undetermined"
+      },
+      "BIPV": {
+        "gate": {
+          "gate": "unknown"
+        },
+        "thermal": {
+          "t_cell_c": 60.0,
+          "multiplier": {
+            "low": 0.86,
+            "mid": 0.878,
+            "high": 0.895
+          },
+          "provenance": "CIGS-derived class prior; NO measured TC exists for 14-15% kesterite (standing red flag, design 5.3)",
+          "cold_side": null
+        },
+        "deterministic_sign": "undetermined"
+      },
+      "interior": {
+        "gate": {
+          "gate": "unknown"
+        },
+        "thermal": {
+          "t_cell_c": 25.0,
+          "multiplier": {
+            "low": 1.0,
+            "mid": 1.0,
+            "high": 1.0
+          },
+          "provenance": "CIGS-derived class prior; NO measured TC exists for 14-15% kesterite (standing red flag, design 5.3)",
+          "cold_side": null
+        },
+        "deterministic_sign": "undetermined"
       }
     },
     "blind_spots": null,
