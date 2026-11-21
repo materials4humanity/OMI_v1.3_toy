@@ -4,7 +4,7 @@ Deterministic layer of the MDL implication engine (design memo sections 5-6) and
 temporal analysis from the learning-curve memo (sections 2, 5, 6). Pure Python:
 numpy, scipy, matplotlib (charts only), pytest (tests only).
 
-    python -m pytest -q            # 16 tests
+    python -m pytest -q            # 21 tests
     python -m mdl_engine --out out # ledger + temporal analysis + charts
     python -m mdl_engine --spectrum astmg173.csv   # use real AM1.5G for %SQ
 
@@ -25,6 +25,24 @@ Append to `mdl_engine/data/events.json`. Minimum: `id`, `headline`. Add `eg_ev` 
 `layers` (name + formula) for compliance, `mechanism` (class, route, configuration)
 for transferability, `prev_id` for gain decomposition, `data_flags` for the
 blind-spot map. Missing inputs are listed on the entry rather than guessed.
+
+`values` records provenance per reported value: `{"value", "tier", "source",
+"access", "verify", "unit"?, "note"?}`. `access` says how the value was read
+(for example a table row as indexed by web search, when the publisher refused
+automated access). `verify: true` marks anything not confirmed against a
+source. The ledger copies `values` into `reported_values` and lists the
+`verify: true` keys under `unverified`. Leave a layer stack out when the
+buffer is not stated: the compliance gate then reads `unknown`, not `pass`.
+
+Provenance tiers as used in the seed rows (the repository has no formal
+definition; this is the reading the rows imply): **T1** an efficiency-table
+row; **T2** a certified value reported in a paper, not (yet) read from a table;
+**T3** an uncertified lab value or detail from a paper; **T4** press or other
+secondary coverage; `assumed` for values entered without a source.
+
+Every entry with Voc, Jsc, FF and an efficiency gets a `jv_check`: if
+Voc x Jsc x FF misses the stated efficiency by more than 0.15 points, the entry
+says so under `missing`, and its normalized shares and gain should not be used.
 
 ## Known limits (read before quoting numbers)
 * **%SQ uses a 5772 K blackbody unless `--spectrum` is given.** It reads high and the

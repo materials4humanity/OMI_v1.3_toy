@@ -9,6 +9,8 @@ import json
 from . import sq, diode, decompose, compliance, thermal, transfer
 
 # Representative operating points per application (assumptions, editable).
+JV_TOL_PTS = 0.15   # abs. points; covers rounding of Voc, Jsc and FF in published rows
+
 REP_POINT = {"VIPV": ("outdoor", "400W/m2"), "BIPV": ("outdoor", "200W/m2"),
              "interior": ("indoor", "500lux")}
 APPS = ("VIPV", "BIPV", "interior")
@@ -25,6 +27,24 @@ def build_entry(event: dict, events_by_id: dict | None = None, spectrum=None) ->
     entry = {"id": event["id"], "headline": event["headline"],
              "provenance_tier": event.get("tier"), "notes": event.get("notes"),
              "missing": []}
+
+    vals = event.get("values")
+    if vals:
+        # Per-value provenance as recorded in the seed data: tier, source, how it was
+        # accessed, and verify=True for anything not confirmed against a source.
+        entry["reported_values"] = vals
+        entry["unverified"] = sorted(k for k, v in vals.items() if v.get("verify"))
+
+    if d and d.get("eta_pct") is not None:
+        prod = d["voc_v"] * d["jsc_ma"] * d["ff_pct"] / 100.0
+        ok = abs(prod - d["eta_pct"]) <= JV_TOL_PTS
+        entry["jv_check"] = {"voc_jsc_ff_pct": round(prod, 2), "stated_eta_pct": d["eta_pct"],
+                             "consistent": ok, "tolerance_pts": JV_TOL_PTS}
+        if not ok:
+            entry["missing"].append(
+                f"consistent J-V: Voc x Jsc x FF = {prod:.2f}% but the stated efficiency is "
+                f"{d['eta_pct']}% - normalized shares and gain in this entry are computed from values "
+                "that do not reproduce the efficiency")
 
     if d and event.get("eg_ev"):
         entry["normalized"] = sq.normalize(event["eg_ev"], d["voc_v"], d["jsc_ma"],
@@ -101,6 +121,17 @@ def render_markdown(entry: dict) -> str:
          f"*Provenance tier: {entry.get('provenance_tier')}*"]
     if entry.get("notes"):
         L.append(f"*Note: {entry['notes']}*")
+    rv = entry.get("reported_values")
+    if rv:
+        bits = []
+        for k, v in rv.items():
+            if v.get("value") is None:
+                continue
+            unit = f" {v['unit']}" if v.get("unit") else ""
+            bits.append(f"{k} {v['value']}{unit} [{v['tier']}{', verify' if v.get('verify') else ''}]")
+        L.append("- **Reported values:** " + "; ".join(bits) + ".")
+        if entry["unverified"]:
+            L.append(f"- **Unverified (verify=true):** {', '.join(entry['unverified'])}.")
     n = entry.get("normalized")
     if n:
         L.append(f"- **Normalized:** {n['eta_pct']}% at Eg {n['eg_ev']} eV = {n['pct_sq']}% of SQ "

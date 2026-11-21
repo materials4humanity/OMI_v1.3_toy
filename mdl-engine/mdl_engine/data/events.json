@@ -55,5 +55,351 @@
 
  {"id": "p0_target_stack", "headline": "P0 target: CZTSSe with Cd-free Zn(O,S) buffer (compliance check only)",
   "tier": "design",
-  "layers": [{"name": "absorber", "formula": "Cu2ZnSn(S0.2Se0.8)4"}, {"name": "buffer", "formula": "ZnO0.7S0.3"}]}
+  "layers": [{"name": "absorber", "formula": "Cu2ZnSn(S0.2Se0.8)4"}, {"name": "buffer", "formula": "ZnO0.7S0.3"}]},
+
+ {
+  "id": "zto_ees_2026",
+  "headline": "Zhao et al. Cd-free CZTSSe/Zn-Sn-O (ZTO) buffer: 13.90% certified, 14.39% lab, 12.24% at 1.03 cm2 (Energy Environ. Sci. 2026)",
+  "tier": "T2 for the certified 13.90%; T3 (unverified) for lab and large-area values",
+  "values": {
+   "eta_certified_pct": {
+    "value": 13.9,
+    "tier": "T2",
+    "source": "Zhao et al., Energy Environ. Sci. 19, 2356-2366 (2026), doi:10.1039/D6EE00550K",
+    "access": "abstract, as indexed by web search (RSC site refuses automated access)",
+    "verify": false
+   },
+   "eta_lab_pct": {
+    "value": 14.39,
+    "tier": "T3",
+    "source": "Zhao et al., Energy Environ. Sci. 19, 2356-2366 (2026), doi:10.1039/D6EE00550K",
+    "access": "not reached: abstract snippets do not state it",
+    "verify": true
+   },
+   "eta_large_area_pct": {
+    "value": 12.24,
+    "tier": "T3",
+    "source": "Zhao et al., Energy Environ. Sci. 19, 2356-2366 (2026), doi:10.1039/D6EE00550K",
+    "access": "not reached",
+    "verify": true
+   },
+   "large_area_cm2": {
+    "value": 1.03,
+    "tier": "T3",
+    "source": "Zhao et al., Energy Environ. Sci. 19, 2356-2366 (2026), doi:10.1039/D6EE00550K",
+    "access": "not reached",
+    "verify": true,
+    "unit": "cm2"
+   },
+   "buffer": {
+    "value": "Zn-Sn-O (ZTO)",
+    "tier": "T3",
+    "source": "Zhao et al., Energy Environ. Sci. 19, 2356-2366 (2026), doi:10.1039/D6EE00550K",
+    "access": "abstract, as indexed by web search (RSC site refuses automated access)",
+    "verify": false,
+    "note": "Zn/(Zn+Sn) ratio not available"
+   },
+   "cd_free": {
+    "value": true,
+    "tier": "T3",
+    "source": "Zhao et al., Energy Environ. Sci. 19, 2356-2366 (2026), doi:10.1039/D6EE00550K",
+    "access": "title and abstract",
+    "verify": false
+   },
+   "certifying_lab": {
+    "value": null,
+    "tier": "T2",
+    "source": "Zhao et al., Energy Environ. Sci. 19, 2356-2366 (2026), doi:10.1039/D6EE00550K",
+    "access": "not reached",
+    "verify": true
+   },
+   "certificate_date": {
+    "value": null,
+    "tier": "T2",
+    "source": "Zhao et al., Energy Environ. Sci. 19, 2356-2366 (2026), doi:10.1039/D6EE00550K",
+    "access": "not reached",
+    "verify": true
+   },
+   "device_jv": {
+    "value": null,
+    "tier": "T2",
+    "source": "Zhao et al., Energy Environ. Sci. 19, 2356-2366 (2026), doi:10.1039/D6EE00550K",
+    "access": "not reached: Voc, Jsc, FF of the certified device are not in the abstract",
+    "verify": true
+   }
+  },
+  "layers": [
+   {
+    "name": "absorber (S/Se assumed 0.2/0.8)",
+    "formula": "Cu2ZnSn(S0.2Se0.8)4"
+   },
+   {
+    "name": "buffer (Zn-Sn-O; Zn0.8Sn0.2O1.2 assumed, ratio not available)",
+    "formula": "Zn0.8Sn0.2O1.2"
+   }
+  ],
+  "mechanism": {
+   "class": "interface/buffer",
+   "route": "unknown",
+   "configuration": "substrate"
+  },
+  "notes": "Mechanism from the abstract: junction heat treatment drives Zn from the ZTO buffer into the absorber's space-charge region. Formulas are placeholders for the compliance arithmetic, which depends only on the absence of Cd/Pb/Hg; the stack is Cd-free per the title. Window and contact layers not listed (not checked for Cd). Deposition route not available, so transferability uses the off-primary default."
+ },
+
+ {
+  "id": "flex_mo_ne_2026",
+  "headline": "Flexible CZTSSe cell, Li-Na alkali co-alloying: 14.2% certified (14.45% lab), 0.23 cm2 (Nature Energy 2026, IoP-CAS)",
+  "tier": "T2 for the certified 14.2%; T3 for the lab value; area unverified",
+  "values": {
+   "eta_certified_pct": {
+    "value": 14.2,
+    "tier": "T2",
+    "source": "Nature Energy 11, 854-865 (2026), doi:10.1038/s41560-026-02018-5 (IoP-CAS, Meng group)",
+    "access": "abstract (as indexed by web search) and IoP-CAS release of 30 Mar 2026 (read directly)",
+    "verify": false,
+    "note": "release says the certified result is collected in Tables v66 (T1 row not read)"
+   },
+   "eta_lab_pct": {
+    "value": 14.45,
+    "tier": "T3",
+    "source": "Nature Energy 11, 854-865 (2026), doi:10.1038/s41560-026-02018-5 (IoP-CAS, Meng group)",
+    "access": "abstract and release state 14.5%; 14.45% not reached",
+    "verify": true
+   },
+   "area_cm2": {
+    "value": 0.23,
+    "tier": "T3",
+    "source": "Nature Energy 11, 854-865 (2026), doi:10.1038/s41560-026-02018-5 (IoP-CAS, Meng group)",
+    "access": "not reached",
+    "verify": true,
+    "unit": "cm2"
+   },
+   "substrate": {
+    "value": "Mo foil",
+    "tier": "T3",
+    "source": "Nature Energy 11, 854-865 (2026), doi:10.1038/s41560-026-02018-5 (IoP-CAS, Meng group)",
+    "access": "not reached: sources say 'flexible' only",
+    "verify": true
+   },
+   "buffer": {
+    "value": null,
+    "tier": "T3",
+    "source": "Nature Energy 11, 854-865 (2026), doi:10.1038/s41560-026-02018-5 (IoP-CAS, Meng group)",
+    "access": "not reached",
+    "verify": true
+   },
+   "certifying_lab": {
+    "value": null,
+    "tier": "T2",
+    "source": "Nature Energy 11, 854-865 (2026), doi:10.1038/s41560-026-02018-5 (IoP-CAS, Meng group)",
+    "access": "not reached",
+    "verify": true
+   },
+   "device_jv": {
+    "value": null,
+    "tier": "T2",
+    "source": "Nature Energy 11, 854-865 (2026), doi:10.1038/s41560-026-02018-5 (IoP-CAS, Meng group)",
+    "access": "not reached",
+    "verify": true
+   }
+  },
+  "mechanism": {
+   "class": "alkali",
+   "route": "unknown",
+   "configuration": "substrate"
+  },
+  "notes": "Layer stack not entered: the buffer is not stated in anything reachable, so compliance is left undetermined rather than assumed."
+ },
+
+ {
+  "id": "flex_module_ne_2026",
+  "headline": "Shingled flexible CZTSSe module: 12.0% certified (12.7% lab), >10.5 cm2 (Nature Energy 2026, IoP-CAS)",
+  "tier": "T2 for the certified 12.0%; area unverified",
+  "values": {
+   "eta_certified_pct": {
+    "value": 12.0,
+    "tier": "T2",
+    "source": "Nature Energy 11, 854-865 (2026), doi:10.1038/s41560-026-02018-5 (IoP-CAS, Meng group)",
+    "access": "abstract (as indexed by web search) and IoP-CAS release of 30 Mar 2026 (read directly)",
+    "verify": false,
+    "note": "release says collected in Tables v66 (T1 row not read)"
+   },
+   "eta_lab_pct": {
+    "value": 12.7,
+    "tier": "T3",
+    "source": "Nature Energy 11, 854-865 (2026), doi:10.1038/s41560-026-02018-5 (IoP-CAS, Meng group)",
+    "access": "abstract (as indexed by web search) and IoP-CAS release of 30 Mar 2026 (read directly)",
+    "verify": false
+   },
+   "area_cm2": {
+    "value": 10.5,
+    "tier": "T3",
+    "source": "Nature Energy 11, 854-865 (2026), doi:10.1038/s41560-026-02018-5 (IoP-CAS, Meng group)",
+    "access": "not reached: 'over 10.5 cm2' not confirmed",
+    "verify": true,
+    "unit": "cm2",
+    "note": "lower bound as given in the request"
+   },
+   "buffer": {
+    "value": null,
+    "tier": "T3",
+    "source": "Nature Energy 11, 854-865 (2026), doi:10.1038/s41560-026-02018-5 (IoP-CAS, Meng group)",
+    "access": "not reached",
+    "verify": true
+   },
+   "device_jv": {
+    "value": null,
+    "tier": "T2",
+    "source": "Nature Energy 11, 854-865 (2026), doi:10.1038/s41560-026-02018-5 (IoP-CAS, Meng group)",
+    "access": "not reached",
+    "verify": true
+   }
+  },
+  "mechanism": {
+   "class": "alkali",
+   "route": "unknown",
+   "configuration": "substrate"
+  },
+  "notes": "Same paper as flex_mo_ne_2026. Layer stack not entered (buffer unknown)."
+ },
+
+ {
+  "id": "tables_v68_1cm2",
+  "headline": "Tables v68 CZTSSe >=1 cm2 cell 14.1% (1.075 cm2 da, IoP/CAS, NPVM 1/25)",
+  "tier": "T1",
+  "eg_ev": 1.1,
+  "prev_id": "tables_v64_1cm2",
+  "device": {
+   "voc_v": 0.5356,
+   "jsc_ma": 40.67,
+   "ff_pct": 69.7,
+   "eta_pct": 14.1
+  },
+  "values": {
+   "eta_certified_pct": {
+    "value": 14.1,
+    "tier": "T1",
+    "source": "Solar cell efficiency tables: Version 68, Joule (2026), Table 1",
+    "access": "Version 68 table row, as indexed by web search (Joule and OSTI refused automated access); identical row in Versions 66 and 67",
+    "verify": false,
+    "note": "± 0.3"
+   },
+   "area_cm2": {
+    "value": 1.075,
+    "tier": "T1",
+    "source": "Solar cell efficiency tables: Version 68, Joule (2026), Table 1",
+    "access": "Version 68 table row, as indexed by web search (Joule and OSTI refused automated access); identical row in Versions 66 and 67",
+    "verify": false,
+    "unit": "cm2",
+    "note": "designated illumination area (da)"
+   },
+   "voc_v": {
+    "value": 0.5356,
+    "tier": "T1",
+    "source": "Solar cell efficiency tables: Version 68, Joule (2026), Table 1",
+    "access": "Version 68 table row, as indexed by web search (Joule and OSTI refused automated access); identical row in Versions 66 and 67",
+    "verify": false,
+    "unit": "V"
+   },
+   "jsc_ma": {
+    "value": 40.67,
+    "tier": "T1",
+    "source": "Solar cell efficiency tables: Version 68, Joule (2026), Table 1",
+    "access": "Version 68 table row, as indexed by web search (Joule and OSTI refused automated access); identical row in Versions 66 and 67",
+    "verify": true,
+    "unit": "mA/cm2",
+    "note": "footnote j on Jsc not read. Voc x Jsc x FF = 15.18%, not the stated 14.1%; 14.1% implies Jsc of about 37.77 mA/cm2. Check the row and footnote j in the table itself."
+   },
+   "ff_pct": {
+    "value": 69.7,
+    "tier": "T1",
+    "source": "Solar cell efficiency tables: Version 68, Joule (2026), Table 1",
+    "access": "Version 68 table row, as indexed by web search (Joule and OSTI refused automated access); identical row in Versions 66 and 67",
+    "verify": false,
+    "unit": "%"
+   },
+   "certifying_lab": {
+    "value": "NPVM",
+    "tier": "T1",
+    "source": "Solar cell efficiency tables: Version 68, Joule (2026), Table 1",
+    "access": "Version 68 table row, as indexed by web search (Joule and OSTI refused automated access); identical row in Versions 66 and 67",
+    "verify": false
+   },
+   "certificate_date": {
+    "value": "2025-01",
+    "tier": "T1",
+    "source": "Solar cell efficiency tables: Version 68, Joule (2026), Table 1",
+    "access": "Version 68 table row, as indexed by web search (Joule and OSTI refused automated access); identical row in Versions 66 and 67",
+    "verify": false
+   },
+   "eg_ev": {
+    "value": 1.1,
+    "tier": "assumed",
+    "source": "not in the table row",
+    "access": "n/a",
+    "verify": true,
+    "unit": "eV"
+   }
+  },
+  "mechanism": {
+   "class": "bulk growth-kinetics",
+   "route": "solution-molecular-ink",
+   "configuration": "substrate"
+  },
+  "notes": "Eg assumed 1.10 eV (not in the table row). Layer stack not entered: the table row does not state the buffer. The indexed Voc, Jsc and FF do not reproduce 14.1% (see jsc_ma); treat the normalized shares and gain as unreliable until the row is checked."
+ },
+
+ {
+  "id": "module_v68",
+  "headline": "Tables v68 CZTSSe minimodule 12.9% (10.51 cm2 da, 6 cells, IoP/CAS, NPVM 7/25)",
+  "tier": "T1",
+  "values": {
+   "eta_certified_pct": {
+    "value": 12.9,
+    "tier": "T1",
+    "source": "Solar cell efficiency tables: Version 68, Joule (2026), Table 1",
+    "access": "Version 68 table row, as indexed by web search (Joule and OSTI refused automated access)",
+    "verify": false,
+    "note": "± 0.3"
+   },
+   "area_cm2": {
+    "value": 10.51,
+    "tier": "T1",
+    "source": "Solar cell efficiency tables: Version 68, Joule (2026), Table 1",
+    "access": "table row, as indexed by web search",
+    "verify": false,
+    "unit": "cm2",
+    "note": "designated illumination area (da)"
+   },
+   "n_cells": {
+    "value": 6,
+    "tier": "T1",
+    "source": "Solar cell efficiency tables: Version 68, Joule (2026), Table 1",
+    "access": "table row, as indexed by web search",
+    "verify": false
+   },
+   "certifying_lab": {
+    "value": "NPVM",
+    "tier": "T1",
+    "source": "Solar cell efficiency tables: Version 68, Joule (2026), Table 1",
+    "access": "table row, as indexed by web search",
+    "verify": false
+   },
+   "certificate_date": {
+    "value": "2025-07",
+    "tier": "T1",
+    "source": "Solar cell efficiency tables: Version 68, Joule (2026), Table 1",
+    "access": "table row, as indexed by web search",
+    "verify": false
+   },
+   "device_jv": {
+    "value": null,
+    "tier": "T1",
+    "source": "Solar cell efficiency tables: Version 68, Joule (2026), Table 1",
+    "access": "not reached: Voc, Isc, FF of the row not in the indexed text",
+    "verify": true
+   }
+  },
+  "notes": "Supersedes the Version 66 minimodule (11.95%, 10.47 cm2, per indexed text). Layer stack not entered (table row does not state the buffer)."
+ }
 ]

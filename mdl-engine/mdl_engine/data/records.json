@@ -83,9 +83,10 @@
    "verify": true
   },
   {
-   "t": 2023.45,
+   "t": 2023.29,
    "eta": 14.9,
-   "label": "v62: 14.9% IoP-CAS small-area (pv magazine, Jun 2023)"
+   "label": "v62: 14.9% IoP-CAS small-area (pv magazine, Jun 2023)",
+   "date_basis": "certificate: NPVM (4/23), mid-month; tables v62 published Jun 2023"
   }
  ],
  "table_dated_1cm2": [
@@ -119,10 +120,10 @@
    "verify": true
   },
   {
-   "t": 2023.15,
+   "t": 2023.29,
    "eta": 14.9,
    "label": "tables v62: IoP-CAS small-area (area definition differs from papers' total-area)",
-   "verify": true
+   "date_basis": "certificate: NPVM (4/23), mid-month; row 14.9 +/- 0.3, 0.2694 cm2 (da), from the v62 table as indexed by web search"
   },
   {
    "t": 2026.15,

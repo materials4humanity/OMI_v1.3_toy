@@ -102,3 +102,61 @@
 - **Application-adjacent data flags:** not yet assessed.
 - **Missing inputs:** device J-V parameters (Voc/Jsc/FF) and/or Eg.
 - **Human ratification:** _pending_
+
+### zto_ees_2026 - Zhao et al. Cd-free CZTSSe/Zn-Sn-O (ZTO) buffer: 13.90% certified, 14.39% lab, 12.24% at 1.03 cm2 (Energy Environ. Sci. 2026)
+*Provenance tier: T2 for the certified 13.90%; T3 (unverified) for lab and large-area values*
+*Note: Mechanism from the abstract: junction heat treatment drives Zn from the ZTO buffer into the absorber's space-charge region. Formulas are placeholders for the compliance arithmetic, which depends only on the absence of Cd/Pb/Hg; the stack is Cd-free per the title. Window and contact layers not listed (not checked for Cd). Deposition route not available, so transferability uses the off-primary default.*
+- **Reported values:** eta_certified_pct 13.9 [T2]; eta_lab_pct 14.39 [T3, verify]; eta_large_area_pct 12.24 [T3, verify]; large_area_cm2 1.03 cm2 [T3, verify]; buffer Zn-Sn-O (ZTO) [T3]; cd_free True [T3].
+- **Unverified (verify=true):** certificate_date, certifying_lab, device_jv, eta_lab_pct, eta_large_area_pct, large_area_cm2.
+- **Compliance:** no restricted substances. Gates -> VIPV: pass, BIPV: moot, interior: pass.
+- **Transferability to P0:** LOW (0.3): mechanism 'interface/buffer': stack-dependent; re-check against the Cd-free buffer (base 0.6); route 'unknown' is off-primary (x0.5).
+- **Application signs (deterministic part):** VIPV: open (gate pass); multipliers above; BIPV: open (gate moot); multipliers above; interior: open (gate pass); multipliers above
+- **Application-adjacent data flags:** not yet assessed.
+- **Missing inputs:** device J-V parameters (Voc/Jsc/FF) and/or Eg.
+- **Human ratification:** _pending_
+
+### flex_mo_ne_2026 - Flexible CZTSSe cell, Li-Na alkali co-alloying: 14.2% certified (14.45% lab), 0.23 cm2 (Nature Energy 2026, IoP-CAS)
+*Provenance tier: T2 for the certified 14.2%; T3 for the lab value; area unverified*
+*Note: Layer stack not entered: the buffer is not stated in anything reachable, so compliance is left undetermined rather than assumed.*
+- **Reported values:** eta_certified_pct 14.2 [T2]; eta_lab_pct 14.45 [T3, verify]; area_cm2 0.23 cm2 [T3, verify]; substrate Mo foil [T3, verify].
+- **Unverified (verify=true):** area_cm2, buffer, certifying_lab, device_jv, eta_lab_pct, substrate.
+- **Transferability to P0:** MEDIUM (0.42): mechanism 'alkali': conditionally better: P0 doses alkali deliberately (no glass supply) (base 0.85); route 'unknown' is off-primary (x0.5).
+- **Application signs (deterministic part):** VIPV: undetermined; BIPV: undetermined; interior: undetermined
+- **Application-adjacent data flags:** not yet assessed.
+- **Missing inputs:** device J-V parameters (Voc/Jsc/FF) and/or Eg; layer stack for compliance arithmetic.
+- **Human ratification:** _pending_
+
+### flex_module_ne_2026 - Shingled flexible CZTSSe module: 12.0% certified (12.7% lab), >10.5 cm2 (Nature Energy 2026, IoP-CAS)
+*Provenance tier: T2 for the certified 12.0%; area unverified*
+*Note: Same paper as flex_mo_ne_2026. Layer stack not entered (buffer unknown).*
+- **Reported values:** eta_certified_pct 12.0 [T2]; eta_lab_pct 12.7 [T3]; area_cm2 10.5 cm2 [T3, verify].
+- **Unverified (verify=true):** area_cm2, buffer, device_jv.
+- **Transferability to P0:** MEDIUM (0.42): mechanism 'alkali': conditionally better: P0 doses alkali deliberately (no glass supply) (base 0.85); route 'unknown' is off-primary (x0.5).
+- **Application signs (deterministic part):** VIPV: undetermined; BIPV: undetermined; interior: undetermined
+- **Application-adjacent data flags:** not yet assessed.
+- **Missing inputs:** device J-V parameters (Voc/Jsc/FF) and/or Eg; layer stack for compliance arithmetic.
+- **Human ratification:** _pending_
+
+### tables_v68_1cm2 - Tables v68 CZTSSe >=1 cm2 cell 14.1% (1.075 cm2 da, IoP/CAS, NPVM 1/25)
+*Provenance tier: T1*
+*Note: Eg assumed 1.10 eV (not in the table row). Layer stack not entered: the table row does not state the buffer. The indexed Voc, Jsc and FF do not reproduce 14.1% (see jsc_ma); treat the normalized shares and gain as unreliable until the row is checked.*
+- **Reported values:** eta_certified_pct 14.1 [T1]; area_cm2 1.075 cm2 [T1]; voc_v 0.5356 V [T1]; jsc_ma 40.67 mA/cm2 [T1, verify]; ff_pct 69.7 % [T1]; certifying_lab NPVM [T1]; certificate_date 2025-01 [T1]; eg_ev 1.1 eV [assumed, verify].
+- **Unverified (verify=true):** eg_ev, jsc_ma.
+- **Normalized:** 14.1% at Eg 1.1 eV = 47.5% of SQ (blackbody-5772K (approx; %SQ reads high)); Voc/SQ 0.625, Jsc/SQ 1.02, FF/SQ 0.803; Voc deficit 321.1 mV vs SQ.
+- **Gain vs tables_v64_1cm2:** +12.8% relative; shares Voc +0.39 / Jsc +0.58 / FF +0.02 -> mixed.
+- **Low light (class-prior envelope (n, Rs borrowed; Rsh solved from FF)), median (min-max):** retention 0.89 (0.79-0.97) @400, 0.75 (0.55-0.91) @200, 0.57 (0.29-0.84) @100 W/m2; indoor eta 0.28 (0.12-2.94)% @1000 lux.
+- **Transferability to P0:** HIGH (0.8): mechanism 'bulk growth-kinetics': transfers high; thermal profile needs re-optimization on steel (base 0.8).
+- **Application signs (deterministic part):** VIPV: undetermined; BIPV: undetermined; interior: undetermined
+- **Application-adjacent data flags:** not yet assessed.
+- **Missing inputs:** consistent J-V: Voc x Jsc x FF = 15.18% but the stated efficiency is 14.1% - normalized shares and gain in this entry are computed from values that do not reproduce the efficiency; fitted n, Rs, Rsh (J-V file or intensity-dependent Voc) - low-light result is a prior envelope; layer stack for compliance arithmetic.
+- **Human ratification:** _pending_
+
+### module_v68 - Tables v68 CZTSSe minimodule 12.9% (10.51 cm2 da, 6 cells, IoP/CAS, NPVM 7/25)
+*Provenance tier: T1*
+*Note: Supersedes the Version 66 minimodule (11.95%, 10.47 cm2, per indexed text). Layer stack not entered (table row does not state the buffer).*
+- **Reported values:** eta_certified_pct 12.9 [T1]; area_cm2 10.51 cm2 [T1]; n_cells 6 [T1]; certifying_lab NPVM [T1]; certificate_date 2025-07 [T1].
+- **Unverified (verify=true):** device_jv.
+- **Application signs (deterministic part):** VIPV: undetermined; BIPV: undetermined; interior: undetermined
+- **Application-adjacent data flags:** not yet assessed.
+- **Missing inputs:** device J-V parameters (Voc/Jsc/FF) and/or Eg; layer stack for compliance arithmetic.
+- **Human ratification:** _pending_

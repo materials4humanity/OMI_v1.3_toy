@@ -90,7 +90,7 @@
         0.4
       ],
       [
-        2023.15,
+        2023.29,
         1.9
       ],
       [
@@ -107,9 +107,9 @@
       ]
     ],
     "drift_2023_on": {
-      "n_records": 3,
-      "ols_slope_pts_per_yr": 0.66,
-      "endpoint_rate_pts_per_yr": 0.87
+      "n_records": 4,
+      "ols_slope_pts_per_yr": 0.09,
+      "endpoint_rate_pts_per_yr": 0.13
     },
     "drift_since_plateau_end": {
       "n_records": 6,
@@ -144,7 +144,7 @@
         2022.9
       ],
       [
-        2025.15,
+        2025.29,
         2026.15
       ]
     ],
