@@ -1,6 +1,7 @@
 # mdl-loop 0.2 — Anchor Devices in the Loop (A8) and the Ratified C1 Pre-registration
 ### Results memo. Follows the mdl-loop 0.1 memo (A7) and amends its §2. Companion to the next-stage plan (A8, B1, C1) and the v2 map (§7a: "periodic anchor devices keep the proxy honest").
 **Status 19 Nov 2026 (evening): the §3 precondition is restated in M0's units by `claude/M0_noise_floor_design.md` (go if the film-to-film 80% upper bound at the literature recipe is ≤ 13 meV; run-to-run becomes a flag).**
+**Status 20 Nov 2026: §5 next action 3 is done in mdl-loop 0.4 (`mdl_loop_v0.4_results.md`). Anchoring the final recommendation removes only part of the §2.4 over-claim. The §2.4 claims rule stands. See the addendum at the end.**
 **Prepared 19 Nov 2026. Code: `mdl-loop-0.2.zip` (14 passing tests). Numbers are in `out/summary.json`, reproducible with `python -m mdl_loop --out out --seeds 24`. Same synthetic test surface as 0.1; read every number as conditional on it.**
 
 ---
@@ -104,3 +105,13 @@ Re-derive the precondition, power and budget with M0's measured noise before the
 3. Always anchor the final recommendation before confirmation, and test whether that removes most of the over-claim in §2.4.
 4. Simulate the two-campaign head-to-head design for funders.
 5. Then return to Stage A paper items: A2 (gate G2 rewrite) and A6 (ledger entries).
+
+---
+
+## Addendum, 20 Nov 2026 (mdl-loop 0.4)
+
+This addendum adds to §2.4 and §5 item 3 and leaves the text above as written. Same synthetic surface; 24 seeds per cell; details in `mdl_loop_v0.4_results.md`.
+
+- **§5 item 3 tested.** The device-aware loop now finishes the recommended film into an anchor device before stopping, refits the gap model and re-recommends. In the 10 meV cell at 40 runs, the median over-claim went from 5.8 to 4.8 mV and the 90th percentile from 12.6 to 11.0. True device gain went from 20.3 to 20.8 mV and primary power from 0.74 to 0.78 (paired difference +0.035 ± 0.032). Across the eight M0 lookup cells, the median over-claim at 40 runs fell in six. The change is larger at 20 runs.
+- **It does not remove most of the over-claim.** Anchoring the hand-over recipe in 96–100% of campaigns (up to three rounds) leaves the median over-claim at 4.2 mV in the 10 meV cell. **The §2.4 rule stands:** device-level claims come from confirmation devices.
+- **The §2.4 figures (5.3 / 15 mV) are not reproduced exactly** in the current environment. With BLAS pinned to one thread, the same 0.3 code gives 5.8 / 12.6 mV. The difference is floating-point sensitivity to BLAS thread count, not a code change (0.4 memo §5).

@@ -2,6 +2,7 @@
 
 Run schema with the hidden parameters, the P0 trajectory space, a synthetic
 virtual-kesterite test surface, noise-aware batch BO against a careful OVAT
-control, and the C1 power analysis. See mdl_loop_v0.1_results.md and mdl_loop_v0.2_results.md.
+control, and the C1 power analysis. See the results memos in docs/
+(mdl_loop_v0.1_results.md, mdl_loop_v0.2_results.md, mdl_loop_v0.4_results.md).
 """
-__version__ = "0.3.0"
+__version__ = "0.4.0"

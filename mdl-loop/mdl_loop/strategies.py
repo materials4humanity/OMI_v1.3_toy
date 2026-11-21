@@ -448,6 +448,10 @@ class DeviceAwareGPBO(GPBO):
     first cycle includes a literature-recipe film (the device baseline); each
     cycle includes the incumbent's film if one is available; the rest go to the
     promising films whose gap the model is least sure of.
+
+    When the campaign stops, ``finalize`` (0.4) anchors the recommended film if
+    it has no device yet, refits the gap model and re-recommends, before
+    confirmation.
     """
 
     def __init__(self, start: dict, rng, anchor_every: int = 5, anchors_per_cycle: int = 2,
@@ -555,3 +559,42 @@ class DeviceAwareGPBO(GPBO):
         r = lab.n_runs
         if r >= self.n_init and (r - self.n_init) % self.anchor_every == 0:
             self._anchor(lab)
+
+    # ---- end of campaign (0.4)
+    def finalize(self, lab, max_rounds: int = 1) -> dict:
+        """Anchor the final recommendation, refit the gap model, re-recommend.
+
+        Called once when the campaign stops, before confirmation. If no film of
+        the recommended recipe has been finished into a device, the most recent
+        surviving film of that recipe is; the gap GP is then refitted (its
+        kernel re-optimized from the previous one) and the recommendation is
+        recomputed. Each round costs one device and no furnace runs.
+
+        ``max_rounds=1`` (the 0.4 default) runs one round: if the new
+        recommendation is a different, unanchored recipe it is kept as is, and
+        the diagnostics say so. Larger values repeat until the recommendation is
+        anchored or the rounds are used up (a sensitivity variant).
+
+        Returns the final recommendation, its claimed device Voc (V) and
+        diagnostics: whether the pre-final recommendation was already anchored,
+        how many devices were made, whether the recommendation changed, and
+        whether the final recommendation is anchored.
+        """
+        def anchored(x):
+            return any(o.x == x and not o.failed and not math.isnan(o.device) for o in lab.history)
+
+        rec0, claimed0 = self.recommend(lab)
+        rec, claimed = rec0, claimed0
+        made = 0
+        while lab.n_runs >= self.n_init and made < max_rounds and not anchored(rec):
+            films = [o for o in lab.history if not o.failed and o.x == rec]
+            if not films:
+                break
+            lab.make_device(films[-1])
+            made += 1
+            self._fit(lab, optimize=False)            # refits the gap GP: anchor count changed
+            rec, claimed = self.recommend(lab)
+        return {"rec": rec, "claimed": claimed, "pre_rec": rec0, "pre_claimed": claimed0,
+                "pre_anchored": anchored(rec0) and made == 0, "devices_made": made,
+                "device_made": made > 0, "rec_changed": rec != rec0,
+                "final_anchored": anchored(rec)}

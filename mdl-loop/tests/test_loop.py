@@ -195,3 +195,35 @@ def test_noise_for_maps_measured_to_nominal():
     m = VirtualKesterite(1.0, het)
     assert 1000 * m.film_sd_ev(LITERATURE_RECIPE) == pytest.approx(10.0, rel=1e-6)
     assert m.run_sd_ev() == pytest.approx(0.005)
+
+
+# ---------------------------------------------------------------- 0.4: final anchor
+def test_finalize_anchors_the_recommendation_without_furnace_runs():
+    from mdl_loop.strategies import DeviceAwareGPBO
+    m = VirtualKesterite(noise=NoiseModel(film_mev=10.0))
+    rng = np.random.default_rng(9)
+    lab = Lab(m, rng)
+    s = DeviceAwareGPBO(LITERATURE_RECIPE, rng)
+    for _ in range(12):
+        s.step(lab)
+    runs, devs = lab.n_runs, lab.n_devices
+    f = s.finalize(lab)
+    assert lab.n_runs == runs
+    assert lab.n_devices == devs + (0 if f["pre_anchored"] else 1)
+    assert f["device_made"] == (not f["pre_anchored"])
+    pre = [o for o in lab.history if o.x == f["pre_rec"] and not o.failed]
+    assert any(not math.isnan(o.device) for o in pre)           # the pre-final pick is now anchored
+    assert f["rec_changed"] == (f["rec"] != f["pre_rec"])
+    assert f["final_anchored"] or f["rec_changed"]
+
+
+def test_checkpoint_finalize_leaves_the_campaign_unchanged():
+    a = run_job(Job("loop-dev", 10.0, 3, budget=10))
+    b = run_job(Job("loop-dev", 10.0, 3, budget=10, final_anchor=False))
+    assert a["trace"] == b["trace"]
+    assert a["checkpoints"][10]["v03"] == b["checkpoints"][10]       # 0.3 record is exact
+    cp = a["checkpoints"][10]
+    assert cp["final_anchor"]["devices_made"] <= 1
+    assert cp["until_anchored"]["final_anchor"]["devices_made"] <= 3
+    assert cp["until_anchored"]["final_anchor"]["devices_made"] >= cp["final_anchor"]["devices_made"]
+    assert a == run_job(Job("loop-dev", 10.0, 3, budget=10))          # seeded

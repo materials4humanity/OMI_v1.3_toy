@@ -10,6 +10,7 @@ better than OVAT?
 """
 from __future__ import annotations
 
+import copy
 import math
 from dataclasses import dataclass
 
@@ -32,6 +33,29 @@ class Job:
     interaction: float = 1.0
     budget: int = 40
     confirm_runs: int = 2
+    final_anchor: bool = True     # loop-dev only: anchor the final recommendation (0.4)
+
+
+def finalize_copy(strat, lab, max_rounds: int = 1):
+    """Run ``strat.finalize`` on a deep copy of (strategy, lab).
+
+    A checkpoint asks what the campaign would hand over if it stopped there.
+    Finalizing a copy answers that without spending a device or random draws in
+    the campaign that continues, so its later runs, and the pre-final (0.3)
+    recommendation recorded beside the final one, are exactly what 0.3 produced
+    for the same seed. The copy's generator starts from the campaign's state, so
+    the result is still seeded.
+    """
+    s2, lab2 = copy.deepcopy((strat, lab))
+    return s2.finalize(lab2, max_rounds), lab2
+
+
+def _final_anchor_diag(fin: dict) -> dict:
+    return {k: fin[k] for k in ("pre_anchored", "device_made", "devices_made", "rec_changed",
+                                "final_anchored")}
+
+
+SENSITIVITY_ROUNDS = 3   # "until anchored" variant recorded beside the 0.4 default (one round)
 
 
 def run_job(job: Job) -> dict:
@@ -64,13 +88,34 @@ def run_job(job: Job) -> dict:
                       "claimed_gain_mev": (1000 * (claimed - ref)) if claimed == claimed and
                       claimed != -math.inf else None})
         if r in CHECKPOINTS:
+            fin = (finalize_copy(strat, lab) if job.arm == "loop-dev" and job.final_anchor
+                   else None)
             conf = lab.confirm(rec, job.confirm_runs)
             cps[r] = {"rec": rec, "true_gain_mev": 1000 * (true_q - lit_q),
                       "device_gain_mev": 1000 * (model.device_voc(rec) - lit_dev),
+                      "claimed_gain_mev": trace[-1]["claimed_gain_mev"],
                       "urbach_mev": model.urbach(rec),
                       "confirm_mev": (1000 * (conf - lit_q)).tolist(),
                       "n_failed": sum(o.failed for o in lab.history),
                       "n_devices": lab.n_devices}
+            if fin is not None:
+                f, lab2 = fin
+                frec = f["rec"]
+                fconf = lab2.confirm(frec, job.confirm_runs)
+                v03 = cps[r]
+                cps[r] = {"rec": frec, "true_gain_mev": 1000 * (model.qfls(frec) - lit_q),
+                          "device_gain_mev": 1000 * (model.device_voc(frec) - lit_dev),
+                          "claimed_gain_mev": 1000 * (f["claimed"] - ref),
+                          "urbach_mev": model.urbach(frec),
+                          "confirm_mev": (1000 * (fconf - lit_q)).tolist(),
+                          "n_failed": v03["n_failed"], "n_devices": lab2.n_devices,
+                          "final_anchor": _final_anchor_diag(f), "v03": v03}
+                g, _ = finalize_copy(strat, lab, SENSITIVITY_ROUNDS)
+                cps[r]["until_anchored"] = {
+                    "rec": g["rec"], "true_gain_mev": 1000 * (model.qfls(g["rec"]) - lit_q),
+                    "device_gain_mev": 1000 * (model.device_voc(g["rec"]) - lit_dev),
+                    "claimed_gain_mev": 1000 * (g["claimed"] - ref),
+                    "final_anchor": _final_anchor_diag(g)}
     return {"arm": job.arm, "noise_mev": job.noise_mev, "seed": job.seed,
             "interaction": job.interaction, "headroom_mev": model.headroom_mev(),
             "trace": trace, "checkpoints": cps}
@@ -141,12 +186,21 @@ def runs_needed(table: dict, target: float = 0.8) -> dict:
 
 
 def winners_curse(results: list[dict], arm: str, n: int, interaction: float = 1.0) -> dict:
-    """Claimed versus true gain of the recommended recipe at run n."""
+    """Claimed versus true gain of the recommended recipe at run n.
+
+    Reads the in-campaign trace, except where the checkpoint at n carries a
+    final-anchored answer (device-aware loop, 0.4): the over-claim is then that
+    of the recipe handed to confirmation.
+    """
     by = {}
     for r in results:
         if r["arm"] != arm or r["interaction"] != interaction:
             continue
         t = r["trace"][n - 1]
+        cp = r["checkpoints"].get(str(n)) or r["checkpoints"].get(n)
+        if cp and "final_anchor" in cp:
+            t = {"claimed_gain_mev": cp["claimed_gain_mev"],
+                 "true_device_gain_mev": cp["device_gain_mev"], "true_gain_mev": cp["true_gain_mev"]}
         if t["claimed_gain_mev"] is None:
             continue
         truth = t["true_device_gain_mev"] if arm == "loop-dev" else t["true_gain_mev"]

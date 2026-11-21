@@ -1,4 +1,4 @@
-# mdl-loop 0.3
+# mdl-loop 0.4
 
 The software half of campaign C1, built before any hardware exists (next-stage
 plan items A4, A7, A8, plus the M0 design support for B1). It answers one question the plan leaves open:
@@ -6,10 +6,11 @@ plan items A4, A7, A8, plus the M0 design support for B1). It answers one questi
 is a fair kill condition, and how does that number depend on the noise floor M0
 will measure?**
 
-    python -m pytest -q                      # 16 tests
+    python -m pytest -q                      # 18 tests
     python -m mdl_loop.m0 --out out          # M0 lookup and sizing, ~15 min
     python -m mdl_loop --out out --seeds 24  # full sweep, ~30 min on 2 cores
     python -m mdl_loop --out out --report-only
+    python -m mdl_loop.final_anchor --out out --seeds 24   # 0.4 vs 0.3, ~20 min on 4 cores
 
 | Module | Does |
 |---|---|
@@ -18,9 +19,10 @@ will measure?**
 | `emulator.py` | **Virtual kesterite v0**, a synthetic test surface (not a model of kesterite) with mechanism terms, failures, device-only losses, and an `interaction` switch |
 | `lab.py` | Virtual furnace: shared trajectory per run, furnace-run random effect, heteroscedastic film noise, failures; confirmation runs outside the budget |
 | `strategies.py` | OVAT control (replicated, line-searching, step-halving) and the loop (GP with learned noise, GP failure classifier, EI x P(survive), Kriging-believer slot filling, replicate-first, periodic incumbent confirmation, LCB recommendation) |
-| `strategies.DeviceAwareGPBO` | A8: anchor devices (2 every 5 runs, 6 cells each) feed a GP of the device-only loss; acquisition and recommendation on predicted device Voc |
+| `strategies.DeviceAwareGPBO` | A8: anchor devices (2 every 5 runs, 6 cells each) feed a GP of the device-only loss; acquisition and recommendation on predicted device Voc. 0.4: `finalize` anchors the final recommendation, refits the gap model and re-recommends before confirmation |
 | `m0.py` | M0 support: C1 power indexed by noise *as M0 measures it* (literature recipe, both noise-shape assumptions); nested runs × films × spots variance components; go/no-go operating characteristics |
-| `campaign.py` | Campaign driver, confirmation test (one-sided Welch at alpha 0.05), power tables, winner's-curse statistics |
+| `campaign.py` | Campaign driver, confirmation test (one-sided Welch at alpha 0.05), power tables, winner's-curse statistics. Device-aware checkpoints record the 0.4 answer and, under `v03`, the 0.3 answer from the same campaign |
+| `final_anchor.py` | 0.4 vs 0.3 in the M0 lookup cells and the 10 meV main-sweep cell: over-claim, true device gain, C1 primary power (common random numbers) |
 
 ## Read before quoting numbers
 * The emulator is a benchmark surface. Its coefficients are choices, set so the
@@ -38,8 +40,8 @@ will measure?**
 
 ## Repository layout
 * `out/` holds the summaries and charts behind the memos. The raw per-campaign
-  results (`results.jsonl`, `m0_lookup.jsonl`, about 4.5 MB) are not committed;
-  every campaign is seeded, so the two commands above regenerate them.
+  results (`results.jsonl`, `m0_lookup.jsonl`, `final_anchor.jsonl`) are not committed;
+  every campaign is seeded, so the commands above regenerate them.
 * `docs/` holds dated snapshots of the memos. The live copies are in the
   Materials Discovery Lab project (`claude/mdl_loop_v0.1_results.md`,
   `claude/mdl_loop_v0.2_results.md`, `claude/M0_noise_floor_design.md`).
